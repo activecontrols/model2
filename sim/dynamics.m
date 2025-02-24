@@ -15,10 +15,9 @@
 %   y - currently uses y = eye(n)*x
 
 function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
-    % Debateable 
-    % linearization points
+    % Linearized around static vertical position
     delx = [0; 0; 0; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0];
-    delu = [0; 0; 0; 0];
+    delu = [0; 0; constants.m * constants.g; 0];
     
     % Linear relations
     % Takes the jacobian of the state dyanmics and output and subsitutes in
