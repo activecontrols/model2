@@ -1,20 +1,20 @@
-% Generates the EoMs
-% The EoMGenerator function is an input free function that builds the
-% Equations of Motion (EoMs) which are derived within this function. The
-% function is designed to output the following values
+% Converts the EoMs into the Dynamics
+% The dynamics function converts the manually derived EoM into the linear
+% and discretized versions for other functions to use. This function also
+% generates the nonlinear plant functions for x_dot & y that can be used by
+% other functions and as simulink blocks
 %
 % Outputs:
-%   x    - symbolic vector of states
-%   u    - symbolic vector of inputs
-%   xdot - symbolic vector of the system dynamics
+%   lin         - structure containing state space matrices (A,B,C,D)
+%   linDis      - structure containing discrete state space matrices
+%   plantState  - nonlinear plant state function
+%   plantOutput - nonlinear plant output function
 %
 % [NOT IMPLEMENTED YET! Need more info on ASTRA] 
-%   w    - symbolic vector of disturbances          
-%           Blocker: Modes of Disturbance Analysis
-%   y    - symbolic vector of outputs               
-%           Blocker: ASTRA sensor design
+%   w - not included in linearization
+%   y - currently uses y = eye(n)*x
 
-function [lin, linDis, plant, output] = dynamics(x, u, x_dot, constants)
+function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
     % Debateable 
     % linearization points
     delx = [0; 0; 0; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0];
@@ -51,8 +51,8 @@ function [lin, linDis, plant, output] = dynamics(x, u, x_dot, constants)
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
-    plant = matlabFunction(x_dot, "Vars",[{x}, {u}]);
-    output = matlabFunction(y, "Vars", [{x}, {u}]);
+    plantState = matlabFunction(x_dot, "Vars",[{x}, {u}]);
+    plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
     % Createas a MATLAB 
     matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});

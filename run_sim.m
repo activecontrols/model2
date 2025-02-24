@@ -5,6 +5,8 @@ addpath('./params/');
 addpath('./sim/');
 addpath('./trajectory/');
 
+open_system('genSym');
+
 %% Constants
 constants = constructConstants; % Creates constant structure
 
