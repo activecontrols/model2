@@ -5,14 +5,13 @@ addpath('./params/');
 addpath('./sim/');
 addpath('./trajectory/');
 
-open_system('genSym');
+% open_system('genSym');
 
 %% Constants
 constants = constructConstants; % Creates constant structure
 
 %% Plant
 [x, u, x_dot] = EoMGenerator(constants);
-
 [linSys, disLinSys, plantFn, outFn] = dynamics(x, u, x_dot, constants);
 
 %% Sensor Modeling

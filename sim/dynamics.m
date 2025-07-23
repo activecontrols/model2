@@ -16,7 +16,7 @@
 
 function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
     % Linearized around static vertical position
-    delx = [0; 0; 0; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0];
+    delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
     delu = [0; 0; constants.m * constants.g; 0];
     
     % Linear relations
@@ -50,7 +50,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
-    plantState = matlabFunction(x_dot, "Vars",[{x}, {u}]);
+    plantState = matlabFunction(x_dot, 'File', './sim/lib/plantfcn.m', "Vars",[{x}, {u}]);
     plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
     % Createas a MATLAB 
