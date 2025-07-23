@@ -26,16 +26,19 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % delw]" when disturbance is added
     lin.A = eval(subs(jacobian(x_dot, x), [x; u], [delx; delu])); % Jacobian of f with respect to x
     lin.B = eval(subs(jacobian(x_dot, u), [x; u], [delx; delu])); % Jacobian of f with respect to u
+
+    % Numerical functions for Jacobians for Kalman Filter
+    matlabFunction(jacobian(x_dot, x), 'File', './sim/lib/JacobianX.m', 'Vars', [{x}, {u}]);
+    matlabFunction(jacobian(x_dot, u), 'File', './sim/lib/JacobianU.m', 'Vars', [{x}, {u}]);
+
     % lin.C = eval(subs(jacobian(y, x), [x; u], [delx; delu]));   % Jacobian of g with respect to x
     % lin.D = eval(subs(jacobian(y, u), [x; u], [delx; delu]));   % Jacobian of g with respect to u
-    
 
     % Until Output is added we have modeled it as being able to directly
     % observe the states
     lin.C = eye(size(lin.A));
     lin.D = zeros(size(lin.B));
-    y = x;
-    
+    y = x;    
     
     % Discrete Linear
     % Creates a system object using continuous matrices and converts them to
