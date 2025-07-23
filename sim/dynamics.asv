@@ -2,7 +2,7 @@
 % The dynamics function converts the manually derived EoM into the linear
 % and discretized versions for other functions to use. This function also
 % generates the nonlinear plant functions for x_dot & y that can be used by
-% other functions and as simulink blocks
+% other functions and as simulink blocks.
 %
 % Outputs:
 %   lin         - structure containing state space matrices (A,B,C,D)
@@ -15,10 +15,9 @@
 %   y - currently uses y = eye(n)*x
 
 function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
-    % Debateable 
-    % linearization points
-    delx = [0; 0; 0; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0];
-    delu = [0; 0; 0; 0];
+    % Linearized around static vertical position
+    delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
+    delu = [0; 0; constants.m * constants.g; 0];
     
     % Linear relations
     % Takes the jacobian of the state dyanmics and output and subsitutes in
@@ -51,10 +50,10 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
-    plantState = matlabFunction(x_dot, "Vars",[{x}, {u}]);
+    plantState = matlabFunction(x_dot, 'File', './sim/lib/plantfcn.m', "Vars",[{x}, {u}]);
     plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
     % Createas a MATLAB 
-    matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
-    matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
+    % matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
+    % matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
 end

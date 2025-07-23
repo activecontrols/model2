@@ -54,6 +54,6 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
     % Createas a MATLAB 
-    matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
-    matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
+    % matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
+    % matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
 end
