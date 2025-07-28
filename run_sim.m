@@ -3,6 +3,7 @@
 % Allows MATLAB to use functions across local file infrastructure
 addpath('./params/');
 addpath('./sim/');
+addpath('./sim/lib');
 addpath('./trajectory/');
 
 % open_system('genSym');

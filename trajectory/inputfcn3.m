@@ -1,9 +1,9 @@
 function u = inputfcn3(u, t)
     
     thrust_max = 1.5 * 9.8;   %N
-    maxU = [pi/24, pi/24, thrust_max, thrust_max * 0.1];
-    minU = [-pi/24, -pi/24, thrust_max * 0.4, -thrust_max * 0.1];
-    MaxDeltaThrottle = 0.6 / 1.2;  %throttle change per sec
+    maxU = [pi/24, pi/24, thrust_max, thrust_max * 10];
+    minU = [-pi/24, -pi/24, thrust_max * 0.4, -thrust_max * 10];
+    MaxDeltaThrottle = 2;  %throttle change per sec
     MaxDeltaAngle = pi / 12;       %rad/s
 
     % Input Saturation
