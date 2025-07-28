@@ -22,3 +22,17 @@ x0 = zeros(12,1);
 
 
 %% Controller
+
+% Brysons Rule for Q and R
+a_weights = ones(12,1);
+b_weights = ones(4,1);
+a_weights = a_weights / norm(a_weights);
+b_weights = b_weights / norm(b_weights);
+
+max_x = [50, 50, 50, 10, 10, 10, 1, 1, 1, 5, 5, 5];
+max_u = [pi/24, pi/24, 1500, 20];
+
+Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+
+[K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);

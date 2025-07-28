@@ -36,8 +36,13 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
 
     % Until Output is added we have modeled it as being able to directly
     % observe the states
-    lin.C = eye(size(lin.A));
-    lin.D = zeros(size(lin.B));
+    %lin.C = eye(size(lin.A));
+
+    % Assumes direct measurement of positions via GPS and angular velocity
+    % via gyroscope (In the future, could expand to measure quaterion
+    % directly via accelerometer data and DCM).
+    lin.C = [eye(3) zeros(3, 9); zeros(3, 9) eye(3)];
+    lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
     y = x;    
     
     % Discrete Linear
