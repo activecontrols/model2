@@ -41,7 +41,8 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion
     % directly via accelerometer data and DCM).
-    lin.C = [eye(3) zeros(3, 9); zeros(3, 9) eye(3)];
+    lin.C = eye(size(lin.A));
+    lin.C = lin.C([1:7 10:12], :);
     lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
     y = x;    
     
