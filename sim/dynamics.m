@@ -15,6 +15,7 @@
 %   y - currently uses y = eye(n)*x
 
 function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
+    
     % Linearized around static vertical position
     delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
     delu = [0; 0; constants.m * constants.g; 0];
@@ -41,7 +42,8 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion
     % directly via accelerometer data and DCM).
-    lin.C = eye(size(lin.A));
+    % Adds 6 due to bias augmentation
+    lin.C = eye(size(lin.A, 1));
     lin.C = lin.C([1:7 10:12], :);
     lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
     y = x;    
@@ -56,13 +58,21 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     linDis.Bd = sysDis.B;
     linDis.Cd = sysDis.C;
     linDis.Dd = sysDis.D;
+
+    % Update the C matrix to augmented form
+    lin.C = eye(size(lin.A, 1) + 6);
+    lin.C = lin.C([1:7 10:12], :);
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
     plantState = matlabFunction(x_dot, 'File', './sim/lib/plantfcn.m', "Vars",[{x}, {u}]);
     plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
-    % Createas a MATLAB 
-    % matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
-    % matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
+    % Repeats function generation process for augmented system for EKF
+    [xAUG, u, xAUG_dot] = EoMGenerator(constants, 2);
+    matlabFunction(jacobian(xAUG_dot, xAUG), 'File', './sim/lib/AUG_JacobianX.m', 'Vars', [{xAUG}, {u}]);
+    matlabFunction(jacobian(xAUG_dot, u), 'File', './sim/lib/AUG_JacobianU.m', 'Vars', [{xAUG}, {u}]);
+    plantState = matlabFunction(xAUG_dot, 'File', './sim/lib/AUG_plantfcn.m', "Vars",[{xAUG}, {u}]);
+
+
 end

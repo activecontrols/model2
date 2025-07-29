@@ -26,16 +26,25 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % delw]" when disturbance is added
     lin.A = eval(subs(jacobian(x_dot, x), [x; u], [delx; delu])); % Jacobian of f with respect to x
     lin.B = eval(subs(jacobian(x_dot, u), [x; u], [delx; delu])); % Jacobian of f with respect to u
+
+    % Numerical functions for Jacobians for Kalman Filter
+    matlabFunction(jacobian(x_dot, x), 'File', './sim/lib/JacobianX.m', 'Vars', [{x}, {u}]);
+    matlabFunction(jacobian(x_dot, u), 'File', './sim/lib/JacobianU.m', 'Vars', [{x}, {u}]);
+
     % lin.C = eval(subs(jacobian(y, x), [x; u], [delx; delu]));   % Jacobian of g with respect to x
     % lin.D = eval(subs(jacobian(y, u), [x; u], [delx; delu]));   % Jacobian of g with respect to u
-    
 
     % Until Output is added we have modeled it as being able to directly
     % observe the states
+    %lin.C = eye(size(lin.A));
+
+    % Assumes direct measurement of positions via GPS and angular velocity
+    % via gyroscope (In the future, could expand to measure quaterion
+    % directly via accelerometer data and DCM).
     lin.C = eye(size(lin.A));
-    lin.D = zeros(size(lin.B));
-    y = x;
-    
+    lin.C = lin.C([1:7 10:12], :);
+    lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
+    y = x;    
     
     % Discrete Linear
     % Creates a system object using continuous matrices and converts them to
@@ -53,7 +62,5 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     plantState = matlabFunction(x_dot, 'File', './sim/lib/plantfcn.m', "Vars",[{x}, {u}]);
     plantOutput = matlabFunction(y, "Vars", [{x}, {u}]);
     
-    % Createas a MATLAB 
-    % matlabFunctionBlock("genSym/Plant/Plant State", x_dot, "Vars", [{x}, {u}], "Outputs", {'x_dot'});
-    % matlabFunctionBlock("genSym/Plant/Plant Output", y, "Vars", [{x}, {u}], "Outputs", {'y'});
+    % Repeats func
 end
