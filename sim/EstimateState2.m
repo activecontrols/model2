@@ -9,9 +9,9 @@ persistent P
 % Exception for T < 1 sec to avoid linearization around invalid points. 
 
 % Calculate Jacobians
-if t < 0.3
+if t < 1
     X_crit = zeros(18,1);
-    U_crit = zeros(4,1);
+    U_crit = [0; 0; 1.5*9.8; 0];
 else
     X_crit = X_hat;
     U_crit = U;
@@ -26,7 +26,7 @@ J_u = AUG_JacobianU(X_crit, U_crit);
 % where n is the number of states (~13 for ASTRA v2)
 if isempty(P)
     P = eye(18);
-    X_hat = [zeros(12,1); 0.01; 0.01; 0.01; 0.02; 0.02; 0.02];
+    X_hat = [zeros(12,1); 0.01; 0.01; 0.01; 0.12; 0.12; 0.12];
 end
 
 % Discretize the dynamics using zero order hold, standard operation.

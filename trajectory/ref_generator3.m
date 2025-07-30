@@ -4,7 +4,7 @@ function ref = ref_generator3(x, t)
     MaxAscentSpeed = 5;         %m/s
     MaxDescentSpeed = -5;       %m/s
     MaxLatSpeed = 5;            %m/s
-    HoldTimeReqs = [1, 5, 0.2, 0.2];    % Time needed to hold at each checkpoint
+    HoldTimeReqs = [0.5, 2, 0.2, 0.2];    % Time needed to hold at each checkpoint
 
     persistent timeFlag
     persistent i
@@ -51,7 +51,7 @@ function ref = ref_generator3(x, t)
 
     ref = x - TargetVec;
 
-    if abs(ref(1:3,1)) < 1
+    if abs(ref(1:3,1)) < 1.2
         timeCounter = timeCounter + dt;
     end
 
