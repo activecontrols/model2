@@ -9,7 +9,7 @@ persistent P
 % Exception for T < 1 sec to avoid linearization around invalid points. 
 
 % Calculate Jacobians
-if t < 1
+if t < 0.5
     X_crit = zeros(18,1);
     U_crit = [0; 0; 1.5*9.8; 0];
 else
