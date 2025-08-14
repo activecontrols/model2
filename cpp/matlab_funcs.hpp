@@ -10,4 +10,4 @@ using Matrix18_18 = Eigen::Matrix<float, 18, 18>;
 
 Matrix18_18 AUG_JacobianX(Vector18 in1, Vector4 in2);
 Vector18 AUG_plantfcn(Vector18 in1, Vector4 in2);
-Vector18 EstimateState2(Vector10 Y, Vector18 X_hat, Vector4 U, float t, Matrix10_18 C);
+Vector18 EstimateState2(Vector10 Y, Vector18 X_hat, Vector4 U, float t, Matrix10_18 C, Matrix18_18 &P, bool &p_init);

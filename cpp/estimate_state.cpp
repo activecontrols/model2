@@ -19,7 +19,7 @@ Matrix18_18 matrixExpPade6(Matrix18_18 A) { // TODO - does this code even work?
   Matrix18_18 numer = V + U;
   Matrix18_18 denom = V - U;
 
-  return denom.inverse() * numer;
+  return (denom.inverse() * numer).transpose(); // NOTE RJN - had to add this transpose - don't know why
 }
 
 float rcond_est(Matrix10_10 A) { // TODO - does this code even work?
@@ -52,10 +52,9 @@ float rcond_est(Matrix10_10 A) { // TODO - does this code even work?
   return 1.0 / (normA * maxColSumInv);
 }
 
-Vector18 EstimateState2(Vector10 Y, Vector18 X_hat, Vector4 U, float t, Matrix10_18 C) {
-
+// note - pass p by ref b/c pointers to Eigen objects are unstable
+Vector18 EstimateState2(Vector10 Y, Vector18 X_hat, Vector4 U, float t, Matrix10_18 C, Matrix18_18 &P, bool &p_init) {
   //// Single Kalman Filter Estimation (Extended Kalman Filter)
-  Matrix18_18 P;
 
   //// Load System Dynamics
   // X_crit and U_crit are linearization points, for an EKF arquitechture we
@@ -81,9 +80,10 @@ Vector18 EstimateState2(Vector10 Y, Vector18 X_hat, Vector4 U, float t, Matrix10
 
   // Covariance matrix for Kalman filter, initialized as an [n x n] matrix,
   // where n is the number of states (~13 for ASTRA v2)
-  if (true) { // isempty (P) // TODO - setup this system
+  if (!p_init) {
     P = Matrix18_18::Identity();
     X_hat << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.01, 0.01, 0.12, 0.12, 0.12;
+    p_init = true;
   }
 
   // Discretize the dynamics using zero order hold, standard operation.
