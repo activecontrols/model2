@@ -9,7 +9,7 @@ persistent P
 % Exception for T < 1 sec to avoid linearization around invalid points. 
 
 % Calculate Jacobians
-if t < 0.5
+if t < 4
     X_crit = zeros(18,1);
     U_crit = [0; 0; 1.5*9.8; 0];
 else
@@ -44,7 +44,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [2 2 2 2 2 2 1/4 1/4 1/4 0.5 0.5 0.5 0.05*ones(1,6)];
+Rvec = [2 2 2 2 2 2 1/4 1/4 1/4 0.5 0.5 0.5 0.01*ones(1,6)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the
@@ -53,7 +53,7 @@ R =  diag((C*Rvec').^2);
 
 % Process Noise Covariance Matrix (obtained experimentally, size [n x n])
 % Q = 0.0005 * eye(12);
-Q = diag([1e-4 1e-4 1e-4 1e-2 1e-2 1e-2 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-5*ones(1,5) 1e-6]);
+Q = diag([1e-4 1e-4 1e-4 1e-2 1e-2 1e-2 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-5*ones(1,5) 1e-5]);
 
 % Conditioning check for inverted matrix (look for the documentation of the
 % RCOND function in MATLAB for implementation)
