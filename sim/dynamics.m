@@ -60,7 +60,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     linDis.Dd = sysDis.D;
 
     % Update the C matrix to augmented form
-    lin.C = eye(size(lin.A, 1) + 6);
+    lin.C = eye(size(lin.A, 1) + 3);
     lin.C = lin.C([1:7 10:12], :);
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
