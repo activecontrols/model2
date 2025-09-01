@@ -11,7 +11,7 @@ persistent P
 % Calculate Jacobians
 if t < 4
     X_crit = zeros(15,1);
-    U_crit = [0; 0; 1.5*9.8; 0];
+    U_crit = [0; 9.81; 0; 0];
 else
     X_crit = X_hat;
     U_crit = U;
@@ -44,7 +44,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/4 1/4 1/4 0.2 0.2 0.2 0.01*ones(1,3)];
+Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/10 1/10 1/10 0.1 0.1 0.1 0.2*ones(1,3)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the

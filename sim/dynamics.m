@@ -44,7 +44,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % directly via accelerometer data and DCM).
     % Adds 6 due to bias augmentation
     lin.C = eye(size(lin.A, 1));
-    lin.C = lin.C([1:7 10:12], :);
+    lin.C = lin.C([7 10:12], :);
     lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
     y = x;    
     
@@ -61,7 +61,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
 
     % Update the C matrix to augmented form
     lin.C = eye(size(lin.A, 1) + 3);
-    lin.C = lin.C([1:7 10:12], :);
+    lin.C = lin.C([7 10:12], :);
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
