@@ -44,7 +44,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [2 2 2 2 2 2 1/4 1/4 1/4 0.5 0.5 0.5 0.01*ones(1,3)];
+Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/4 1/4 1/4 0.2 0.2 0.2 0.01*ones(1,3)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the

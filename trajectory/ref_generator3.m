@@ -40,7 +40,7 @@ function ref = ref_generator3(x, t)
     % TargetX4 = max(TargetX4, MaxDescentSpeed);
     % TargetX4 = min(TargetX4, MaxAscentSpeed);
 
-    PosGain = [0.5; 0.1; 0.1];
+    PosGain = [0.5; 0.25; 0.25];
     PosError = TargetPos(:, i) - x(1:3);
     TargetVel = PosGain .* PosError;
     TargetVel(1) = max(min(TargetVel(1), MaxAscentSpeed), MaxDescentSpeed);
