@@ -23,7 +23,8 @@ J_x = AUG_JacobianX(X_crit, U_crit);
 J_u = AUG_JacobianU(X_crit, U_crit);
 
 % Covariance matrix for Kalman filter, initialized as an [n x n] matrix,
-% where n is the number of states (~13 for ASTRA v2)
+% where n is the number of states (~13 for ASTRA v2), Consider deflating
+% P0, or inflating.
 if isempty(P)
     P = eye(15);
     X_hat = [zeros(12,1); 0.12; 0.12; 0.12];
@@ -53,7 +54,7 @@ R =  diag((C*Rvec').^2);
 
 % Process Noise Covariance Matrix (obtained experimentally, size [n x n])
 % Q = 0.0005 * eye(12);
-Q = diag([1e-3 1e-3 1e-3 1e-2 1e-2 1e-2 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6*ones(1,3)]);
+Q = diag([1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6*ones(1,3)]);
 
 % Conditioning check for inverted matrix (look for the documentation of the
 % RCOND function in MATLAB for implementation)
