@@ -1,4 +1,4 @@
-function X_est = EstimateState2(Y, X_hat, U, t, C)
+function [X_est, Inn] = EstimateState2(Y, X_hat, U, t, C)
     
 %% Single Kalman Filter Estimation (Extended Kalman Filter)
 persistent P
@@ -9,7 +9,7 @@ persistent P
 % Exception for T < 1 sec to avoid linearization around invalid points. 
 
 % Calculate Jacobians
-if t < 4
+if t < 2
     X_crit = zeros(15,1);
     U_crit = [0; 9.81; 0; 0];
 else
@@ -25,8 +25,8 @@ J_u = AUG_JacobianU(X_crit, U_crit);
 % Covariance matrix for Kalman filter, initialized as an [n x n] matrix,
 % where n is the number of states (~13 for ASTRA v2)
 if isempty(P)
-    P = eye(15);
-    X_hat = [zeros(12,1); 0.12; 0.12; 0.12];
+    P = diag([0.001 * eye(12,1); 0.0005 * eye(3,1)]);
+    X_hat = [zeros(12,1); 0.06; 0.06; 0.06];
 end
 
 % Discretize the dynamics using zero order hold, standard operation.
@@ -44,7 +44,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/10 1/10 1/10 0.1 0.1 0.1 0.2*ones(1,3)];
+Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/10 1/2 1/2 0.04 0.04 0.04 0.01*ones(1,3)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the
@@ -53,7 +53,7 @@ R =  diag((C*Rvec').^2);
 
 % Process Noise Covariance Matrix (obtained experimentally, size [n x n])
 % Q = 0.0005 * eye(12);
-Q = diag([1e-3 1e-3 1e-3 1e-2 1e-2 1e-2 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6*ones(1,3)]);
+Q = diag([1e-3 1e-3 1e-3 1e-2 1e-2 1e-2 1e-6 1e-6 1e-6 1e-4 1e-4 1e-4 1e-5*ones(1,3)]);
 
 % Conditioning check for inverted matrix (look for the documentation of the
 % RCOND function in MATLAB for implementation)
@@ -61,7 +61,9 @@ isWCond = (rcond(C*P*C' + R*R') > 1e-9);
 if isWCond == 0
     % Set estimated state to -999 to signal ill-conditioned matrix and flag
     % the filter.
-    X_est = ones(15,1)*-999;
+    X_est = ones(15,1)*-37;
+    L = A_d*P*C'*inv(C*P*C' + R*R');
+    Inn = L*(Y - C*X_hat);
 else
     % Calculates the Kalman Gain (inv is the matrix inverse.)
     L = A_d*P*C'*inv(C*P*C' + R*R');
@@ -69,6 +71,7 @@ else
     % Prediction and Estimation (uses Euler integration to integrate the
     % state derivative obtained from the nonlinear plant dynamics).
     X_est = X_hat + AUG_plantfcn(X_hat, U)*h + L*(Y - C*X_hat);
+    Inn = L*(Y - C*X_hat);
 
     % Updates the covariance matrix.
     P = A_d*P*A_d' + Q*Q' - L*C*P*A_d';
