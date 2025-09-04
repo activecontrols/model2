@@ -14,7 +14,7 @@
 %   w - not included in linearization
 %   y - currently uses y = eye(n)*x
 
-function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constants)
+function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, h, constants)
     
     % Linearized around static vertical position
     delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
@@ -31,13 +31,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, constant
     % Numerical functions for Jacobians for Kalman Filter
     matlabFunction(jacobian(x_dot, x), 'File', './sim/lib/JacobianX.m', 'Vars', [{x}, {u}]);
     matlabFunction(jacobian(x_dot, u), 'File', './sim/lib/JacobianU.m', 'Vars', [{x}, {u}]);
-
-    % lin.C = eval(subs(jacobian(y, x), [x; u], [delx; delu]));   % Jacobian of g with respect to x
-    % lin.D = eval(subs(jacobian(y, u), [x; u], [delx; delu]));   % Jacobian of g with respect to u
-
-    % Until Output is added we have modeled it as being able to directly
-    % observe the states
-    %lin.C = eye(size(lin.A));
+    matlabFunction(jacobian(h, x), 'File', './sim/lib/JacobianH.m', 'Vars', [{x}, {u}]);
 
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion

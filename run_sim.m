@@ -12,8 +12,8 @@ addpath('./trajectory/');
 constants = constructConstants; % Creates constant structure
 
 %% Plant
-[x, u, x_dot] = EoMGenerator(constants, 1);
-[linSys, disLinSys, plantFn, outFn] = dynamics(x, u, x_dot, constants);
+[x, u, x_dot, h] = EoMGenerator(constants, 1);
+[linSys, disLinSys, plantFn, outFn] = dynamics(x, u, x_dot, h, constants);
 x0 = zeros(12,1);
 
 %% Sensor Modeling
