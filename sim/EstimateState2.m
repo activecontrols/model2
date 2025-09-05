@@ -1,4 +1,4 @@
-function X_est = EstimateState2(Y, X_hat, U, t)
+function [X_est, Innovation] = EstimateState2(Y, X_hat, U, t)
     
 %% Single Kalman Filter Estimation (Extended Kalman Filter)
 persistent P
@@ -26,7 +26,7 @@ J_h = JacobianH(X_crit);
 % through dual integration + magnetometer)
 H1 = [eye(3) zeros(3, 12); 
      zeros(3,3) eye(3) zeros(3,9);  
-     J_h; zeros(3,9) eye(3) zeros(3)];
+     zeros(3,6) J_h zeros(3,6); zeros(3,9) eye(3) zeros(3)];
 
 % Covariance matrix for Kalman filter, initialized as an [n x n] matrix,
 % where n is the number of states (~13 for ASTRA v2), Consider deflating
@@ -51,7 +51,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 1/4 1/4 1/4 0.2 0.2 0.2 0.01*ones(1,3)];
+Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 2 2 2 0.2 0.2 0.2 0.01*ones(1,3)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the
@@ -60,7 +60,7 @@ R =  diag((H1*Rvec').^2);
 
 % Process Noise Covariance Matrix (obtained experimentally, size [n x n])
 % Q = 0.0005 * eye(12);
-Q = diag([1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6*ones(1,3)]);
+Q = diag([1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-6 1e-6 1e-6 1e-6*ones(1,3)]);
 
 % Conditioning check for inverted matrix (look for the documentation of the
 % RCOND function in MATLAB for implementation)
@@ -68,7 +68,9 @@ isWCond = (rcond(H1*P*H1' + R*R') > 1e-9);
 if isWCond == 0
     % Set estimated state to -999 to signal ill-conditioned matrix and flag
     % the filter.
-    X_est = ones(15,1)*-999;
+    X_est = ones(15,1)*-42;
+    L = A_d*P*H1'*inv(H1*P*H1' + R*R');
+    Innovation = L*(Y - H1*X_hat);
 else
     % Calculates the Kalman Gain (inv is the matrix inverse.)
     L = A_d*P*H1'*inv(H1*P*H1' + R*R');
@@ -79,5 +81,5 @@ else
 
     % Updates the covariance matrix.
     P = A_d*P*A_d' + Q*Q' - L*H1*P*A_d';
+    Innovation = L*(Y - H1*X_hat);
 end
-

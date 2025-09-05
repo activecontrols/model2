@@ -31,7 +31,7 @@ function [lin, linDis, plantState, plantOutput] = dynamics(x, u, x_dot, h, const
     % Numerical functions for Jacobians for Kalman Filter
     matlabFunction(jacobian(x_dot, x), 'File', './sim/lib/JacobianX.m', 'Vars', [{x}, {u}]);
     matlabFunction(jacobian(x_dot, u), 'File', './sim/lib/JacobianU.m', 'Vars', [{x}, {u}]);
-    matlabFunction(jacobian(h, x), 'File', './sim/lib/JacobianH.m', 'Vars', [{x}]);
+    matlabFunction(jacobian(h, x(7:9)), 'File', './sim/lib/JacobianH.m', 'Vars', {x});
 
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion
