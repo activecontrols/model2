@@ -25,8 +25,8 @@ J_h = JacobianH(X_crit);
 % Observability Matrix for IMU Update Step in EKF (all states observable
 % through dual integration + magnetometer)
 H1 = [eye(3) zeros(3, 12); 
-     zeros(3,3) eye(3) zeros(3,9);  
-     zeros(3,6) J_h zeros(3,6); zeros(3,9) eye(3) zeros(3)];
+         zeros(3,3) eye(3) zeros(3,9);  
+         zeros(3,6) -J_h' zeros(3,6); zeros(3,9) eye(3) zeros(3)];
 
 % Covariance matrix for Kalman filter, initialized as an [n x n] matrix,
 % where n is the number of states (~13 for ASTRA v2), Consider deflating
@@ -51,7 +51,7 @@ A_d = expm(J_x*h);
 
 % Standard deviations of every state measurement (obtained experimentally
 % or just estimated)
-Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 2 2 2 0.2 0.2 0.2 0.01*ones(1,3)];
+Rvec = [0.2 0.2 0.2 0.2 0.2 0.2 0.004 0.004 0.004 0.2 0.2 0.2 0.01*ones(1,3)];
 
 % Measurement Noise Covariancce Matrix
 % (' operator indicates transpose, diag creates a diagonal matrix with the
@@ -65,21 +65,28 @@ Q = diag([1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-6 1e-6 1e-6 1e-6*ones(
 % Conditioning check for inverted matrix (look for the documentation of the
 % RCOND function in MATLAB for implementation)
 isWCond = (rcond(H1*P*H1' + R*R') > 1e-9);
-if isWCond == 0
+if isWCond == 0 && isWCond == 1
     % Set estimated state to -999 to signal ill-conditioned matrix and flag
     % the filter.
     X_est = ones(15,1)*-42;
     L = A_d*P*H1'*inv(H1*P*H1' + R*R');
-    Innovation = L*(Y - H1*X_hat);
+    ref = [0; 2; 0];
+    offset = [zeros(6,1); ref; zeros(3,1)];
+    Innovation = L*(Y - (H1*X_hat + offset));
 else
     % Calculates the Kalman Gain (inv is the matrix inverse.)
     L = A_d*P*H1'*inv(H1*P*H1' + R*R');
     
     % Prediction and Estimation (uses Euler integration to integrate the
     % state derivative obtained from the nonlinear plant dynamics).
-    X_est = X_hat + AUG_plantfcn(X_hat, U)*h + L*(Y - H1*X_hat);
+    %
+    % magnetometer incl. offset, so add [zeros(6,1); ref; zeros(6,1)] to
+    % the H1 * H_hat
+    ref = [0; 2; 0];
+    offset = [zeros(6,1); ref; zeros(3,1)];
+    X_est = X_hat + AUG_plantfcn(X_hat, U)*h + L*(Y - (H1*X_hat + offset));
 
     % Updates the covariance matrix.
     P = A_d*P*A_d' + Q*Q' - L*H1*P*A_d';
-    Innovation = L*(Y - H1*X_hat);
+    Innovation = L*(Y - (H1*X_hat + offset));
 end
