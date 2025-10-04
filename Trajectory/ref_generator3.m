@@ -4,7 +4,7 @@ function ref = ref_generator3(x, t)
     MaxAscentSpeed = 5;         %m/s
     MaxDescentSpeed = -5;       %m/s
     MaxLatSpeed = 3;            %m/s
-    HoldTimeReqs = [1, 7, 0.2, 0.2];    % Time needed to hold at each checkpoint
+    HoldTimeReqs = [5, 25, 0.2, 0.2];    % Time needed to hold at each checkpoint
 
     persistent timeFlag
     persistent i
@@ -40,7 +40,7 @@ function ref = ref_generator3(x, t)
     % TargetX4 = max(TargetX4, MaxDescentSpeed);
     % TargetX4 = min(TargetX4, MaxAscentSpeed);
 
-    PosGain = [0.2; 0.2; 1.25];
+    PosGain = [0.15; 0.15; 0.75];
     PosError = TargetPos(:, i) - x(4:6);
     TargetVel = PosGain .* PosError;
     TargetVel(1) = max(min(TargetVel(1), MaxAscentSpeed), MaxDescentSpeed);

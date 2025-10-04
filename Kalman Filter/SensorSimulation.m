@@ -6,6 +6,8 @@ function z = SensorSimulation(x, x_dot, constantsASTRA, covar_vec, t)
 % Update rates
 IMU_Rate = 1000;     %Hz
 GPS_Rate = 15;      %Hz
+z = zeros(15,1);
+
 persistent lastGPS lastIMU lastZ
 
 if isempty(lastGPS)

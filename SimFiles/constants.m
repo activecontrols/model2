@@ -47,5 +47,5 @@ p.Q(13:15, 1:3) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
 p.Q(13:15, 13:15) = p.gyro_bias_cov_mat*dt;
 
 % Hand-tuning factors
-p.Q(1, 1) = p.Q(1, 1) * 0.005;
+p.Q(1, 1) = p.Q(1, 1) * 0.001;
 p.Q(2:3, 2:3) = p.Q(2:3, 2:3) * 0.025;

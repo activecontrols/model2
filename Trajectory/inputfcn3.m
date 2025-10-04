@@ -1,5 +1,5 @@
-function u = inputfcn3(u, t)
-    
+function u = inputfcn3(u, t) 
+    u = u';
     thrust_max = 1.5 * 9.8;   %N
     maxU = [pi/24, pi/24, thrust_max, thrust_max * 10];
     minU = [-pi/24, -pi/24, thrust_max * 0.4, -thrust_max * 10];
@@ -34,10 +34,4 @@ function u = inputfcn3(u, t)
     u(1:2) = min(MaxAllowGimbal, u(1:2));
 
     prevInput = u;
-
-    % fprintf("Throttle Input Bounds: ")
-    % disp([MaxAllowThrottle, MinAllowThrottle])
-    % fprintf("Input: ");
-    % disp(u(1));
-    % fprintf("\n");
 end

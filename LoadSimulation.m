@@ -6,6 +6,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Initialize parameters and clear functions
+% Initial conditions for state
 clear ref_generator3;
 clear inputfcn3;
 clear EstimateStateFCN;
@@ -17,7 +18,12 @@ addpath('.\SimFiles');
 addpath('.\Trajectory');
 constants;
 constantsASTRA = constructConstants;
+Simulink.Bus.createObject(constantsASTRA);
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
+
+%%
+x0 = zeros(15,1);
+u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 
 %% Generate nominal dynamics function
 % Documentation for the math available on Confluence.
@@ -34,7 +40,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [1000, 1000, 1, 30, 30, 15, 4, 4, 1, 3, 3, 3];
+max_x = [100, 100, 10, 30, 30, 15, 4, 4, 1, 3, 3, 3];
 max_u = [pi/24, pi/24, 25, 20];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;

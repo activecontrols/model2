@@ -1,4 +1,4 @@
-function [x_est, dx] = EstimateStateFCN(x_est,u,constantsASTRA,z,covar_vec,dT,t,Q)
+function x_est = EstimateStateFCN(x_est,u,constantsASTRA,z,covar_vec,dT,Q)
 
 %% M-EKF Implementation
 % Propagate nominal state (DEAD-RECKONING PROPAGATION FOR Q, R, AND V)
@@ -58,7 +58,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     H(7:9, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
 
     % Measurement Noise Covariance
-    w = 1 + 20 * x_dot(7:9)' * x_dot(7:9) + 5 * x_dot(4:6)' * x_dot(4:6);
+    w = 1 + 10 * x_dot(7:9)' * x_dot(7:9) + 10 * x_dot(4:6)' * x_dot(4:6);
     w = min(w, 300);
     R = diag([(covar_vec(1) * w)^2 * ones(3,1); covar_vec(2)^2 * ones(3,1); covar_vec(3)^2 * ones(3,1)]);
     
@@ -84,8 +84,8 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
     H(4:6, 7:9) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 0.2;
-    gps_vel_covar = 0.2;
+    gps_pos_covar = 0.20;
+    gps_vel_covar = 0.20;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain
