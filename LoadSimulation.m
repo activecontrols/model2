@@ -1,0 +1,43 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This file loads in all the constants and parameters for the Simulink into
+% workspace. Please always run this file before running a full-scale
+% simulation if you've made any changes to trajectory, controls, filtering,
+% or others.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Initialize parameters and clear functions
+clear ref_generator3;
+clear inputfcn3;
+clear EstimateStateFCN;
+clear SensorSimulation;
+
+addpath('.\Parameters');
+addpath('.\Kalman Filter');
+addpath('.\SimFiles');
+addpath('.\Trajectory');
+constants;
+constantsASTRA = constructConstants;
+covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
+
+%% Generate nominal dynamics function
+% Documentation for the math available on Confluence.
+[x, u2, x_dot, ~] = EoMGenerator(constantsASTRA, 2);
+[linSys, disLinSys] = dynamics(x, u2, x_dot, constantsASTRA);
+matlabFunction(x_dot, 'File', './SimFiles/nominalDynamics.m', 'Vars', [{x}, {u2}]);
+linSys.A = linSys.A(1:12,1:12);
+linSys.B = linSys.B(1:12,:);
+
+%% Generate LQR Controller for Simulation
+% Brysons Rule for Q and R.
+a_weights = ones(12,1);
+b_weights = ones(4,1);
+a_weights = a_weights / norm(a_weights);
+b_weights = b_weights / norm(b_weights);
+
+max_x = [1000, 1000, 1, 30, 30, 15, 4, 4, 1, 3, 3, 3];
+max_u = [pi/24, pi/24, 25, 20];
+
+Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+
+[K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
