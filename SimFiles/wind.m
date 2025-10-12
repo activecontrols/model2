@@ -1,10 +1,10 @@
-function final_xdot = wind(xdot, wind_vel)
+function final_xdot = wind(xdot, wind_vel, mass)
 
 % Constants needed for force calculation
-AREA = 0.07; % Lateral surface are of ASTRA - m/s
+AREA = 0.07; % Lateral surface area of ASTRA - m^2
 AIR_DENSITY = 1.246656; % Estimated air desnsity - kg/m^3
 % (plan to calculate more accuraately with sensor information like temperature)
-mass = 0.9950; % ASTRA mass (couldn't figure out how to get it from constantsASTRA) - kg
+% mass = 0.9950; % ASTRA mass (couldn't figure out how to get it from constantsASTRA) - kg
 Cd = 0.9; % Estimated Drag coefficient
 
 % Calculates component accelerations from drag equation and wind velocity

@@ -1,14 +1,14 @@
 function ref = ref_generator3(x, t)
     
     % Sets the time to execute an abort at
-    % A va;ue of 0 result in no abort being run
-    ABORT = 25;
+    % A value of 0 result in no abort being run
+    ABORT = 0;
 
     x = x(1:12,1);
     MaxAscentSpeed = 4;         %m/s
     MaxDescentSpeed = -4;       %m/s
     MaxLatSpeed = 2;            %m/s
-    HoldTimeReqs = [5, 25, 0.2, 0.2];    % Time needed to hold at each checkpoint
+    HoldTimeReqs = [5, 5, 0.2, 0.2];    % Time needed to hold at each checkpoint
 
     persistent timeFlag
     persistent i
@@ -24,42 +24,23 @@ function ref = ref_generator3(x, t)
     dt = t - prevTime;
     prevTime = t;
 
-    % TargetX1 = [0, 5, 0, 0];
-    % TargetX2 = [0, 50, 0, 0];
-
     TargetPos = [0, 5,   0, 0;
-                 0, 15,  0, 0;
+                 0, 5,  0, 0;
                  0, 50,  0, 0];
-    TargetAttitude = zeros(size(HoldTimeReqs, 1), 3);
-
-    % X1Gain = 0.075;
-    % X1Error = TargetX1(i) - x(1);
-    % TargetX3 = X1Gain * X1Error;
-    % TargetX3 = max(TargetX3, -MaxLatSpeed);
-    % TargetX3 = min(TargetX3, MaxLatSpeed);
-    % 
-    % X2Gain = 0.65;
-    % X2Error = TargetX2(i) - x(2);
-    % TargetX4 = X2Gain * X2Error;
-    % TargetX4 = max(TargetX4, MaxDescentSpeed);
-    % TargetX4 = min(TargetX4, MaxAscentSpeed);
 
     % Ignores lateral position gain if time is past set abort value
     if ABORT > 0 & t >= ABORT 
         PosGain   = [0; 0; 0.8];
-        TargetPos = [0, 0, 0, 0;
-                     0, 0, 0, 0;
-                     0, 0, 0, 0];    
+        TargetPos = zeros(size(TargetPos));    
     else
-        PosGain = [0.15; 0.15; 0.8];
+        PosGain = [0.35; 0.35; 0.75];
     end
     
     PosError = TargetPos(:, i) - x(4:6);
     TargetVel = PosGain .* PosError;
-    TargetVel(1) = max(min(TargetVel(1), MaxAscentSpeed), MaxDescentSpeed);
-    TargetVel(2:3) = max(min(TargetVel(2:3), MaxLatSpeed), -MaxLatSpeed);
+    TargetVel(1:2) = max(min(TargetVel(1:2), MaxLatSpeed), -MaxLatSpeed);
+    TargetVel(3) = max(min(TargetVel(3), MaxAscentSpeed), MaxDescentSpeed);
 
-    %TargetVec = [TargetX1(i); TargetX2(i); TargetX3; TargetX4; TargetX5(i); TargetX6; 0];
     TargetVec = [zeros(3,1); TargetPos(:, i); TargetVel; zeros(3,1)];
 
     ref = x - TargetVec;

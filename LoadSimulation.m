@@ -40,7 +40,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [2, 2, 2, 3000, 3000, 300, 3, 3, 3, 2, 2, 2];
+max_x = [2, 2, 2, 5000, 5000, 1000, 2, 2, 2, 2, 2, 2];
 max_u = [pi/24, pi/24, 6, 20];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
