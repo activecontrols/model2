@@ -33,7 +33,7 @@ function ref = ref_generator3(x, t)
         PosGain   = [0; 0; 0.8];
         TargetPos = zeros(size(TargetPos));    
     else
-        PosGain = [0.35; 0.35; 0.75];
+        PosGain = [0.35; 0.35; 0.7];
     end
     
     PosError = TargetPos(:, i) - x(4:6);
