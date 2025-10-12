@@ -44,12 +44,15 @@ function ref = ref_generator3(x, t)
     % TargetX4 = max(TargetX4, MaxDescentSpeed);
     % TargetX4 = min(TargetX4, MaxAscentSpeed);
 
-    % Ignores lateral position gain if time is past set abort value
-    if ABORT > 0 & t >= ABORT 
-        PosGain   = [0; 0; 0.8];
-        TargetPos = [0, 0, 0, 0;
-                     0, 0, 0, 0;
-                     0, 0, 0, 0];    
+    if ABORT > 0 &  
+        if t < ABORT
+            PosGain = [0.15; 0.15; 0.8];
+        else 
+            PosGain = [0; 0; 0.8];
+             TargetPos = [0, 0, 0, 0;
+                     0, 0,  0, 0;
+                     0, 0,  0, 0];
+        end
     else
         PosGain = [0.15; 0.15; 0.8];
     end
