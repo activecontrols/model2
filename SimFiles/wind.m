@@ -1,6 +1,6 @@
 function total_vect = wind(mass, wind_vel, ASTRA_vel)
 
-rel_vel = wind_vel + ASTRA_vel
+rel_vel = wind_vel + ASTRA_vel;
 
 % Constants needed for force calculation
 AREA = 0.07; % Lateral surface area of ASTRA - m^2
