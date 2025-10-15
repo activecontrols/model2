@@ -14,26 +14,40 @@ function ref = ref_generator3(x, t)
     persistent i
     persistent timeCounter
     persistent prevTime
+    persistent HoldMode
+    persistent TargetPos;
 
     if isempty(timeFlag)
         timeFlag = 999;
         i = 1;
         timeCounter = 0;
         prevTime = 0;
+        HoldMode = 0;
+        TargetPos = [0, 5,   0, 0;
+                 0, 5,  0, 0;
+                 0, 50,  0, 0];
     end
     dt = t - prevTime;
     prevTime = t;
 
-    TargetPos = [0, 5,   0, 0;
-                 0, 5,  0, 0;
-                 0, 50,  0, 0];
-
     % Ignores lateral position gain if time is past set abort value
-    if ABORT > 0 & t >= ABORT 
-        PosGain   = [0; 0; 0.8];
-        TargetPos = zeros(size(TargetPos));    
-    else
-        PosGain = [0.35; 0.35; 0.7];
+    % ABORT MODE LOGIC: If artificial abort is triggered, enter abort mode
+    % loop. If the position hold mode is disabled, set lateral velocity
+    % references to zero by setting their gains to zero. If lateral
+    % velocities are below threshold, pick current position as hold and
+    % activate HoldMode.
+
+    PosGain = [1; 1; 0.7];
+    isABORT = ABORT > 0 && t >= ABORT;
+    if isABORT
+        if HoldMode == 0
+            PosGain   = [0; 0; 0.7];
+            TargetPos(:,i) = zeros(3,1);
+        end
+        if norm(x(7:8)) < 0.2 && HoldMode == 0
+            TargetPos(:,i) = [x(4:5); 0];
+            HoldMode = 1;
+        end
     end
     
     PosError = TargetPos(:, i) - x(4:6);
@@ -45,10 +59,9 @@ function ref = ref_generator3(x, t)
 
     ref = x - TargetVec;
 
-    if abs(ref(4:6,1)) < 3
+    if norm(ref(4:6,1)) < 3 && isABORT == 0 
         timeCounter = timeCounter + dt;
     end
-
     if timeCounter > HoldTimeReqs(i) && i < size(HoldTimeReqs,2)
         i = i + 1;
         timeCounter = 0;
