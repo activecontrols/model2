@@ -1,0 +1,25 @@
+function xdot = ActuatorDynamics(x, u)
+    xdot = zeros(6, 1);
+    % Simple actuator model
+    % x(1) Angle 1
+    % x(2) Rate 1
+    % x(3) Angle 2
+    % x(4) Rate 2
+    % x(5) Thrust
+    % x(6) Roll
+
+    % Assume identical servos for gimbal
+    a = 7500;
+    b = 85;
+    xdot(1:4) = [x(2); a*(u(1) - x(1)) - b*x(2); 
+            x(4); a*(u(2) - x(3)) - b*x(4)];
+
+    % Assume first order response for thrust
+    tau = 0.15;
+    xdot(5) = (1/tau) * (u(3) - x(5));
+
+    % Since torque depends on thrust changes on two fans, response time is
+    % half that of thrust
+    xdot(6) = (1/(tau/2)) * (u(4) - x(6));
+
+end

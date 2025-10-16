@@ -3,7 +3,7 @@ function x_est = EstimateStateFCN(x_est,u,constantsASTRA,z,covar_vec,dT,Q)
 %% M-EKF Implementation
 % Propagate nominal state (DEAD-RECKONING PROPAGATION FOR Q, R, AND V)
 % Extract Quaternion
-% ISSUES WITH QUATERNION CONVERGENCE - TRACK COVARIANCES AND FIX Q_k MATRIX
+% REMOVE RATES FROM STATE_VEC, AIM FOR FULL STATE SIM
 
 % Remove bias from gyro
 z(4:6) = z(4:6) - x_est(13:15);
@@ -18,6 +18,7 @@ M = [q(1) -q(2) -q(3) -q(4);
      q(4) -q(3)  q(2)  q(1)];
 qdot = 0.5 * M * [0; z(4:6)]; %body frame derivative
 q_123_dot = qdot(2:4); % + zetaCross(z(4:6)) * q(2:4); %inertial derivative 
+x_dot = nominalDynamics(x_est, u);
 x_est(1:3) = q(2:4) + q_123_dot * dT;
 
 % A-priori quaternion estimate and rotation matrix
@@ -35,8 +36,7 @@ end
 % State Transition Matrix
 F = StateTransitionMat(z(1:3), z(4:6), R_b2i, constantsASTRA.J);
 
-% Propagate rest of state
-x_dot = nominalDynamics(x_est, u);
+% Propagate rest of state using IMU
 x_est(7:9) = x_est(7:9) + (R_b2i * z(1:3) - [0; 0; constantsASTRA.g]) * dT;
 x_est(4:6) = x_est(4:6) + x_est(7:9) * dT;
 x_est(10:12) = x_est(10:12) + x_dot(10:12) * dT;
@@ -45,7 +45,7 @@ x_est(10:12) = x_est(10:12) + x_dot(10:12) * dT;
 Phi = expm(F * dT);
 
 % Process Noise Covariance and a-priori propagation step
-Q = 0.3 * Q;
+Q = 0.4 * Q;
 P = Phi * P * Phi' + Q;
 
 if sum(lastZ(1:9) - z(1:9)) ~=0
