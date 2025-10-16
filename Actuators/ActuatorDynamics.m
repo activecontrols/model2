@@ -10,7 +10,7 @@ function xdot = ActuatorDynamics(x, u)
 
     % Assume identical servos for gimbal
     a = 8000;
-    b = 175;
+    b = 125;
     xdot(1:4) = [x(2); a*(u(1) - x(1)) - b*x(2); 
             x(4); a*(u(2) - x(3)) - b*x(4)];
 
