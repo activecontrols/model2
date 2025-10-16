@@ -7,6 +7,7 @@
 
 %% Initialize parameters and clear functions
 % Initial conditions for state
+clear;
 clear ref_generator3;
 clear inputfcn3;
 clear EstimateStateFCN;
@@ -16,6 +17,7 @@ addpath('.\Parameters');
 addpath('.\Kalman Filter');
 addpath('.\SimFiles');
 addpath('.\Trajectory');
+addpath('.\Actuators\');
 constants;
 constantsASTRA = constructConstants;
 Simulink.Bus.createObject(constantsASTRA);
