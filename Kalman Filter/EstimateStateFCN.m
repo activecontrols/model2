@@ -39,7 +39,6 @@ F = StateTransitionMat(z(1:3), z(4:6), R_b2i, constantsASTRA.J);
 % Propagate rest of state using IMU
 x_est(7:9) = x_est(7:9) + (R_b2i * z(1:3) - [0; 0; constantsASTRA.g]) * dT;
 x_est(4:6) = x_est(4:6) + x_est(7:9) * dT;
-x_est(10:12) = x_est(10:12) + x_dot(10:12) * dT;
 
 % Discrete STM
 Phi = expm(F * dT);
