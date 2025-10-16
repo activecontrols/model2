@@ -43,7 +43,7 @@ a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
 max_x = [2, 2, 2, 5000, 5000, 1000, 1, 1, 2, 3, 3, 3];
-max_u = [pi/24, pi/24, 6, 20];
+max_u = [pi/30, pi/30, 6, 20];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
 R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
