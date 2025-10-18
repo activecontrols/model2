@@ -9,7 +9,7 @@ dt = 40/10000; %assuming a 200Hz filter + sensor poll/update rate
 p.est_cov = 1.0; %How much we trust obsv vs. measurements initially
 
 %Gyro (rad/s) - estimated from datasheet & testing
-gyro_bias_cov = 0.1;
+gyro_bias_cov = 0.005;
 gyro_cov = 0.01;
 
 %Accel (m/s^2) - estimated from datasheet & testing
@@ -36,17 +36,18 @@ p.mag_cov_mat = mag_proc_cov*eye(3);
 p.mag_bias_cov_mat = mag_bias_cov*eye(3);
 
 %Process noise covariance, statically defined for fixed timestep
-p.Q = zeros(15);
+p.Q = zeros(12);
 p.Q(1:3, 1:3) = p.gyro_cov_mat*dt + p.gyro_bias_cov_mat*(dt^3)/3.0;
-p.Q(1:3, 13:15) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
+p.Q(1:3, 10:12) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
 p.Q(7:9, 4:6) = p.accel_cov_mat*dt;
 p.Q(7:9, 7:9) = p.accel_cov_mat*(dt^2)/2.0;
 p.Q(4:6, 4:6) = p.accel_cov_mat*(dt^2)/2.0;
 p.Q(4:6, 7:9) = p.accel_cov_mat*(dt^3)/3.0;
-p.Q(10:12, 10:12) = p.gyro_cov_mat*dt * 150;
-p.Q(13:15, 1:3) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
-p.Q(13:15, 13:15) = p.gyro_bias_cov_mat*dt;
+p.Q(10:12, 1:3) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
+p.Q(10:12, 10:12) = p.gyro_bias_cov_mat*dt;
 
 % Hand-tuning factors
 p.Q(1, 1) = p.Q(1, 1) * 0.001;
 p.Q(2:3, 2:3) = p.Q(2:3, 2:3) * 0.025;
+p.Q(10:12, 10:12) = p.Q(10:12, 10:12) * 0.1;
+p.Q(10, 10) = p.Q(10, 10) * 0.01;
