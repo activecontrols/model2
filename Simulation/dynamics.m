@@ -28,9 +28,9 @@ function [lin, linDis] = dynamics(x, u, x_dot, constants)
     lin.A = double(subs(jacobian(x_dot, x), [x; u], [delx; delu])); % Jacobian of f with respect to x
     lin.B = double(subs(jacobian(x_dot, u), [x; u], [delx; delu])); % Jacobian of f with respect to u
 
-    % Numerical functions for Jacobians for Kalman Filter
-    % matlabFunction(jacobian(x_dot, x), 'File', './sim/lib/JacobianX.m', 'Vars', [{x}, {u}]);
-    % matlabFunction(jacobian(x_dot, u), 'File', './sim/lib/JacobianU.m', 'Vars', [{x}, {u}]);
+    % Numerical functions for Jacobians for Controls.
+    matlabFunction(jacobian(x_dot, x), 'File', './Controls/JacobianX.m', 'Vars', [{x}, {u}]);
+    matlabFunction(jacobian(x_dot, u), 'File', './Controls/JacobianU.m', 'Vars', [{x}, {u}]);
 
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion

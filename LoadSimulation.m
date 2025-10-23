@@ -16,9 +16,9 @@ clear SensorSimulation;
 addpath('.\Parameters');
 addpath('.\State Estimation\EMA Filter');
 addpath('.\State Estimation\Kalman Filter');
-addpath('.\SimFiles');
+addpath('.\Simulation');
 addpath('.\Trajectory');
-addpath('.\Actuators\');
+addpath('.\Actuators');
 constants;
 constantsASTRA = constructConstants;
 Simulink.Bus.createObject(constantsASTRA);
@@ -30,9 +30,9 @@ u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 
 %% Generate nominal dynamics function
 % Documentation for the math available on Confluence.
-[x, u2, x_dot, ~] = EoMGenerator(constantsASTRA, 2);
+[x, u2, x_dot] = EoMGenerator(constantsASTRA, 2);
 [linSys, disLinSys] = dynamics(x, u2, x_dot, constantsASTRA);
-matlabFunction(x_dot, 'File', './SimFiles/nominalDynamics.m', 'Vars', [{x}, {u2}]);
+matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u2}]);
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 
