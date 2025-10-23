@@ -37,7 +37,7 @@ function ref = ref_generator3(x, t)
     % velocities are below threshold, pick current position as hold and
     % activate HoldMode.
 
-    PosGain = [0.7; 0.7; 0.7];
+    PosGain = [0.8; 0.8; 0.7];
     isABORT = ABORT > 0 && t >= ABORT;
     if isABORT
         if HoldMode == 0
