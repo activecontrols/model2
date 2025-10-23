@@ -14,6 +14,7 @@ clear EstimateStateFCN;
 clear SensorSimulation;
 
 addpath('.\Parameters');
+addpath('.\State Estimation');
 addpath('.\State Estimation\EMA Filter');
 addpath('.\State Estimation\Kalman Filter');
 addpath('.\Simulation');
@@ -21,7 +22,6 @@ addpath('.\Trajectory');
 addpath('.\Actuators');
 constants;
 constantsASTRA = constructConstants;
-Simulink.Bus.createObject(constantsASTRA);
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 
 %%
@@ -35,6 +35,8 @@ u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u2}]);
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
+Simulink.Bus.createObject(constantsASTRA);
+Simulink.Bus.createObject(linSys);
 
 %% Generate LQR Controller for Simulation
 % Brysons Rule for Q and R.
