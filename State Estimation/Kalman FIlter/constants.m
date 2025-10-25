@@ -36,18 +36,24 @@ p.mag_cov_mat = mag_proc_cov*eye(3);
 p.mag_bias_cov_mat = mag_bias_cov*eye(3);
 
 %Process noise covariance, statically defined for fixed timestep
-p.Q = zeros(12);
+p.Q = zeros(15);
 p.Q(1:3, 1:3) = p.gyro_cov_mat*dt + p.gyro_bias_cov_mat*(dt^3)/3.0;
 p.Q(1:3, 10:12) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
-p.Q(7:9, 4:6) = p.accel_cov_mat*dt;
-p.Q(7:9, 7:9) = p.accel_cov_mat*(dt^2)/2.0;
-p.Q(4:6, 4:6) = p.accel_cov_mat*(dt^2)/2.0;
-p.Q(4:6, 7:9) = p.accel_cov_mat*(dt^3)/3.0;
+p.Q(7:9, 4:6) = p.accel_cov_mat*dt;     % + p.accel_bias_cov_mat*(dt^3)/3.0;
+p.Q(7:9, 7:9) = p.accel_cov_mat*(dt^2)/2.0;     % + p.accel_bias_cov_mat*(dt^4)/8.0 
+% p.Q(7:9, 13:15) = -p.accel_bias_cov_mat*(dt^2)/2.0;
+p.Q(4:6, 4:6) = p.accel_cov_mat*(dt^2)/2.0; % + p.accel_bias_cov_mat*(dt^4)/8.0;
+p.Q(4:6, 7:9) = p.accel_cov_mat*(dt^3)/3.0; % + p.accel_bias_cov_mat*(dt^5)/20.0;
+% p.Q(4:6, 13:15) = -p.accel_bias_cov_mat*(dt^3)/6.0;
 p.Q(10:12, 1:3) = -p.gyro_bias_cov_mat*(dt^2)/2.0;
 p.Q(10:12, 10:12) = p.gyro_bias_cov_mat*dt;
+% p.Q(13:15, 7:9) = -p.accel_bias_cov_mat*(dt^2)/2.0;
+% p.Q(13:15, 4:6) = -p.accel_bias_cov_mat*(dt^3)/6.0;
+% p.Q(13:15, 13:15) = p.accel_bias_cov_mat*dt;
 
 % Hand-tuning factors
 p.Q(1, 1) = p.Q(1, 1) * 0.001;
 p.Q(2:3, 2:3) = p.Q(2:3, 2:3) * 0.025;
 p.Q(10:12, 10:12) = p.Q(10:12, 10:12) * 0.1;
+p.Q(13:15, 13:15) = p.Q(13:15, 13:15) * 0.1;
 p.Q(10, 10) = p.Q(10, 10) * 0.01;
