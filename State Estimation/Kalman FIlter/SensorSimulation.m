@@ -35,8 +35,8 @@ end
 
 % Fake GPS measurements
 if t - lastGPS > 1 / GPS_Rate
-    gps_pos_covar = 0.01;
-    gps_vel_covar = 0.0025;
+    gps_pos_covar = 0.02;
+    gps_vel_covar = 0.15;
     z(10:12) = x(4:6) + gps_pos_covar * randn;
     z(13:15) = x(7:9) + gps_vel_covar * randn;
     lastGPS = t;

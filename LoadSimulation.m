@@ -20,6 +20,7 @@ addpath('.\State Estimation\Kalman Filter');
 addpath('.\Simulation');
 addpath('.\Trajectory');
 addpath('.\Actuators');
+addpath('.\Controls');
 constants;
 constantsASTRA = constructConstants;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
@@ -45,7 +46,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [2, 2, 0.08, 1000, 1000, 1000, 0.8, 0.8, 2, 2, 2, 10];
+max_x = [4, 4, 0.08, 1000, 1000, 1000, 0.8, 0.8, 2, 4, 4, 10];
 max_u = [pi/30, pi/30, 6, 0.5];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;

@@ -12,7 +12,7 @@ function Output = ExpMovingAvg(Input)
     end
 
     % Filter parameter
-    Alpha = 0.32;
+    Alpha = 0.28;
 
     % Filter difference equation
     Output = Alpha * Input + (1 - Alpha) * lastOut;
