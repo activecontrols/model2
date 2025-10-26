@@ -13,23 +13,24 @@ z(4:6) = z(4:6) - x_est(10:12);
 dx = zeros(15,1);
 q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
 q = [q0; x_est(1:3)];
+
+% Update the quaternion
 M = HamiltonianProd(q);
-
-
 qdot = 0.5 * M * [0; z(4:6)];
 q_123_dot = qdot(2:4); 
 x_est(1:3) = q(2:4) + q_123_dot * dT;
 
-% A-priori quaternion estimate and rotation matrix
+% A-priori quaternion estimate (renormalized) and rotation matrix
 q0 = sqrt(1 - x_est(1:3)'*x_est(1:3));
 q = [q0; x_est(1:3)];
 R_b2i = quatRot(q)';
 
 % Process Covariance Matrix
-persistent P lastZ 
+persistent P lastZ iter
 if isempty(P)
     P = 1 * eye(15);  
     lastZ = zeros(15,1);
+    iter = 1;
 end
 
 % State Transition Matrix
@@ -103,9 +104,10 @@ q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
 q = [q0; x_est(1:3)];
 dq = [1; dx(1:3) / 2];
 
-q_nom = quatmultiply(q', dq');
+q_nom = HamiltonianProd(q) * dq;
 q_nom = q_nom / norm(q_nom); 
 x_est(1:3) = q_nom(2:4)';
-x_est(4:15) = x_est(4:15) + dx(4:15);
+x_est(10:15) = x_est(10:15) + dx(10:15);
 lastZ = z;
+iter = iter + 1;
 end
