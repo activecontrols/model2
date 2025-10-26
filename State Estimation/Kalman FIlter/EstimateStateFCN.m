@@ -40,7 +40,7 @@ x_est(4:6) = x_est(4:6) + x_est(7:9) * dT;
 Phi = expm(F * dT);
 
 % Process Noise Covariance and a-priori propagation step
-Q = 0.4 * Q;
+Q = 0.5 * Q;
 P = Phi * P * Phi' + Q;
 
 if sum(lastZ(1:9) - z(1:9)) ~=0

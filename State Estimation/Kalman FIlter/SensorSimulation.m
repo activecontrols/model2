@@ -15,7 +15,7 @@ if isempty(lastGPS)
     lastIMU = 0;  % Update last IMU timestamp
     lastZ = [0; 0; 9.81; zeros(3,1); 1; 0; 0; zeros(6,1)];
     bias_vec_G = 0.05 * ones(3,1);
-    bias_vecA = 0; %0.02 * ones(3,1);
+    bias_vecA = -0.05 * ones(3,1);
 end
 
 % Extract Quaternion

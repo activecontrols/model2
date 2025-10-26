@@ -36,6 +36,7 @@ u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u2}]);
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
+constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 Simulink.Bus.createObject(constantsASTRA);
 Simulink.Bus.createObject(linSys);
 
