@@ -6,7 +6,7 @@ function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,covar_vec,dT,Q,GN
 % REMOVE RATES FROM STATE_VEC, AIM FOR FULL STATE SIM
 
 % Remove bias from gyro and accel
-% z(1:3) = z(1:3) - x_est(13:15);
+z(1:3) = z(1:3) - x_est(13:15);
 z(4:6) = z(4:6) - x_est(10:12);
 
 % Extract quaternion
@@ -51,7 +51,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     % Measurement matrix
     H = zeros(6,15);
     H(1:3, 1:3) = zetaCross(R_b2i' * [0; 0; constantsASTRA.g]);
-    % H(1:3, 13:15) = eye(3);
+    H(1:3, 13:15) = eye(3);
     H(4:6, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
 
     % Measurement Noise Covariance
@@ -106,6 +106,6 @@ dq = [1; dx(1:3) / 2];
 q_nom = quatmultiply(q', dq');
 q_nom = q_nom / norm(q_nom); 
 x_est(1:3) = q_nom(2:4)';
-x_est(4:12) = x_est(4:12) + dx(4:12);
+x_est(4:15) = x_est(4:15) + dx(4:15);
 lastZ = z;
 end
