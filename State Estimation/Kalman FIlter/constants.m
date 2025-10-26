@@ -15,7 +15,7 @@ gyro_cov = 0.01;
 %Accel (m/s^2) - estimated from datasheet & testing
 accel_obs_cov = .5;
 accel_proc_cov = 0.2; %How much we expect to deviate between updates
-accel_bias_cov = 0.1;
+accel_bias_cov = 0.05;
 
 %Mag (G/s) - estimated from datasheet & testing
 
@@ -69,4 +69,4 @@ p.Q(13:15, 13:15) = p.accel_bias_cov_mat*dt;
 % Hand-tuning factors
 p.Q(1:3, 1:3) = p.Q(1:3, 1:3) * 0.1;
 p.Q(10:12, 10:12) = p.Q(10:12, 10:12) * 0.1;
-p.Q(13:15, 13:15) = p.Q(13:15, 13:15) * 0.1;
+p.Q(13:15, 13:15) = p.Q(13:15, 13:15) * 0.05;
