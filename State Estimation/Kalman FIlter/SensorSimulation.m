@@ -22,7 +22,7 @@ end
 q0 = sqrt(abs(1 - x(1:3)'*x(1:3)));
 q = [q0; x(1:3)];
 R_b2i = quatRot(q)';
-bias_vec_G = bias_vec_G + 5e-5 * randn(3,1);
+%bias_vec_G = bias_vec_G + 5e-5 * randn(3,1);
 %bias_vecA = bias_vecA + 5e-5 * randn(3,1);
 
 % Fake IMU measurements

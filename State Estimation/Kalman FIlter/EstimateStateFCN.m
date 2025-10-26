@@ -1,10 +1,6 @@
 function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,covar_vec,dT,Q,GND)
 
 %% M-EKF Implementation
-% Propagate nominal state (DEAD-RECKONING PROPAGATION FOR Q, R, AND V)
-% Extract Quaternion
-% REMOVE RATES FROM STATE_VEC, AIM FOR FULL STATE SIM
-
 % Remove bias from gyro and accel
 z(1:3) = z(1:3) - x_est(13:15);
 z(4:6) = z(4:6) - x_est(10:12);
@@ -58,14 +54,14 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     % Measurement Noise Covariance
     w = 1 + 300 * (1 - GND);
     R = diag([(covar_vec(1) * w)^2 * ones(3,1); covar_vec(3)^2 * ones(3,1)]);
-    
+
     % A priori covariance and Kalman gain
     L = P * H' / (H * P * H' + R);
-    
+
     % Predicted measurements 
     z_hat = [R_b2i' * [0; 0; constantsASTRA.g];
              R_b2i' * constantsASTRA.mag];
-    
+
     % Kalman Gain Weighting based on predicted acceleration
     ILH = (eye(15) - L * H);
     P = ILH * P * ILH' + L * R * L';
