@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "matlab_funcs.hpp"
+#include "sample_data.hpp"
 
 void setup() {
   Serial.begin(115200);
