@@ -44,6 +44,8 @@ void setup() {
 
     bool new_imu_packet;     //NOT SURE HOW TO INITIALIZE THESE...
     bool new_gps_packet;
+    Matrix12_12 P = 1 * Matrix12_12::Identity();
+
 
     // Loop over all timesteps
     for (int idx = 0; idx < MAX_IDX; idx++) {
