@@ -58,7 +58,7 @@ void setup() {
         double dT_val = dT_arr[idx];
         double GND_val = GND_arr[idx];
 
-        Vector12 ret_state = EstimateStateFCN(x_est, constantsASTRA, z, covar_vec, dT_val, Q_matrix, GND_val, new_imu_packet, new_gps_packet);
+        Vector12 ret_state = EstimateStateFCN(x_est, constantsASTRA, z, covar_vec, dT_val, Q_matrix, GND_val, P, new_imu_packet, new_gps_packet);
 
         // comparison with expected output
         for (int i = 0; i < 12; i++) {
