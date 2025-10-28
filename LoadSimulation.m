@@ -12,6 +12,7 @@ clear ref_generator3;
 clear inputfcn3;
 clear EstimateStateFCN;
 clear SensorSimulation;
+clear GPS_Sim;
 
 addpath('.\Parameters');
 addpath('.\State Estimation');
@@ -40,8 +41,8 @@ matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
-Simulink.Bus.createObject(constantsASTRA);
-Simulink.Bus.createObject(linSys);
+ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
+% Simulink.Bus.createObject(linSys);
 
 %% Generate LQR Controller for Simulation
 % Brysons Rule for Q and R.

@@ -52,6 +52,6 @@ p2.Q(13:15, 13:15) = p2.accel_bias_cov_mat*dt;
 %Hand tuning
 p2.Q(3,3) = p2.Q(3,3) * 1; 
 
-busInfo = Simulink.Bus.createObject(p2);
-MyBus = eval(busInfo.busName);  % Grab the created bus
-assignin('base','MyBus',MyBus); % Store as 'MyBus' in workspace
+% busInfo = Simulink.Bus.createObject(p2);
+% MyBus = eval(busInfo.busName);  % Grab the created bus
+% assignin('base','MyBus',MyBus); % Store as 'MyBus' in workspace
