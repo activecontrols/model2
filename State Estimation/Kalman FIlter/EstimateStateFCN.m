@@ -38,7 +38,7 @@ x_est(8:10) = x_est(8:10) + x_est(5:7) * dT;
 Phi = expm(F * dT);
 
 % Process Noise Covariance and a-priori propagation step
-Q = 5 * constantsASTRA.Q;
+Q = 1 * constantsASTRA.Q;
 R = constantsASTRA.R;
 P = Phi * P * Phi' + Q;
 
@@ -51,7 +51,8 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     H(4:6, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
 
     % Measurement Noise Covariance
-    w = 1 + 1e4 * (1 - GND);
+    % w = 1 + 1e4 * (1 - GND);
+    w = 5000;
     R(1:3,1:3) = R(1:3,1:3) * w;
 
     % A priori covariance and Kalman gain
@@ -75,8 +76,8 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
     H(4:6, 4:6) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 1;
-    gps_vel_covar = 2;
+    gps_pos_covar = 3;
+    gps_vel_covar = 3;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain
