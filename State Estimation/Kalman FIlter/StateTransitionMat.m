@@ -5,6 +5,5 @@ function F = StateTransitionMat(accel, gyro, R_b2i)
 F = zeros(12);
 F(1:3,1:3) = -zetaCross(gyro);
 F(1:3,10:12) = -eye(3);
-F(4:6,1:3) = -R_b2i * zetaCross(accel);
-F(7:9,4:6) = eye(3);
-
+F(4:6,7:9) = eye(3);
+F(7:9,1:3) = -R_b2i * zetaCross(accel);

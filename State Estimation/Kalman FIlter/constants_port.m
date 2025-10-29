@@ -1,7 +1,7 @@
 
 %Taken from example implementation
 p2.est_cov = 1.0;
-gyro_bias_cov = 0.1;
+gyro_bias_cov = 0.035;
 accel_proc_cov = 0.05;
 accel_bias_cov = 0.02;
 mag_proc_cov = 0.1;
@@ -9,7 +9,7 @@ mag_bias_cov = 0.1;
 
 gyro_cov = 0.2;
 accel_obs_cov = 0.15;
-mag_obs_cov = 0.15;
+mag_obs_cov = 0.35;
 
 %Init constants
 dt = 0.005;
@@ -33,18 +33,34 @@ p2.G = zeros(15);
 p2.G(1:3,10:12) = -eye(3);
 p2.G(7:9,4:6) = eye(3);
 
+% p2.Q = zeros(12);
+% p2.Q(1:3, 1:3) = p2.gyro_cov_mat*dt + p2.gyro_bias_cov_mat*(dt^3)/3.0;
+% p2.Q(1:3, 10:12) = -p2.gyro_bias_cov_mat*(dt^2)/2.0;
+% p2.Q(4:6, 4:6) = p2.accel_cov_mat*dt;
+% p2.Q(4:6, 7:9) = p2.accel_cov_mat*(dt^2)/2.0;
+% p2.Q(7:9, 4:6) = p2.accel_cov_mat*(dt^2)/2.0;
+% p2.Q(7:9, 7:9) = p2.accel_cov_mat*(dt^3)/3.0;
+% p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0;
+% p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
+
+%Process noise covariance, statically defined for fixed timestep
 p2.Q = zeros(12);
 p2.Q(1:3, 1:3) = p2.gyro_cov_mat*dt + p2.gyro_bias_cov_mat*(dt^3)/3.0;
 p2.Q(1:3, 10:12) = -p2.gyro_bias_cov_mat*(dt^2)/2.0;
-p2.Q(4:6, 4:6) = p2.accel_cov_mat*dt;
-p2.Q(4:6, 7:9) = p2.accel_cov_mat*(dt^2)/2.0;
-p2.Q(7:9, 4:6) = p2.accel_cov_mat*(dt^2)/2.0;
-p2.Q(7:9, 7:9) = p2.accel_cov_mat*(dt^3)/3.0;
+p2.Q(7:9, 4:6) = p2.accel_cov_mat*dt;
+p2.Q(7:9, 7:9) = p2.accel_cov_mat*(dt^2)/2.0;
+p2.Q(4:6, 4:6) = p2.accel_cov_mat*(dt^2)/2.0;
+p2.Q(4:6, 7:9) = p2.accel_cov_mat*(dt^3)/3.0;
 p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0;
 p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
 
 %Hand tuning
-p2.Q(3,3) = p2.Q(3,3) * 0.25; 
+% p2.Q(3,3) = p2.Q(3,3) * 0.25; 
+% p2.Q(1:2, 1:2) = p2.Q(1:2, 1:2) * 0.025;
+% p2.Q(3, 3) = p2.Q(3, 3) * 0.001;
+% p2.Q(10:12, 10:12) = p2.Q(10:12, 10:12) * 0.1;
+p2.Q(12,12) = p2.Q(12,12) * 0.01;
+p2.Q(3, 3) = p2.Q(3, 3) * 0.01;
 
 % busInfo = Simulink.Bus.createObject(p2);
 % MyBus = eval(busInfo.busName);  % Grab the created bus
