@@ -30,7 +30,7 @@ constantsASTRA.R = p2.obsv_cov_mat;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 
 %%
-x0 = zeros(18,1);
+x0 = zeros(15,1);
 u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 
 %% Generate nominal dynamics function

@@ -1,13 +1,12 @@
 function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,dT,GND)
 
 %% M-EKF Implementation
-% Remove bias from gyro and accel, normalize mag
-z(1:3) = z(1:3) - x_est(14:16);
+% Remove bias from gyro, normalize mag
 z(4:6) = z(4:6) - x_est(11:13);
 z(7:9) = z(7:9) / norm(z(7:9));
 
 % Extract quaternion
-dx = zeros(15,1);
+dx = zeros(12,1);
 q = x_est(1:4);
 
 % Update the quaternion
@@ -22,7 +21,7 @@ R_b2i = quatRot(q)';
 % Process Covariance Matrix
 persistent P lastZ iter
 if isempty(P)
-    P = 1 * eye(15);  
+    P = 1 * eye(12);  
     lastZ = zeros(15,1);
     iter = 1;
 end
@@ -45,14 +44,12 @@ P = Phi * P * Phi' + Q;
 if sum(lastZ(1:9) - z(1:9)) ~=0
 
     % Measurement matrix
-    H = zeros(6,15);
+    H = zeros(6,12);
     H(1:3, 1:3) = zetaCross(R_b2i' * [0; 0; constantsASTRA.g]);
-    H(1:3, 13:15) = eye(3);
     H(4:6, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
 
     % Measurement Noise Covariance
     w = 1 + 1e4 * (1 - GND);
-    w = 5000;
     R(1:3,1:3) = R(1:3,1:3) * w;
 
     % A priori covariance and Kalman gain
@@ -63,7 +60,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
              R_b2i' * constantsASTRA.mag];
 
     % Kalman Gain 
-    ILH = (eye(15) - L * H);
+    ILH = (eye(12) - L * H);
     P = ILH * P * ILH' + L * R * L';
     residual = (z([1:3 7:9]) - z_hat);
     dx = dx + L * residual;
@@ -71,7 +68,7 @@ end
 if sum(lastZ(10:15) - z(10:15)) ~=0
 
     % Measurement matrix
-    H = zeros(6,15);
+    H = zeros(6,12);
     H(1:3, 7:9) = eye(3);
     H(4:6, 4:6) = eye(3);
 
@@ -88,7 +85,7 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
              x_est(5:7)];
 
     % Kalman Gain Weighting based on predicted acceleration
-    ILH = (eye(15) - L * H);
+    ILH = (eye(12) - L * H);
     P = ILH * P * ILH' + L * R * L';
     residual = (z(10:15) - z_hat);
     inn = L * residual;
@@ -101,7 +98,7 @@ dq = [1; dx(1:3) / 2];
 q_nom = HamiltonianProd(q) * dq;
 q_nom = q_nom / norm(q_nom'); 
 x_est(1:4) = q_nom;
-x_est(5:16) = x_est(5:16) + dx(4:15);
+x_est(5:13) = x_est(5:13) + dx(4:12);
 lastZ = z;
 iter = iter + 1;
 end

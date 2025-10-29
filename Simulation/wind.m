@@ -34,6 +34,6 @@ ang_accel_vect = MoI\transpose(torque_vect);
 
 
 % Turns the acceleration into a 15 state vector to add to xdot
-total_vect = [zeros(6,1); transpose(accel_vect); ang_accel_vect; zeros(6,1)];
+total_vect = [zeros(6,1); transpose(accel_vect); ang_accel_vect; zeros(3,1)];
 
 end

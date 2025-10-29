@@ -17,7 +17,7 @@
 function [lin, linDis] = dynamics(x, u, x_dot, constants)
     
     % Linearized around static vertical position
-    delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
+    delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
     delu = [0; 0; constants.m * constants.g; 0];
     
     % Linear relations
