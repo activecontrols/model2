@@ -8,7 +8,7 @@ function ref = ref_generator3(x, t)
     MaxAscentSpeed = 4;         %m/s
     MaxDescentSpeed = -4;       %m/s
     MaxLatSpeed = 2;            %m/s
-    HoldTimeReqs = [15, 5, 0.2, 0.2];    % Time needed to hold at each checkpoint
+    HoldTimeReqs = [5, 5, 0.2, 0.2];    % Time needed to hold at each checkpoint
 
     persistent timeFlag
     persistent i
@@ -37,7 +37,7 @@ function ref = ref_generator3(x, t)
     % velocities are below threshold, pick current position as hold and
     % activate HoldMode.
 
-    PosGain = [0.8; 0.8; 0.7];
+    PosGain = [0.7; 0.7; 0.7];
     isABORT = ABORT > 0 && t >= ABORT;
     if isABORT
         if HoldMode == 0
