@@ -23,6 +23,7 @@ addpath('.\Trajectory');
 addpath('.\Actuators');
 addpath('.\Controls');
 addpath('.\Sensors');
+addpath('.\Plotting');
 constants_port;
 constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
