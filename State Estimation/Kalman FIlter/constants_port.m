@@ -7,7 +7,7 @@ accel_bias_cov = 0.02;
 mag_proc_cov = 0.1;
 mag_bias_cov = 0.1;
 
-gyro_cov = 0.05;
+gyro_cov = 0.2;
 accel_obs_cov = 0.15;
 mag_obs_cov = 0.15;
 

@@ -37,7 +37,7 @@ x_est(8:10) = x_est(8:10) + x_est(5:7) * dT;
 Phi = expm(F * dT);
 
 % Process Noise Covariance and a-priori propagation step
-Q = 1 * constantsASTRA.Q;
+Q = 0.4 * constantsASTRA.Q;
 R = constantsASTRA.R;
 P = Phi * P * Phi' + Q;
 
