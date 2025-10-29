@@ -3,7 +3,7 @@ function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,dT,GND)
 %% M-EKF Implementation
 % Remove bias from gyro, normalize mag
 z(4:6) = z(4:6) - x_est(11:13);
-z(7:9) = z(7:9) / norm(z(7:9));
+% z(7:9) = z(7:9) / norm(z(7:9));
 
 % Extract quaternion
 dx = zeros(12,1);
@@ -65,32 +65,32 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     residual = (z([1:3 7:9]) - z_hat);
     dx = dx + L * residual;
 end
-if sum(lastZ(10:15) - z(10:15)) ~=0
-
-    % Measurement matrix
-    H = zeros(6,12);
-    H(1:3, 7:9) = eye(3);
-    H(4:6, 4:6) = eye(3);
-
-    % Measurement Covariance Matrix
-    gps_pos_covar = 3;
-    gps_vel_covar = 3;
-    R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
-
-    % A priori covariance and Kalman gain
-    L = P * H' / (H * P * H' + R);
-
-    % Predicted measurements 
-    z_hat = [x_est(8:10);
-             x_est(5:7)];
-
-    % Kalman Gain Weighting based on predicted acceleration
-    ILH = (eye(12) - L * H);
-    P = ILH * P * ILH' + L * R * L';
-    residual = (z(10:15) - z_hat);
-    inn = L * residual;
-    dx = dx + inn;
-end
+% if sum(lastZ(10:15) - z(10:15)) ~=0
+% 
+%     % Measurement matrix
+%     H = zeros(6,12);
+%     H(1:3, 7:9) = eye(3);
+%     H(4:6, 4:6) = eye(3);
+% 
+%     % Measurement Covariance Matrix
+%     gps_pos_covar = 3;
+%     gps_vel_covar = 3;
+%     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
+% 
+%     % A priori covariance and Kalman gain
+%     L = P * H' / (H * P * H' + R);
+% 
+%     % Predicted measurements 
+%     z_hat = [x_est(8:10);
+%              x_est(5:7)];
+% 
+%     % Kalman Gain Weighting based on predicted acceleration
+%     ILH = (eye(12) - L * H);
+%     P = ILH * P * ILH' + L * R * L';
+%     residual = (z(10:15) - z_hat);
+%     inn = L * residual;
+%     dx = dx + inn;
+% end
 
 % Update full-state estimates
 dq = [1; dx(1:3) / 2];
