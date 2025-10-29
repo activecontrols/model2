@@ -51,7 +51,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     H(4:6, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
 
     % Measurement Noise Covariance
-    % w = 1 + 1e4 * (1 - GND);
+    w = 1 + 1e4 * (1 - GND);
     w = 5000;
     R(1:3,1:3) = R(1:3,1:3) * w;
 
