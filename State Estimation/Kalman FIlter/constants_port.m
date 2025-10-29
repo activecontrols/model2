@@ -1,13 +1,13 @@
 
 %Taken from example implementation
 p2.est_cov = 1.0;
-gyro_bias_cov = 0.01;
+gyro_bias_cov = 0.005;
 accel_proc_cov = 0.05;
 accel_bias_cov = 0.02;
 mag_proc_cov = 0.1;
 mag_bias_cov = 0.1;
 
-gyro_cov = 0.05;
+gyro_cov = 0.01;
 accel_obs_cov = 0.15;
 mag_obs_cov = 0.1;
 
@@ -55,7 +55,7 @@ p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0;
 p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
 
 %Hand tuning
-p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.1;
+p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.005;
 p2.Q(10:12, 10:12) = p2.Q(10:12, 10:12) * 0.01;
 %p2.Q(12,12) = p2.Q(12,12) * 0.01;
 %p2.Q(3, 3) = p2.Q(3, 3) * 0.01;
