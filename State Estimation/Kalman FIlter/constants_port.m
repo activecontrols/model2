@@ -46,17 +46,17 @@ p2.G(7:9,4:6) = eye(3);
 %Process noise covariance, statically defined for fixed timestep
 p2.Q = zeros(12);
 p2.Q(1:3, 1:3) = p2.gyro_cov_mat*dt + p2.gyro_bias_cov_mat*(dt^3)/3.0;
-p2.Q(1:3, 10:12) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.1;
+p2.Q(1:3, 10:12) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.05;
 p2.Q(7:9, 4:6) = p2.accel_cov_mat*dt;
 p2.Q(7:9, 7:9) = p2.accel_cov_mat*(dt^2)/2.0;
 p2.Q(4:6, 4:6) = p2.accel_cov_mat*(dt^2)/2.0;
 p2.Q(4:6, 7:9) = p2.accel_cov_mat*(dt^3)/3.0;
-p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.1;
+p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.05;
 p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
 
 %Hand tuning
-p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.01;
-p2.Q(10:12, 10:12) = p2.Q(10:12, 10:12) * 0.01;
+p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.05;
+p2.Q(10:12, 10:12) = p2.Q(10:12, 10:12) * 0.05;
 %p2.Q(12,12) = p2.Q(12,12) * 0.01;
 %p2.Q(3, 3) = p2.Q(3, 3) * 0.01;
 
