@@ -1,5 +1,5 @@
 {
-  "x_est": "12x1",
+  "x_est": "13x1",
   "constantsASTRA": "struct",
   "z": "15x1",
   "covar_vec": "3x1",
@@ -25,5 +25,7 @@
   "residual": "6x1",
   "inn": "12x1",
   "dq": "4x1",
-  "q_nom": "4x1"
+  "q_nom": "4x1",
+  "gps_pos_covar": "1x1",
+  "gps_vel_covar": "1x1"
 }

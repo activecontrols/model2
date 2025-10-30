@@ -1,20 +1,7 @@
-function Output = ExpMovingAvg(Input)
+function Output = ExpMovingAvg(Input, Last, Alpha)
     % Basic Exponential Moving Average Implementation to pre-process
     % measurements.
 
-    % Initialize output array
-    Output = zeros(size(Input)); 
-
-    % Initialize peristent variable
-    persistent lastOut
-    if isempty(lastOut)
-        lastOut = Output;
-    end
-
-    % Filter parameter
-    Alpha = 0.28;
-
     % Filter difference equation
-    Output = Alpha * Input + (1 - Alpha) * lastOut;
-    lastOut = Output;
+    Output = Alpha * Input + (1 - Alpha) * Last;
 end

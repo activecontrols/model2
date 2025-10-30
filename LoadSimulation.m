@@ -12,6 +12,7 @@ clear ref_generator3;
 clear inputfcn3;
 clear EstimateStateFCN;
 clear SensorSimulation;
+clear GPS_Sim;
 
 addpath('.\Parameters');
 addpath('.\State Estimation');
@@ -22,6 +23,7 @@ addpath('.\Trajectory');
 addpath('.\Actuators');
 addpath('.\Controls');
 addpath('.\Sensors');
+addpath('.\Plotting');
 constants_port;
 constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
@@ -29,7 +31,7 @@ constantsASTRA.R = p2.obsv_cov_mat;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 
 %%
-x0 = zeros(18,1);
+x0 = zeros(15,1);
 u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 
 %% Generate nominal dynamics function
@@ -40,8 +42,8 @@ matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
-Simulink.Bus.createObject(constantsASTRA);
-Simulink.Bus.createObject(linSys);
+ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
+% Simulink.Bus.createObject(linSys);
 
 %% Generate LQR Controller for Simulation
 % Brysons Rule for Q and R.
@@ -50,7 +52,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [4, 4, 0.08, 1000, 1000, 1000, 0.8, 0.8, 2, 4, 4, 10];
+max_x = [2, 2, 0.08, 1000, 1000, 1000, 0.6, 0.6, 2, 0.75, 0.75, 10];
 max_u = [pi/30, pi/30, 6, 0.5];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;

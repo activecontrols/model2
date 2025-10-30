@@ -7,8 +7,8 @@ function ref = ref_generator3(x, t)
     x = x(1:12,1);
     MaxAscentSpeed = 4;         %m/s
     MaxDescentSpeed = -4;       %m/s
-    MaxLatSpeed = 2;            %m/s
-    HoldTimeReqs = [30, 5, 0.2, 0.2];    % Time needed to hold at each checkpoint
+    MaxLatSpeed = 3;            %m/s
+    HoldTimeReqs = [4, 1, 4, 4, 4, 3, 0.2];    % Time needed to hold at each checkpoint
 
     persistent timeFlag
     persistent i
@@ -23,9 +23,9 @@ function ref = ref_generator3(x, t)
         timeCounter = 0;
         prevTime = 0;
         HoldMode = 0;
-        TargetPos = [0, 5,   0, 0;
-                 0, 5,  0, 0;
-                 0, 50,  0, 0];
+        TargetPos = [0, 0, 2,  5,  5, 0, 0, 0;
+                     0, 0, 5,  5,  5, 0, 0, 0;
+                     0, 2, 5,  5,  8, 5, 0, 0];
     end
     dt = t - prevTime;
     prevTime = t;
@@ -37,7 +37,7 @@ function ref = ref_generator3(x, t)
     % velocities are below threshold, pick current position as hold and
     % activate HoldMode.
 
-    PosGain = [0.8; 0.8; 0.7];
+    PosGain = [0.55; 0.55; 0.75];
     isABORT = ABORT > 0 && t >= ABORT;
     if isABORT
         if HoldMode == 0
@@ -59,7 +59,7 @@ function ref = ref_generator3(x, t)
 
     ref = x - TargetVec;
 
-    if norm(ref(4:6,1)) < 3 && isABORT == 0 
+    if norm(ref(4:6,1)) < sqrt(3) && isABORT == 0 
         timeCounter = timeCounter + dt;
     end
     if timeCounter > HoldTimeReqs(i) && i < size(HoldTimeReqs,2)
