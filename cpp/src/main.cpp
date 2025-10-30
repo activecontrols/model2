@@ -26,6 +26,7 @@ void setup() {
 
   long long start_t = millis();
   Matrix12_12 P = 1 * Matrix12_12::Identity();
+  Vector15 lastZ = Vector15::Zero();
 
   // Loop over all timesteps
   for (int idx = 0; idx < MAX_IDX; idx++) {
@@ -35,10 +36,11 @@ void setup() {
     double dT_val = dT_arr[idx];
     double GND_val = GND_arr[idx];
 
-    bool new_imu_packet = false; // TODO - fill these out
-    bool new_gps_packet = false;
+    bool new_imu_packet = (lastZ.segment<9>(0) - z.segment<9>(0)).sum() != 0;
+    bool new_gps_packet = (lastZ.segment<6>(9) - z.segment<6>(9)).sum() != 0;
 
     Vector13 ret_state = EstimateStateFCN(x_est, constantsASTRA, z, dT_val, GND_val, P, new_imu_packet, new_gps_packet);
+    lastZ = z;
 
     // comparison with expected output
     for (int i = 0; i < 13; i++) {
