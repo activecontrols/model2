@@ -1,9 +1,9 @@
 function xdot = ActuatorDynamics(x, u)
     xdot = zeros(6, 1);
     % Simple actuator model
-    % x(1) Angle 1
+    % x(1) Theta 
     % x(2) Rate 1
-    % x(3) Angle 2
+    % x(3) Phi 2
     % x(4) Rate 2
     % x(5) Thrust
     % x(6) Roll
@@ -11,8 +11,20 @@ function xdot = ActuatorDynamics(x, u)
     % Assume identical servos for gimbal
     a = 700;
     b = 40;
-    xdot(1:4) = [x(2); a*(u(1) - x(1)) - b*x(2); 
-            x(4); a*(u(2) - x(3)) - b*x(4)];
+
+    k1 = 1;
+    k2 = 1;
+
+    theta_error = k1 * (1 - cos(x(1)));
+    phi_error = k2 * (1 - cos(x(3)));
+
+    x(3) = x(3) - theta_error;
+    x(1) = x(1) - phi_error;
+
+    xdot(1:4) = [x(2);
+                a*(u(1) - x(1)) - b*x(2); 
+                x(4);
+                a*(u(2) - x(3)) - b*x(4)];
 
     % Assume first order response for thrust
     tau = 0.15;

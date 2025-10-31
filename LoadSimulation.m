@@ -7,6 +7,8 @@
 
 %% Initialize parameters and clear functions
 % Initial conditions for state
+% YOU CHANGED THE ACTUATORS DUMMY, IF IT DOESNT WORK IT'S CUZ OF THAT DONT
+% GO INSANE THX -Pablo
 clear;
 clear ref_generator3;
 clear inputfcn3;
