@@ -23,8 +23,8 @@ phi_actual = zeros(1, res);
 
 % Simulation loop
 for i = 2:1:res
-    theta_target(i) = norm(1) * cos(tsim(i) * 1);
-    phi_target(i) = norm(2) * sin(tsim(i) * 1);
+    theta_target(i) = norm(1); %* cos(tsim(i) * 1);
+    phi_target(i) = norm(2) * sin(tsim(i) * 1) * 0;
     utrg(1:2, i) = [theta_target(i); phi_target(i)];
     
     xsim(:,i) = xsim(:,i-1) + ActuatorDynamics(xsim(:,i-1), utrg(:, i)) * dt;

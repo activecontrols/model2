@@ -54,7 +54,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [6, 6, 0.08, 1000, 1000, 1000, 0.55, 0.55, 2, 0.6, 0.6, 10];
+max_x = [6, 6, 0.08, 1000, 1000, 1000, 0.55, 0.55, 2, 0.6, 0.6, 2];
 max_u = [pi/45, pi/45, 6, 0.5];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;

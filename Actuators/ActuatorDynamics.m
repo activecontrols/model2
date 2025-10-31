@@ -12,8 +12,8 @@ function xdot = ActuatorDynamics(x, u)
     a = 700;
     b = 40;
 
-    k1 = 1;
-    k2 = 1;
+    k1 = 0.35;
+    k2 = 0.35;
 
     theta_error = k1 * (1 - cos(x(1)));
     phi_error = k2 * (1 - cos(x(3)));
