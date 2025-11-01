@@ -73,6 +73,12 @@ void setup() {
   Serial.print("Finished astra sim in ");
   Serial.print(end_t - start_t);
   Serial.println(" ms.");
+  Serial.println(HAL_RCC_GetHCLKFreq()); // Expect ~480000000 Hz
+  if (HAL_GetCurrentCPUID() == CM7_CPUID) {
+    Serial.println("Running on M7 core");
+  } else {
+    Serial.println("Running on M4 core");
+  }
 }
 
 void loop() {
