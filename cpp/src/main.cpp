@@ -3,6 +3,7 @@
 #include "sample_data.hpp" // contains x_est_arr, z_arr, covar_arr, dT_arr, GND_arr, exp_x_est_arr
 
 void setup() {
+  delay(5000);
   Serial.begin(115200);
   Serial.println("Connected - starting astra sim");
 
@@ -21,6 +22,7 @@ void setup() {
       -3.125000000000001e-09, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.25e-06, 0.0, 0.0,
       0.0, -3.125000000000001e-09, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.25e-06, 0.0,
       0.0, 0.0, -3.125000000000001e-09, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.25e-06;
+  constantsASTRA.R = Matrix6_6::Zero();
   constantsASTRA.R.block<3, 3>(0, 0) = Matrix3_3::Identity() * 0.1500;
   constantsASTRA.R.block<3, 3>(3, 3) = Matrix3_3::Identity() * 0.1000;
 
@@ -30,14 +32,23 @@ void setup() {
 
   // Loop over all timesteps
   for (int idx = 0; idx < MAX_IDX; idx++) {
+
     // Construct Eigen vectors directly from arrays
     Vector13 x_est(x_est_arr[idx]);
     Vector15 z(z_arr[idx]);
-    double dT_val = dT_arr[idx];
+    double dT_val = 0.001;
     double GND_val = GND_arr[idx];
 
-    bool new_imu_packet = (lastZ.segment<9>(0) - z.segment<9>(0)).sum() != 0;
-    bool new_gps_packet = (lastZ.segment<6>(9) - z.segment<6>(9)).sum() != 0;
+    Vector15 temp_z = z;
+    temp_z.segment<3>(3) = temp_z.segment<3>(3) - x_est.segment<3>(10);
+    bool new_imu_packet = (lastZ.segment<9>(0) - temp_z.segment<9>(0)).sum() != 0;
+    bool new_gps_packet = (lastZ.segment<6>(9) - temp_z.segment<6>(9)).sum() != 0;
+
+    Serial.print(idx);
+    Serial.print(" imu: ");
+    Serial.print(new_imu_packet);
+    Serial.print(" gps: ");
+    Serial.println(new_gps_packet);
 
     Vector13 ret_state = EstimateStateFCN(x_est, constantsASTRA, z, dT_val, GND_val, P, new_imu_packet, new_gps_packet);
     lastZ = z;
@@ -65,4 +76,8 @@ void setup() {
 }
 
 void loop() {
+  for (;;) {
+    Serial.println("Done!");
+    delay(100000);
+  }
 }

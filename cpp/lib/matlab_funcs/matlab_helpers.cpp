@@ -35,7 +35,7 @@ Matrix12_12 StateTransitionMat(Vector3 accel, Vector3 gyro, Matrix3_3 R_b2i) {
   return F;
 }
 
-Matrix12_12 matrixExpPade6(Matrix12_12 A) { // TODO - does this code even work?
+Matrix12_12 matrixExpPade6(Matrix12_12 A) {
   using Scalar = typename Matrix12_12::Scalar;
   const Scalar b[] = {1.0, 0.5, 0.12, 0.0183333333333,
                       0.00199275362319, 0.000160590438368, 0.00000939085239292};
@@ -54,5 +54,5 @@ Matrix12_12 matrixExpPade6(Matrix12_12 A) { // TODO - does this code even work?
   Matrix12_12 numer = V + U;
   Matrix12_12 denom = V - U;
 
-  return (denom.inverse() * numer).transpose(); // NOTE RJN - had to add this transpose - don't know why
+  return denom.inverse() * numer;
 }

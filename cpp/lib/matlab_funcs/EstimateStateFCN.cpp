@@ -91,7 +91,7 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
 
     // Predicted measurements
     Vector6 z_hat;
-    z_hat << x_est.segment<3>(3), x_est.segment<3>(6);
+    z_hat << x_est.segment<3>(4), x_est.segment<3>(7);
 
     // Kalman Gain Weighting based on predicted acceleration
     Matrix12_12 ILH = (Matrix12_12::Identity() - L * H);
