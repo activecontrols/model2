@@ -3,6 +3,9 @@
 #include "sample_data.hpp" // contains x_est_arr, z_arr, covar_arr, dT_arr, GND_arr, exp_x_est_arr
 
 void setup() {
+  extern uint8_t SetSysClock_PLL_HSE(uint8_t bypass, bool lowspeed);
+  SetSysClock_PLL_HSE(1, (bool)false);
+
   delay(5000);
   Serial.begin(115200);
   Serial.println("Connected - starting astra sim");
@@ -36,8 +39,8 @@ void setup() {
     // Construct Eigen vectors directly from arrays
     Vector13 x_est(x_est_arr[idx]);
     Vector15 z(z_arr[idx]);
-    double dT_val = 0.001;
-    double GND_val = GND_arr[idx];
+    float dT_val = 0.001;
+    float GND_val = GND_arr[idx];
 
     Vector15 temp_z = z;
     temp_z.segment<3>(3) = temp_z.segment<3>(3) - x_est.segment<3>(10);
@@ -73,6 +76,7 @@ void setup() {
   Serial.print("Finished astra sim in ");
   Serial.print(end_t - start_t);
   Serial.println(" ms.");
+  Serial.println(SystemCoreClock);
   Serial.println(HAL_RCC_GetHCLKFreq()); // Expect ~480000000 Hz
   if (HAL_GetCurrentCPUID() == CM7_CPUID) {
     Serial.println("Running on M7 core");

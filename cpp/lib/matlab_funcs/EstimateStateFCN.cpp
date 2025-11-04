@@ -1,6 +1,6 @@
 #include "matlab_funcs.hpp"
 
-Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vector15 z, double dT, double GND, Matrix12_12 &P, bool new_imu_packet, bool new_gps_packet) {
+Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vector15 z, float dT, float GND, Matrix12_12 &P, bool new_imu_packet, bool new_gps_packet) {
 
   //// M-EKF Implementation
   // Remove bias from gyro
@@ -53,7 +53,7 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     H.block<3, 3>(3, 0) = zetaCross(R_b2i.transpose() * constantsASTRA.mag);
 
     // Measurement Noise Covariance
-    double w = 1 + 1e5 * (1 - GND);
+    float w = 1 + 1e5 * (1 - GND);
     R.block<3, 3>(0, 0) = R.block<3, 3>(0, 0) * w;
 
     // A priori covariance and Kalman gain
@@ -80,8 +80,8 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     H.block<3, 3>(3, 6) = Matrix3_3::Identity();
 
     // Measurement Covariance Matrix
-    double gps_pos_covar = 0.2;
-    double gps_vel_covar = 1.25;
+    float gps_pos_covar = 0.2;
+    float gps_vel_covar = 1.25;
     Vector6 R_vec;
     R_vec << gps_pos_covar * gps_pos_covar * Vector3::Ones(), gps_vel_covar * gps_vel_covar * Vector3::Ones();
     Matrix6_6 R = R_vec.asDiagonal();
