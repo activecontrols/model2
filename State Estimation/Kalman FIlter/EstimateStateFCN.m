@@ -106,5 +106,6 @@ q_nom = quatmultiply(q', dq');
 q_nom = q_nom / norm(q_nom); 
 x_est(1:4) = q_nom';
 x_est(5:13) = x_est(5:13) + dx(4:12);
+x_est(5:10) = x_est(5:10) * (1 - GND);
 lastZ = z;
 end
