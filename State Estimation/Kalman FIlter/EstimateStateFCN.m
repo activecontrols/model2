@@ -1,6 +1,10 @@
 function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,dT,GND)
 
 %% M-EKF Implementation
+% Filter mode (1 for full INS when GPS signals available, 0 for pure
+% integration after launch when no GPS available | limit flight time)
+FILTER_MODE = 1;
+
 % Remove bias from gyro
 z(4:6) = z(4:6) - x_est(11:13);
 
@@ -45,7 +49,7 @@ R = constantsASTRA.R;
 Q = 0.4 * Q;
 P = Phi * P * Phi' + Q;
 
-if sum(lastZ(1:9) - z(1:9)) ~=0
+if sum(lastZ(1:9) - z(1:9)) ~=0 || (FILTER_MODE == 1 || GND == 1)
 
     % Measurement matrix
     H = zeros(6,12);
@@ -69,7 +73,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0
     residual = (z([1:3 7:9]) - z_hat);
     dx = dx + L * residual;
 end
-if sum(lastZ(10:15) - z(10:15)) ~=0
+if sum(lastZ(10:15) - z(10:15)) ~=0 || (FILTER_MODE == 1 || GND == 1)
 
     % Measurement matrix
     H = zeros(6,12);
@@ -95,17 +99,18 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
     inn = L * residual;
     dx = dx + inn;
 end
-
-% Update full-state estimates
-% q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
-% q = [q0; x_est(1:3)];
-dq = [1; dx(1:3) / 2];
-dq = dq / norm(dq);
-
-q_nom = quatmultiply(q', dq');
-q_nom = q_nom / norm(q_nom); 
-x_est(1:4) = q_nom';
-x_est(5:13) = x_est(5:13) + dx(4:12);
+if FILTER_MODE == 1 || GND == 1
+    % Update full-state estimates
+    % q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
+    % q = [q0; x_est(1:3)];
+    dq = [1; dx(1:3) / 2];
+    dq = dq / norm(dq);
+    
+    q_nom = quatmultiply(q', dq');
+    q_nom = q_nom / norm(q_nom); 
+    x_est(1:4) = q_nom';
+    x_est(5:13) = x_est(5:13) + dx(4:12);
+end
 x_est(5:10) = x_est(5:10) * (1 - GND);
 lastZ = z;
 end
