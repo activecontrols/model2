@@ -6,7 +6,7 @@ function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,dT,GND)
 FILTER_MODE = 1;
 
 % Remove bias from gyro
-z(4:6) = z(4:6) - x_est(11:13);
+z(4:6) = z(4:6) - x_est(11:13) * (FILTER_MODE == 1 || GND == 1);
 
 % Extract quaternion
 dx = zeros(12,1);
