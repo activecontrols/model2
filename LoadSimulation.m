@@ -54,7 +54,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [6, 6, 0.08, 1000, 1000, 1000, 0.55, 0.55, 2, 0.6, 0.6, 2];
+max_x = [5, 5, 0.08, 1000, 1000, 1000, 0.55, 0.55, 2, 1, 1, 2];
 max_u = [pi/45, pi/45, 6, 0.5];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
@@ -63,7 +63,7 @@ R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
 [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
 %% Checkpoints and HoldTimes for Trajectory
-Checkpoints = [0, 0, 0,  5,  5, 0, 0, 0;
-               0, 0, 5,  5,  0, 0, 0, 0;
-               0, 5, 5,  5,  5, 5, 0, 0];
+Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
+               0, 0, 3,  3,  0, 0, 0, 0;
+               0, 3, 3,  3,  3, 3, 0, 0];
 HoldTimeReqs = [4, 3, 3, 3, 3, 3, 0, 0.2];

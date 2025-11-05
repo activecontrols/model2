@@ -10,17 +10,12 @@ z(4:6) = z(4:6) - x_est(11:13);
 
 % Extract quaternion
 dx = zeros(12,1);
-%q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
-%q = [q0; x_est(1:3)];
 q = x_est(1:4);
-qdot = 0.5 * HamiltonianProd(q) * [0; z(4:6)];
-%q_123_dot = qdot(2:4); 
+qdot = 0.5 * HamiltonianProd(q) * [0; z(4:6)]; 
 x_est(1:4) = q + qdot * dT;
 q = x_est(1:4);
 
 % A-priori quaternion estimate and rotation matrix
-%q0 = sqrt(1 - x_est(1:3)'*x_est(1:3));
-%q = [q0; x_est(1:3)];
 q = q / norm(q);
 R_b2i = quatRot(q)';
 
@@ -49,7 +44,7 @@ R = constantsASTRA.R;
 Q = 0.4 * Q;
 P = Phi * P * Phi' + Q;
 
-if sum(lastZ(1:9) - z(1:9)) ~=0 || (FILTER_MODE == 1 || GND == 1)
+if sum(lastZ(1:9) - z(1:9)) ~=0 && (FILTER_MODE == 1 || GND == 1)
 
     % Measurement matrix
     H = zeros(6,12);
@@ -73,7 +68,7 @@ if sum(lastZ(1:9) - z(1:9)) ~=0 || (FILTER_MODE == 1 || GND == 1)
     residual = (z([1:3 7:9]) - z_hat);
     dx = dx + L * residual;
 end
-if sum(lastZ(10:15) - z(10:15)) ~=0 || (FILTER_MODE == 1 || GND == 1)
+if sum(lastZ(10:15) - z(10:15)) ~=0 && (FILTER_MODE == 1 || GND == 1)
 
     % Measurement matrix
     H = zeros(6,12);
@@ -81,8 +76,8 @@ if sum(lastZ(10:15) - z(10:15)) ~=0 || (FILTER_MODE == 1 || GND == 1)
     H(4:6, 7:9) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 4;
-    gps_vel_covar = 3;
+    gps_pos_covar = 5;
+    gps_vel_covar = 5;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain
@@ -101,8 +96,6 @@ if sum(lastZ(10:15) - z(10:15)) ~=0 || (FILTER_MODE == 1 || GND == 1)
 end
 if FILTER_MODE == 1 || GND == 1
     % Update full-state estimates
-    % q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
-    % q = [q0; x_est(1:3)];
     dq = [1; dx(1:3) / 2];
     dq = dq / norm(dq);
     
