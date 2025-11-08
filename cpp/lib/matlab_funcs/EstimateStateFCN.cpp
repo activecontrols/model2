@@ -113,4 +113,5 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     x_est.segment<9>(4) = x_est.segment<9>(4) + dx.segment<9>(3);
   }
   x_est.segment<6>(4) = x_est.segment<6>(4) * (1 - GND);
+  return x_est;
 }
