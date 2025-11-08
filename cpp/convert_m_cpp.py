@@ -8,7 +8,7 @@ has_been_init_bk = set()
 
 def get_cpp_datatype(shortcode: str):
     if shortcode == "1x1":
-        return "double"
+        return "float"
     if shortcode == "struct":
         return "struct"
     if shortcode.split('x')[1] == "1":
