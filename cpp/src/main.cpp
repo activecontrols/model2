@@ -63,7 +63,7 @@ void setup() {
     raw_co = output_clamp(raw_co);
 
     lastZ = z;
-
+    lastEMA = EMA_G;
 
     // still need to convert raw_co to the proper controller output??
       
