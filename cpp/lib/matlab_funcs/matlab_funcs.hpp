@@ -8,6 +8,7 @@ using Vector13 = Eigen::Matrix<float, 13, 1>;
 using Vector15 = Eigen::Matrix<float, 15, 1>;
 using Matrix3_3 = Eigen::Matrix<float, 3, 3>;
 using Matrix4_4 = Eigen::Matrix<float, 4, 4>;
+using Matrix4_12 = Eigen::Matrix<float, 4, 12>;
 using Matrix6_6 = Eigen::Matrix<float, 6, 6>;
 using Matrix6_12 = Eigen::Matrix<float, 6, 12>;
 using Matrix12_6 = Eigen::Matrix<float, 12, 6>;
@@ -19,7 +20,6 @@ typedef struct {
   Matrix12_12 Q;
   Matrix6_6 R;
 } t_constantsASTRA;
-
 
 Matrix3_3 zetaCross(Vector3 zeta);
 Matrix3_3 quatRot(Vector4 q);
