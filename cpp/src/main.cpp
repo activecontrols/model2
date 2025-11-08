@@ -66,10 +66,11 @@ void setup() {
     lastEMA = EMA_G;
 
     // still need to convert raw_co to the proper controller output??
+    Vector4 controller_out = raw_co;  
       
     // comparison with expected output
     for (int i = 0; i < 4; i++) {
-      if (abs(controller_out(i) - exp_output_arr[idx][i]) > 0.0002) {     //NOTE THAT ARRAY NAMES MIGHT NEED TO BE CHANGED
+      if (abs(controller_out(i) - exp_output_arr[idx][i]) > 0.0002) {     //NOTE THAT ARRAY NAME FOR EXPECTED OUTPUT MIGHT NEED TO BE CHANGED
         Serial.print("Mismatch at idx: ");
         Serial.print(idx);
         Serial.print(" element: ");
@@ -77,7 +78,7 @@ void setup() {
         Serial.print(" expected controller output: ");
         Serial.print(exp_output_arr[idx][i], 6);              // ARRAY NAME NEEDS TO BE UPDATED TO ALIGN WITH MATLAB EXPORT
         Serial.print(" got: ");
-        Serial.println(controller_out(i), 6);              // ARRAY NAME NEEDS TO BE UPDATED TO ALIGN WITH WHATEVER IS DONE TO raw_co
+        Serial.println(controller_out(i), 6);
       }
     }
   }
