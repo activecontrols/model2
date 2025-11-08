@@ -63,11 +63,13 @@ void setup() {
     raw_co = output_clamp(raw_co);
 
     lastZ = z;
-    lastEMA = EMA_G;
 
-    // still need to convert raw_co to the proper controller output??
-    Vector4 controller_out = raw_co;  
-      
+    Vector4 controller_out;
+    controller_out(0) = raw_co(0) * 180.0 / M_PI;  // gimbal_yaw_deg
+    controller_out(1) = raw_co(1) * 180.0 / M_PI;  // gimbal_pitch_deg
+    controller_out(2) = raw_co(2);                 // thrust_N
+    controller_out(3) = raw_co(3);                 // roll_N
+          
     // comparison with expected output
     for (int i = 0; i < 4; i++) {
       if (abs(controller_out(i) - exp_output_arr[idx][i]) > 0.0002) {     //NOTE THAT ARRAY NAME FOR EXPECTED OUTPUT MIGHT NEED TO BE CHANGED
