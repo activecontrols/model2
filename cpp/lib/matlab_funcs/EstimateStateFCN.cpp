@@ -1,26 +1,26 @@
 #include "matlab_funcs.hpp"
 
-Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vector15 z, float dT, float GND, Matrix12_12 &P, bool new_imu_packet, bool new_gps_packet) {
+#define FILTER_MODE 1
+#define RTK 1
 
+Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vector15 z, float dT, float GND, Matrix12_12 &P, bool new_imu_packet, bool new_gps_packet) {
   //// M-EKF Implementation
+  // Filter mode (1 for full INS when GPS signals available, 0 for pure
+  // integration after launch when no GPS available | limit flight time)
+
   // Remove bias from gyro
-  z.segment<3>(3) = z.segment<3>(3) - x_est.segment<3>(10);
+  z.segment<3>(3) = z.segment<3>(3) - x_est.segment<3>(10) * (FILTER_MODE == 1 || GND == 1);
 
   // Extract quaternion
   Vector12 dx = Vector12::Zero();
-  // q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
-  // q = [q0; x_est(1:3)];
   Vector4 q = x_est.segment<4>(0);
   Vector4 t_zseg;
   t_zseg << 0, z.segment<3>(3);
   Vector4 qdot = 0.5 * HamiltonianProd(q) * t_zseg;
-  // q_123_dot = qdot(2:4);
   x_est.segment<4>(0) = q + qdot * dT;
   q = x_est.segment<4>(0);
 
   // A-priori quaternion estimate and rotation matrix
-  // q0 = sqrt(1 - x_est(1:3)'*x_est(1:3));
-  // q = [q0; x_est(1:3)];
   q.normalize();
   Matrix3_3 R_b2i = quatRot(q).transpose();
 
@@ -45,7 +45,7 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
   Q = 0.4 * Q;
   P = Phi * P * Phi.transpose() + Q;
 
-  if (new_imu_packet) {
+  if (new_imu_packet && (FILTER_MODE == 1 || GND == 1)) {
 
     // Measurement matrix
     Matrix6_12 H = Matrix6_12::Zero();
@@ -72,7 +72,7 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     Vector6 residual = (z_slice - z_hat);
     dx = dx + L * residual;
   }
-  if (new_gps_packet) {
+  if (new_gps_packet && (FILTER_MODE == 1 || GND == 1)) {
 
     // Measurement matrix
     Matrix6_12 H = Matrix6_12::Zero();
@@ -80,8 +80,8 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     H.block<3, 3>(3, 6) = Matrix3_3::Identity();
 
     // Measurement Covariance Matrix
-    float gps_pos_covar = 0.2;
-    float gps_vel_covar = 1.25;
+    float gps_pos_covar = 1 * RTK + 5 * (1 - RTK);
+    float gps_vel_covar = gps_pos_covar;
     Vector6 R_vec;
     R_vec << gps_pos_covar * gps_pos_covar * Vector3::Ones(), gps_vel_covar * gps_vel_covar * Vector3::Ones();
     Matrix6_6 R = R_vec.asDiagonal();
@@ -101,17 +101,17 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
     dx = dx + inn;
   }
 
-  // Update full-state estimates
-  // q0 = sqrt(abs(1 - x_est(1:3)'*x_est(1:3)));
-  // q = [q0; x_est(1:3)];
-  Vector4 dq;
-  dq << 1, dx.segment<3>(0) / 2;
-  dq.normalize();
+  if (FILTER_MODE == 1 || GND == 1) {
+    // Update full-state estimates
+    Vector4 dq;
+    dq << 1, dx.segment<3>(0) / 2;
+    dq.normalize();
 
-  Vector4 q_nom = HamiltonianProd(q) * dq;
-  q_nom.normalize();
-  x_est.segment<4>(0) = q_nom;
-  x_est.segment<9>(4) = x_est.segment<9>(4) + dx.segment<9>(3);
-
+    Vector4 q_nom = HamiltonianProd(q) * dq;
+    q_nom.normalize();
+    x_est.segment<4>(0) = q_nom;
+    x_est.segment<9>(4) = x_est.segment<9>(4) + dx.segment<9>(3);
+  }
+  x_est.segment<6>(4) = x_est.segment<6>(4) * (1 - GND);
   return x_est;
 }
