@@ -17,9 +17,10 @@ clear SensorSimulation;
 clear GPS_Sim;
 
 addpath('.\Parameters');
-addpath('.\State Estimation');
-addpath('.\State Estimation\EMA Filter');
-addpath('.\State Estimation\Kalman Filter');
+addpath('.\Filtering');
+addpath('.\Filtering\EMA Filter');
+addpath('.\Filtering\Kalman Filter');
+addpath('.\Filtering\ANF');
 addpath('.\Simulation');
 addpath('.\Trajectory');
 addpath('.\Actuators');
