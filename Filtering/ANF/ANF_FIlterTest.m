@@ -48,7 +48,9 @@ NotchD = convTF(NotchD_Array);
 % Create a 2nd order LPF for comparaison
 s = tf('s');
 wc = 0.8 * f0 * 2 * pi;
+phi = (1 + sqrt(5))/ 2;
 LPF = wc^2 / (s^2 + sqrt(2) * wc * s + wc^2);
+% LPF = wc^2 / ((s + 1)*(s^2 + phi^-1 * s + 1)*(s^2 + phi*s + 1));
 
 % Frequency range in Hz
 f = linspace(0, 500, 2000);    % Linear spacing 0–500 Hz
