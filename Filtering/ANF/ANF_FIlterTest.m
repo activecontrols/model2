@@ -31,8 +31,8 @@ end
 clear;
 
 % Create Notch Filters
-f0 = 130;
-width = 6;
+f0 = 50;
+width = 10;
 fs = 1000;
 n = 3;
 NotchC_Array = zeros(n,1) * tf('s');
