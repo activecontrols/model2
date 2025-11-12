@@ -49,21 +49,14 @@ for k = 1:numFiles
     fs = 1 / dt;
 
     % Perform Fourier Transform on the data
-        %PSD Plots
-        % fourier(k).filename = allData(k).filename;
-        % fourier_k = pwelch(allData(k).data(:,2:end));
-        % fourier(k).data = abs(fourier_k);
-        % fourier(k).freq = 1:1:size(fourier_k,1);
+    fourier_k = fft(allData(k).data(:,2:end));
+    L = size(allData(k).data, 1);
 
-        %FFT Plots
-        fourier_k = fft(allData(k).data(:,2:end));
-        L = size(allData(k).data, 1);
-
-        % Post-processing
-        fourier_k = abs(fourier_k / L);
-        fourier(k).data = fourier_k(1:floor(L/2) + 1,:);
-        fourier(k).data(2:end-1,:) = 2 * fourier(k).data(2:end-1,:);
-        fourier(k).freq = fs * (0:floor(L/2)) / L;
+    % Post-processing
+    fourier_k = abs(fourier_k / L);
+    fourier(k).data = fourier_k(1:floor(L/2) + 1,:);
+    fourier(k).data(2:end-1,:) = 2 * fourier(k).data(2:end-1,:);
+    fourier(k).freq = fs * (0:floor(L/2)) / L;
 end
 
 %% 3D Surface Plot (Binned by Integer Thrust, Gaps as Zeros)
