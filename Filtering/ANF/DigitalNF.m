@@ -58,8 +58,8 @@ if ~GND
         G = G_num / G_den;
 
         % Filter Out
-        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
-        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        NUM = G * (IN - 2*cos(w0)*X2(:, 1) + X2(:, 2));
+        DEN = 2*r*cos(w0)*Y2(:,1) - r^2*Y2(:,2);
         OUT = NUM + DEN;
     
         % Update memory for second Notch
@@ -79,8 +79,8 @@ if ~GND
         G = G_num / G_den;
 
         % Filter Out
-        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
-        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        NUM = G * (IN - 2*cos(w0)*X3(:, 1) + X3(:, 2));
+        DEN = 2*r*cos(w0)*Y3(:,1) - r^2*Y3(:,2);
         OUT = NUM + DEN;
     
         % Update memory for second Notch

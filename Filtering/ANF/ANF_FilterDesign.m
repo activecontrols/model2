@@ -15,9 +15,14 @@ function TF = Notch_TFD(f0, width, fs)
     w0 = 2 * pi * f0 / fs;
     r = exp(-pi * width / fs);
 
+    % Calculate Normalization Gain
+    G_num = 1 - 2*r*cos(w0) + r^2;
+    G_den = 2 - 2*cos(w0);
+    G = G_num / G_den;
+
     % Define z-domain variable and discrete TF
     z = tf('z', Ts);
-    TF = (1 - 2 * cos(w0) * z^-1 + z^-2) / (1 - 2 * r *cos(w0) * z^-1 + r^2 * z^-2);
+    TF = G * (1 - 2 * cos(w0) * z^-1 + z^-2) / (1 - 2 * r *cos(w0) * z^-1 + r^2 * z^-2);
 end
 function TF = convTF(TF_Array)
     n = size(TF_Array, 1);
@@ -135,4 +140,4 @@ yline(10, 'r--');
 
 % Link the camera angles so they rotate together
 linkaxes([subplot(2,1,1), subplot(2,1,2)], 'xy');
-sgtitle('Sequential Adaptive Notch Filter Design for ASTRAv2');
+sgtitle('Adaptive Notch Filter Sequence [ANF-S] Design for ASTRAv2');

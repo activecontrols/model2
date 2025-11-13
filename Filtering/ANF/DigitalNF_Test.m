@@ -1,5 +1,6 @@
 % This section executes the filter test.
 clear; 
+clear DigitalNF;
 
 % --- Filter Parameters (from ANF_FilterDesign.m) ---
 fs = 1000; % Sampling frequency (Hz)
