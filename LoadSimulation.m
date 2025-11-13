@@ -15,6 +15,7 @@ clear inputfcn3;
 clear EstimateStateFCN;
 clear SensorSimulation;
 clear GPS_Sim;
+clear DigitalNF;
 
 addpath('.\Parameters');
 addpath('.\Filtering');

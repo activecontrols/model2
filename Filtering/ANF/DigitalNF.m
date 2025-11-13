@@ -8,7 +8,7 @@ function OUT = DigitalNF(IN, GND, THRUST, dT)
 % Initialize past output / input memory column 
 persistent X1 X2 X3 Y1 Y2 Y3
 if isempty(X1)
-    X1 = zeros(size(IN, 1), 2) .* IN;
+    X1 = ones(size(IN, 1), 2) .* IN;
     X2 = X1;
     X3 = X1;
     Y1 = X1;
@@ -20,7 +20,7 @@ end
 TRACK = [1.7672    47.4512;
          3.1740    109.242];
 fs = 1 / dT;
-width1 = 20;     % Hz
+width1 = 16;     % Hz
 width2 = width1 + 0.35 * THRUST;
 
 % Sequential Notch Filter
@@ -59,4 +59,6 @@ if ~GND
         % Update memory for second Notch
         X3 = [IN    X3(:, 1)];
         Y3 = [OUT   Y3(:, 1)];
+else
+    OUT = IN;
 end

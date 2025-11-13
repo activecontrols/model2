@@ -38,7 +38,7 @@ close;
     % that).
 % Create Notch Filters
 f0 = 94;
-width1 = 20;
+width1 = 16;
 fs = 1000;
 n = 3;
 res = 200;
