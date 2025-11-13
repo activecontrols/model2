@@ -30,7 +30,16 @@ if ~GND
         f0 = 94;    %Hz
         w0 = 2 * pi * f0 / fs;
         r = exp(-pi * width1 / fs);
-        OUT = IN - 2*cos(w0)*X1(:, 1) + X1(:, 2) + 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2); 
+
+        % Calculate Normalization Gain
+        G_num = 1 - 2*r*cos(w0) + r^2;
+        G_den = 2 - 2*cos(w0);
+        G = G_num / G_den;
+
+        % Filter Out
+        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
+        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        OUT = NUM + DEN;
     
         % Update memory for first Notch
         X1 = [IN    X1(:, 1)];
@@ -42,7 +51,16 @@ if ~GND
         f0 = TRACK(1, 1) * THRUST + TRACK(1, 2);    %Hz
         w0 = 2 * pi * f0 / fs;
         r = exp(-pi * width2 / fs);
-        OUT = IN - 2*cos(w0)*X2(:, 1) + X2(:, 2) + 2*r*cos(w0)*Y2(:,1) - r^2*Y2(:,2); 
+
+        % Calculate Normalization Gain
+        G_num = 1 - 2*r*cos(w0) + r^2;
+        G_den = 2 - 2*cos(w0);
+        G = G_num / G_den;
+
+        % Filter Out
+        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
+        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        OUT = NUM + DEN;
     
         % Update memory for second Notch
         X2 = [IN    X2(:, 1)];
@@ -54,11 +72,46 @@ if ~GND
         f0 = TRACK(2, 1) * THRUST + TRACK(2, 2);    %Hz
         w0 = 2 * pi * f0 / fs;
         r = exp(-pi * width2 / fs);
-        OUT = IN - 2*cos(w0)*X3(:, 1) + X3(:, 2) + 2*r*cos(w0)*Y3(:,1) - r^2*Y3(:,2); 
+
+        % Calculate Normalization Gain
+        G_num = 1 - 2*r*cos(w0) + r^2;
+        G_den = 2 - 2*cos(w0);
+        G = G_num / G_den;
+
+        % Filter Out
+        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
+        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        OUT = NUM + DEN;
     
         % Update memory for second Notch
         X3 = [IN    X3(:, 1)];
         Y3 = [OUT   Y3(:, 1)];
 else
-    OUT = IN;
+    % The output is just the input (passthrough)
+    OUT = IN; 
+    
+    % --- Update states sequentially for a smooth switch-on ---
+    
+    % Stage 1: History is updated with IN and OUT
+    X1 = [IN    X1(:, 1)];
+    Y1 = [OUT   Y1(:, 1)];
+    
+    % The input to stage 2 is the output of stage 1
+    IN_2 = OUT;
+    OUT_2 = IN_2; % Passthrough for stage 2
+    
+    % Stage 2: History is updated
+    X2 = [IN_2  X2(:, 1)];
+    Y2 = [OUT_2 Y2(:, 1)];
+    
+    % The input to stage 3 is the output of stage 2
+    IN_3 = OUT_2;
+    OUT_3 = IN_3; % Passthrough for stage 3
+
+    % Stage 3: History is updated
+    X3 = [IN_3  X3(:, 1)];
+    Y3 = [OUT_3 Y3(:, 1)];
+    
+    % The final output is the passthrough from the last stage
+    OUT = OUT_3;
 end

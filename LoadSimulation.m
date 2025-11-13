@@ -33,6 +33,7 @@ constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
 constantsASTRA.R = p2.obsv_cov_mat;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
+IMU_Rate = 1000;     %Hz
 
 %%
 x0 = zeros(15,1);
