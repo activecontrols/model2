@@ -23,78 +23,116 @@ function TF = convTF(TF_Array)
     n = size(TF_Array, 1);
     TF = 1;
     for i = 1:1:n
-        TF = TF_Array(i) * TF;
+        TF = TF_Array(i,:) .* TF;
     end
 end
 
 % Clear workspace
 clear;
+close;
 
+%% Filter structure design
+    % 6th order filter composed of 3 sequential ANF's (Adaptive Notch Filters).
+    % The 1st Notch filter is set to a constant frequency os ~120Hz. Other two
+    % ANF's follow a linear trace based on thrust (see RollTestAnalysis.m for
+    % that).
 % Create Notch Filters
-f0 = 50;
-width = 10;
+f0 = 94;
+width1 = 20;
 fs = 1000;
 n = 3;
-NotchC_Array = zeros(n,1) * tf('s');
-NotchD_Array = NotchC_Array;
-for i = 1:1:n
-    NotchC_Array(i,1) = Notch_TFC(i * f0, width);
-    NotchD_Array(i,1) = Notch_TFD(i * f0, width, fs);
+res = 200;
+thrustArray = linspace(1, 100, res);
+NotchC_Array = zeros(n, res) * tf('s');
+
+% Center Freq. vs Thrust Tracks
+tracks = [1.7672    47.4512;
+          3.1740    109.242];
+
+% Build constant Notch at 120 Hz
+NotchC_Array(1,:) = Notch_TFD(f0, width1, fs);
+for thrust = 1:1:res
+    for track = 2:1:n
+        width2 = width1 + 0.35 * thrust;
+        NotchFreq = tracks(track-1, 1) * thrustArray(thrust) + tracks(track-1, 2);
+        NotchC_Array(track,thrust) = Notch_TFD(NotchFreq, width2, fs);
+    end
 end
 
 NotchC = convTF(NotchC_Array);
-NotchD = convTF(NotchD_Array);
 
 % Create a 2nd order LPF for comparaison
 s = tf('s');
 wc = 0.8 * f0 * 2 * pi;
 phi = (1 + sqrt(5))/ 2;
 LPF = wc^2 / (s^2 + sqrt(2) * wc * s + wc^2);
-% LPF = wc^2 / ((s + 1)*(s^2 + phi^-1 * s + 1)*(s^2 + phi*s + 1));
 
 % Frequency range in Hz
 f = linspace(0, 500, 2000);    % Linear spacing 0–500 Hz
 w = 2 * pi * f;                % Convert to rad/s for 'bode' or 'freqresp'
 
-% Get frequency response
-[magC, phaseC] = bode(NotchC, w);
-[magD, phaseD] = bode(NotchD, w);
+% Get frequency response at each thrust level
+magC = zeros(res, size(f, 2));
+phaseC = magC;
+for thrust = 1:1:res
+    [mag, phase] = bode(NotchC(1, thrust), w);
+    mag = squeeze(mag);
+    phase = squeeze(phase);
+    phase = wrapTo180(phase);
+    magC(thrust, :) = mag; 
+    phaseC(thrust, :) = phase;
+end
+
+% Get frequency response of the LPF
 [magLPF, phaseLPF] = bode(LPF, w);
-magC = squeeze(magC);
-phaseC = squeeze(phaseC);
 magLPF = squeeze(magLPF);
 phaseLPF = squeeze(phaseLPF);
-magD = squeeze(magD);
-phaseD = squeeze(phaseD);
 
 % Wrap the unwrapped phase from bode() to the [-180, 180] range
-phaseC = wrapTo180(phaseC);
-phaseD = wrapTo180(phaseD);
 phaseLPF = wrapTo180(phaseLPF);
 
 % Plots
+% --- 1. Fix the Phase Wrap Artifact ---
+
+% 'unwrap' works in radians, so we convert, unwrap, and convert back
+% We unwrap along dimension 2 (the rows), which is your frequency axis
+magC_dB = 20 * log10(magC);
+phaseC_rad = deg2rad(phaseC); 
+phaseC_unwrapped_rad = unwrap(phaseC_rad, [], 2);
+phaseC_unwrapped_deg = rad2deg(phaseC_unwrapped_rad);
+
+% --- 3. Create the 3D Surface Plots (Convention: X=Thrust, Y=Freq) ---
 figure;
-Color = colororder("glow");
 
-subplot(2,1,1)
-plot(f, 20*log10(magC), 'LineWidth', 1.5, 'Color', Color(2,:)); hold on;
-% plot(f, 20*log10(magD), 'LineWidth', 1.5, 'Color', Color(1,:));
-plot(f, 20*log10(magLPF), 'LineWidth', 1.5, 'Color', Color(4,:));
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-legend('Continious ANF', 'LPF');
-title('Linear-Frequency Bode Magnitude');
-grid on;
-xlim([0 500]);
-ylim([min(20*log10(magC)) * 1.1, 2]) 
+% --- Top plot for Magnitude ---
+subplot(2,1,1);
+colormap turbo
+% Swap axes (f, thrustArray -> thrustArray, f) and transpose data (magC_dB -> magC_dB')
+surf(thrustArray, f, magC_dB', 'EdgeColor', 'none');
+shading interp; 
+xlabel('Thrust [%]');           % <-- Swapped
+ylabel('Frequency [Hz]');      % <-- Swapped
+zlabel('Magnitude [dB]');
+title('ANF Magnitude (3D Surface)');
+colorbar;
+clim([-5, 0]);      % Anything under 5dB is considered cutoff.
+view(-90,90);
 
-subplot(2,1,2)
-plot(f, phaseC, 'LineWidth', 1.5, 'Color', Color(2,:)); hold on;
-% plot(f, phaseD, 'LineWidth', 1.5, 'Color', Color(1,:));
-plot(f, phaseLPF, 'LineWidth', 1.5, 'Color', Color(4,:));
-xlabel('Frequency (Hz)');
-ylabel('Phase (deg)');
-legend('Continious ANF', 'LPF');
-title('Linear-Frequency Bode Phase (Wrapped)');
-grid on;
-xlim([0 500]);
+% --- Bottom plot for Phase (using unwrapped data) ---
+subplot(2,1,2);
+colormap turbo
+% Swap axes and transpose data
+surf(thrustArray, f, phaseC_unwrapped_deg', 'EdgeColor', 'none'); 
+shading interp;
+xlabel('Thrust [%]');           % <-- Swapped
+ylabel('Frequency [Hz]');      % <-- Swapped
+zlabel('Phase [degrees]');
+title('ANF Phase (3D Surface - Unwrapped)');
+colorbar;
+clim([-90 90]);
+view(-90,90);
+yline(10, 'r--');
+
+% Link the camera angles so they rotate together
+linkaxes([subplot(2,1,1), subplot(2,1,2)], 'xy');
+sgtitle('Sequential Adaptive Notch Filter Design for ASTRAv2');
