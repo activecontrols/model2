@@ -42,7 +42,7 @@ end
 %% 1. Filter Data and Perform Fourier Analysis (NEW STEP)
 fourier_raw = struct('data', {}, 'freq', {});
 fourier_filtered = struct('data', {}, 'freq', {});
-plotChannel = 1; % The signal channel to analyze (e.g., Roll Rate)
+plotChannel = 2; % The signal channel to analyze (e.g., Roll Rate)
 
 for k = 1:numFiles
     % Timestep and Fs
@@ -188,12 +188,12 @@ fprintf(['Max Noise Amplitude Pre-Filter: %.3f \n' ...
          'Max Noise Amplitude Post-Filter: %.3f \n'], max_ampl_raw, max_ampl_filt);
 
 figure;
-TestNumber = 36;
-Channel = plotChannel + 2;
+TestNumber = 42;
+Channel = plotChannel + 1;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).raw_data(:, Channel)); hold on;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).filtered_data(:, Channel))
 legend('Raw Data', 'ANF-S Filtered')
 xlabel('Time [s]')
 ylabel('Acceleration [m/s^2]')
-title('Test Sensor Data Filtered vs. ANF-S Filtered');
+title('Test Sensor Data Unfiltered vs. ANF-S Filtered');
 fprintf('Plotted Test File: %s \n', allData(TestNumber).filename);

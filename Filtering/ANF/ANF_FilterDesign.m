@@ -43,7 +43,7 @@ close;
     % that).
 % Create Notch Filters
 f0 = 94;
-width1 = 16;
+width1 = 18;
 fs = 1000;
 n = 3;
 res = 200;
@@ -51,14 +51,14 @@ thrustArray = linspace(1, 100, res);
 NotchC_Array = zeros(n, res) * tf('s');
 
 % Center Freq. vs Thrust Tracks
-tracks = [1.7672    47.4512;
+tracks = [1.7672    50.4512;
           3.1740    109.242];
 
 % Build constant Notch at 120 Hz
 NotchC_Array(1,:) = Notch_TFD(f0, width1, fs);
 for thrust = 1:1:res
     for track = 2:1:n
-        width2 = width1 + 0.35 * thrust;
+        width2 = width1 + 0.8 * (thrust - 15);
         NotchFreq = tracks(track-1, 1) * thrustArray(thrust) + tracks(track-1, 2);
         NotchC_Array(track,thrust) = Notch_TFD(NotchFreq, width2, fs);
     end
@@ -122,6 +122,8 @@ title('ANF Magnitude (3D Surface)');
 colorbar;
 clim([-5, 0]);      % Anything under 5dB is considered cutoff.
 view(-90,90);
+xline(40, 'g--', 'LineWidth', 2);
+yline(10, 'r--', 'LineWidth', 2);
 % view(-70, 40);
 
 % --- Bottom plot for Phase (using unwrapped data) ---
@@ -138,7 +140,8 @@ colorbar;
 clim([-90 90]);
 view(-90,90);
 % view(-70, 40);
-yline(10, 'r--');
+xline(40, 'g--', 'LineWidth', 2);
+yline(10, 'r--', 'LineWidth', 2);
 
 % Link the camera angles so they rotate together
 linkaxes([subplot(2,1,1), subplot(2,1,2)], 'xy');

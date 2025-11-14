@@ -17,11 +17,11 @@ if isempty(X1)
 end
 
 % Center Freq. vs Thrust Tracks, Sampling Freq, and Notch Width
-TRACK = [1.7054    48.9375;
+TRACK = [1.7054    50.9375;
          3.2139    117.1451];
 fs = 1 / dT;
-width1 = 18;     % Hz
-width2 = width1 + 0.4 * THRUST;
+width1 = 17;     % Hz
+width2 = width1 + 0.8 * (THRUST - 15);
 
 % Sequential Notch Filter
 if ~GND
