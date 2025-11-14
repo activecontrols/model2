@@ -356,3 +356,56 @@ disp('Waterfall plot generated. \n');
 % ylabel('Frequency (Hz)');
 % zlabel('Amplitude');
 % title('Tracked Peaks Over FFT Surface');
+
+%% Manual Track Identification
+% PEAKS = [TRACK, THRUST, LEFT EDGE, RIGHT EDGE]
+PEAKS = [1, 20, 64.353, 93.1678;
+         1, 30, 87.885, 114.779;
+         1, 40, 95.85, 135.910;
+         1, 50, 125.18, 151.758;
+         1, 60, 140.11, 166.646;
+         1, 70, 150.16, 190.178;
+         1, 80, 173.77, 200.743;
+         1, 90, 181.01, 212.269;
+         2, 30, 196.38, 223.795;
+         2, 40, 232.92, 261.734;
+         2, 50, 268.46, 293.911;
+         2, 60, 296.79, 327.048;
+         2, 70, 322.25, 355.863;
+         2, 80, 360.19, 387.559];
+
+% Sort Peaks to each track
+length = size(PEAKS, 1);
+count1 = 0;
+for i = 1:length
+    if PEAKS(i, 1) == 1
+        TRACK1(i, 1) = PEAKS(i, 2);
+        TRACK1(i, 2) = (PEAKS(i, 3) + PEAKS(i, 4)) / 2;
+        count1 = count1 + 1;
+    else
+        TRACK2(i - count1, 1) = PEAKS(i, 2);
+        TRACK2(i - count1, 2) = (PEAKS(i, 3) + PEAKS(i, 4)) / 2;
+    end
+end
+
+% Fit linear curves
+[p1, S1] = polyfit(TRACK1(:,1), TRACK1(:,2), 1);
+[p2, S2] = polyfit(TRACK2(:,1), TRACK2(:,2), 1);
+
+% OLD TRACKS
+T_OLD = [1.7672    47.4512;
+         3.1740    109.242];
+
+% Plot tracks vs. Fit
+figure;
+thrust = linspace(0, 100, 10);
+plot(TRACK1(:, 1), TRACK1(:, 2), 'r*'); hold on; grid on;
+plot(thrust, p1(1) * thrust + p1(2), 'r--');
+plot(thrust, T_OLD(1,1) * thrust + T_OLD(1, 2), 'r-');
+plot(TRACK2(:, 1), TRACK2(:, 2), 'b*');
+plot(thrust, p2(1) * thrust + p2(2), 'b--');
+plot(thrust, T_OLD(2,1) * thrust + T_OLD(2,2), 'b-');
+
+disp('New Tracks:');
+disp(p1);
+disp(p2);

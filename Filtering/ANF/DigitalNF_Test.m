@@ -19,8 +19,8 @@ THRUST = 68;
 THRUST_TIME = THRUST * ones(1, N);
 
 % --- Calculate expected notches ---
-TRACK = [1.7672    47.4512;
-         3.1740    109.242];
+TRACK = [1.7132    49.6994;
+         3.2067    117.6213];
 Notches = [94;
            TRACK(1, 1) * THRUST + TRACK(1, 2); 
            TRACK(2, 1) * THRUST + TRACK(2, 2)];

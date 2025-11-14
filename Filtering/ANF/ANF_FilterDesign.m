@@ -122,6 +122,7 @@ title('ANF Magnitude (3D Surface)');
 colorbar;
 clim([-5, 0]);      % Anything under 5dB is considered cutoff.
 view(-90,90);
+% view(-70, 40);
 
 % --- Bottom plot for Phase (using unwrapped data) ---
 subplot(2,1,2);
@@ -136,6 +137,7 @@ title('ANF Phase (3D Surface - Unwrapped)');
 colorbar;
 clim([-90 90]);
 view(-90,90);
+% view(-70, 40);
 yline(10, 'r--');
 
 % Link the camera angles so they rotate together
