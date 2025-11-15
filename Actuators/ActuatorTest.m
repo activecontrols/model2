@@ -27,7 +27,7 @@ for i = 2:1:res
     phi_target(i) = norm(2) * sin(tsim(i) * 1) * 0;
     utrg(1:2, i) = [theta_target(i); phi_target(i)];
     
-    xsim(:,i) = xsim(:,i-1) + ActuatorDynamics(xsim(:,i-1), utrg(:, i)) * dt;
+    xsim(:,i) = xsim(:,i-1) + ActuatorDynamics(xsim(:,i-1), utrg(:, i), 1) * dt;
     usim(:,i) = [xsim(1,i); xsim(3,i); xsim(5:6,i)];
 
     theta_actual(:, i) = xsim(1, i);
