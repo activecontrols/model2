@@ -69,4 +69,4 @@ R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
 Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
                0, 0, 3,  3,  0, 0, 0, 0;
                0, 3, 3,  3,  3, 3, -0.05, -0.05];
-HoldTimeReqs = [4, 3, 3, 3, 3, 3, 0, 0.2];
+HoldTimeReqs = [15, 3, 3, 3, 3, 3, 0, 0.2];
