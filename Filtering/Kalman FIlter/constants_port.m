@@ -2,14 +2,14 @@
 %Taken from example implementation
 p2.est_cov = 1.0;
 gyro_bias_cov = 0.005;
-accel_proc_cov = 0.005;
-accel_bias_cov = 0.002;
+accel_proc_cov = 0.05;
+accel_bias_cov = 0.02;
 mag_proc_cov = 0.1;
-mag_bias_cov = 1e-4;
+mag_bias_cov = 0.1;
 
 gyro_cov = 0.01;
-accel_obs_cov = 0.3;
-mag_obs_cov = 0.05;
+accel_obs_cov = 0.15;
+mag_obs_cov = 0.1;
 
 %Init constants
 dt = 0.005;
@@ -44,7 +44,7 @@ p2.G(7:9,4:6) = eye(3);
 % p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
 
 %Process noise covariance, statically defined for fixed timestep
-p2.Q = zeros(15);
+p2.Q = zeros(12);
 p2.Q(1:3, 1:3) = p2.gyro_cov_mat*dt + p2.gyro_bias_cov_mat*(dt^3)/3.0;
 p2.Q(1:3, 10:12) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.01;
 p2.Q(7:9, 4:6) = p2.accel_cov_mat*dt;
@@ -53,7 +53,6 @@ p2.Q(4:6, 4:6) = p2.accel_cov_mat*(dt^2)/2.0;
 p2.Q(4:6, 7:9) = p2.accel_cov_mat*(dt^3)/3.0;
 p2.Q(10:12, 1:3) = -p2.gyro_bias_cov_mat*(dt^2)/2.0 * 0.01;
 p2.Q(10:12, 10:12) = p2.gyro_bias_cov_mat*dt;
-p2.Q(13:15, 13:15) = p2.mag_bias_cov_mat*dt;
 
 %Hand tuning
 p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.2;
