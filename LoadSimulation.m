@@ -23,6 +23,10 @@ addpath('.\Filtering\EMA Filter');
 addpath('.\Filtering\Kalman Filter');
 addpath('.\Filtering\ANF');
 addpath('.\Simulation');
+addpath('.\Simulation\Disturbances\');
+addpath('.\Simulation\Helper\');
+addpath('.\Simulation\Stability\');
+addpath('.\Simulation\Vehicle Motion\');
 addpath('.\Trajectory');
 addpath('.\Actuators');
 addpath('.\Controls');
@@ -48,7 +52,6 @@ linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
-% Simulink.Bus.createObject(linSys);
 
 %% Generate LQR Controller for Simulation
 % Brysons Rule for Q and R.
@@ -57,7 +60,7 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.55, 0.55, 2, 1, 1, 3];
+max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.5, 0.5, 1.5, 1, 1, 3];
 max_u = [pi/45, pi/45, 6, 0.4];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
@@ -70,3 +73,4 @@ Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
                0, 0, 3,  3,  0, 0, 0, 0;
                0, 3, 3,  3,  3, 3, 0, 0];
 HoldTimeReqs = [4, 3, 3, 3, 3, 3, 0, 0.2];
+
