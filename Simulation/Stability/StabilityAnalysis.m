@@ -28,17 +28,17 @@ end
 
 % Define the bounds for the operating conditions
 thrustMax = 1.5 * 9.8;   %N
-gimbalMax = pi/36;
+gimbalMax = pi/18;
 InputBounds = [-gimbalMax       gimbalMax;
                -gimbalMax       gimbalMax;
                .4 * thrustMax   thrustMax;
-               -pi/8            pi/8];
+               -pi/6            pi/6];
 
 % Euler Angle Limits
-MaxTilt = pi/12;
+MaxTilt = pi/10;
 YawBounds = [-MaxTilt MaxTilt];
 PitchBounds = [-MaxTilt MaxTilt];
-RollBounds = [-pi/4 pi/4];
+RollBounds = [-pi/12 pi/12];
 
 % Other State Limits (Position and Velocity don't affect linearization)
 PosBounds = zeros(3,2);
@@ -53,7 +53,7 @@ StateBounds = [RollBounds; PitchBounds; YawBounds; PosBounds; VelBounds; RateBou
 
 %% Initial State 
 x0 = zeros(15,1);
-u0 = [0; 0; 1.5*9.8; 0];
+u0 = [0; 0; 9.8; 0];
 A = JacobianX(x0, u0);
 A = A(1:12, 1:12);
 B = JacobianU(x0, u0);
@@ -82,10 +82,12 @@ L = L * Filter_ss;
 
 % Disk Margins
 [DM, MM] = diskmargin(L);
+
 %% Sample random operating states
-numSamples = 100;
+numSamples = 200;
 StateVec = zeros(15, numSamples);
 InputVec = zeros(4,  numSamples);
+EulerVec = zeros(3,  numSamples);
 
 % Pre-allocate space for results using initial run
 DM_MonteCarlo = repmat(DM, 1, numSamples);
@@ -94,16 +96,30 @@ TimePerSample = 0.0073;       %min
 fprintf(['Started a %i sample Monte Carlo Sim!\n' ...
          'Expected completion time: %.2f min\n'], numSamples, TimePerSample * numSamples);
 for i = 1:numSamples
+
+    % Sample a Random State Vector
     StateVec(:, i) = [SampleBounds(StateBounds(:, 1), StateBounds(:, 2)); zeros(3,1)];
-    InputVec(:, i) = SampleBounds(InputBounds(:, 1), InputBounds(:, 2));
+    EulerVec(:, i) = StateVec(1:3, i);
 
     % Transform Euler Angles to Q_Vec
     Q = eul2quat(StateVec(1:3, i)', 'XYZ');
     StateVec(1:3, i) = Q(2:4)';
 
     % Relinearize System
-    A = JacobianX(StateVec(:,i), InputVec(:,i));
-    B = JacobianU(StateVec(:,i), InputVec(:,i));
+    A = JacobianX(StateVec(:,i), u0);
+    B = JacobianU(StateVec(:,i), u0);
+
+    % Compute input trim for steady state
+    DeltaU = -pinv(B) * A * (StateVec(:,i) - x0);
+    U = u0 + DeltaU;
+    uMax = InputBounds(:, 2);
+    uMin = InputBounds(:, 1);
+    U = min(max(U, uMin), uMax);
+
+    % Save Input and relinearize
+    InputVec(:,i) = U;
+    A = JacobianX(StateVec(:,i), U);
+    B = JacobianU(StateVec(:,i), U);
     A = A(1:12, 1:12);
     B = B(1:12, :);
     C = eye(12);
@@ -121,7 +137,7 @@ for i = 1:numSamples
     L = L * Delay_MIMO_ss;
 
     % Digital Filter TF
-    thrust = u0(3) / thrustMax;
+    thrust = InputVec(3, i) / thrustMax;
     [Filter_TF, ~] = FilterTF_Gen(thrust);
     Filter_ss = ss(Filter_TF);
     L = L * Filter_ss;
@@ -151,7 +167,7 @@ subplot(1,2,1);
 histogram(gainMarginArray, round(sqrt(numSamples))); grid on;
 xlabel('Gain Margin Value');
 ylabel('Frequency');
-title('Gain Margin Distribution [dB]');
+title('Gain Margin Distribution');
 
 subplot(1,2,2);
 histogram(phaseMarginArray, round(sqrt(numSamples))); grid on;
@@ -173,7 +189,7 @@ title('Worst Case Frequency Distribution');
 
 % Total number of data points (Sample Size)
 N = numel(diskMarginArray);
-threshold = 0.4;
+threshold = 0.5;
 
 % Sort the data (Crucial step for ECDF)
 x_sorted = sort(diskMarginArray);
@@ -205,3 +221,41 @@ yline(probThreshold, 'r--', 'LineWidth',1);
 scatter(0.4, probThreshold, 50, 'r', 'filled');
 hold off;
 fprintf('Cumulative Probability of Disk Margin being below %.2f is: %.2f%%\n', threshold, probThreshold * 100);
+
+% 3. Angular Rates (States 10-12)
+RollRate = StateVec(10, :);
+PitchRate = StateVec(11, :);
+YawRate = StateVec(12, :);
+
+% Calculate Total Tilt Magnitude (Approximation via RSS of sampled angles in radians)
+Tilt_Total = sqrt(EulerVec(1,:).^2 + ...
+                  EulerVec(2,:).^2 + ...
+                  EulerVec(3,:).^2);
+Tilt_Total_deg = rad2deg(Tilt_Total); % Convert to degrees for plotting
+
+% Calculate Total Angular Rate Magnitude (RSS of p, q, r in deg/sec)
+Omega_Total = sqrt(RollRate.^2 + PitchRate.^2 + YawRate.^2);
+Omega_Total_deg = rad2deg(Omega_Total); % Convert to degrees/sec for plotting
+
+% 1. Create a regular 2D grid for interpolation
+num_grid_points = 50;
+Tilt_Grid = linspace(min(Tilt_Total_deg), max(Tilt_Total_deg), num_grid_points);
+Omega_Grid = linspace(min(Omega_Total_deg), max(Omega_Total_deg), num_grid_points);
+[XX, YY] = meshgrid(Tilt_Grid, Omega_Grid);
+
+% 2. Interpolate the scattered data (Disk Margin) onto the grid
+ZZ = griddata(Tilt_Total_deg, Omega_Total_deg, diskMarginArray, XX, YY);
+
+
+% 3. Plot the surface
+figure;
+surf(XX, YY, ZZ);
+
+% Make it readable
+xlabel('Total Tilt [deg]');
+ylabel('Total Angular Rate [deg/s]');
+zlabel('Disk Margin Value (\alpha)');
+title('Robustness Surface: Disk Margin vs. Flight Condition');
+colorbar;
+view(2); % View from 3D perspective
+grid on;

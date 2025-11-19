@@ -65,13 +65,13 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
     NotchD_Array(1,1) = Notch_TFD(f0, width1, fs);
 
     % Build Adaptive notch
-    width2 = width1 + 0 * 0.8 * (thrust - 15);
+    width2 = width1 + thrust / 100 * 20;
     NotchFreq = tracks(1, 1) * thrust + tracks(1, 2);
     NotchC_Array(2,1) = Notch_TFC(NotchFreq, width2);
     NotchD_Array(2,1) = Notch_TFD(NotchFreq, width2, fs);
 
     % Build LPF
-    Cutoff = 110;
+    Cutoff = 30;
     NotchC_Array(3,1) = LPF_C(Cutoff);
     NotchD_Array(3,1) = LPF_D(Cutoff, fs);
 

@@ -60,7 +60,7 @@ ylabel('Frequency [Hz]');      % <-- Swapped
 zlabel('Magnitude [dB]');
 title('ANF Magnitude (3D Surface)');
 colorbar;
-clim([-5, 0]);      % Anything under 5dB is considered cutoff.
+clim([-30, 0]);      % Anything under 5dB is considered cutoff.
 view(-90,90);
 xline(40, 'g--', 'LineWidth', 2);
 yline(10, 'r--', 'LineWidth', 2);

@@ -88,7 +88,7 @@ if ~GND
         % Y3 = [OUT   Y3(:, 1)];
         
         %Notch 3 as a 1st order LPF at 120Hz
-        cut = 110 * 2 * pi;
+        cut = 35 * 2 * pi;
         C1 = cut / (2 * fs + cut);
         C2 = (cut - 2 * fs) / (cut + 2* fs);
         OUT = C1*IN + C1*X3(:, 1) - C2*Y3(:, 1); 
@@ -97,7 +97,7 @@ if ~GND
 else
     % The output is just the input (passthrough)
     OUT = IN; 
-    % cut = 70 * 2 * pi;
+    % cut = 30 * 2 * pi;
     % C1 = cut / (2 * fs + cut);
     % C2 = (cut - 2 * fs) / (cut + 2* fs);
     % OUT = C1*IN + C1*X1(:, 1) - C2*Y1(:, 1); 
