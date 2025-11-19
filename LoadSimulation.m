@@ -60,8 +60,8 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.5, 0.5, 1.5, 1, 1, 3];
-max_u = [pi/45, pi/45, 6, 0.4];
+max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.55, 0.55, 1.5, 2, 2, 3];
+max_u = [pi/24, pi/24, 6, 0.4];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
 R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;

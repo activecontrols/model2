@@ -74,17 +74,23 @@ L = K_ss * P;
 Delay_MIMO_ss = ActuatorDelay;
 L = L * Delay_MIMO_ss;
 
+% Digital Filter TF
+thrust = u0(3) / thrustMax;
+[Filter_TF, ~] = FilterTF_Gen(thrust);
+Filter_ss = ss(Filter_TF);
+L = L * Filter_ss;
+
 % Disk Margins
 [DM, MM] = diskmargin(L);
 %% Sample random operating states
-numSamples = 1000;
+numSamples = 100;
 StateVec = zeros(15, numSamples);
 InputVec = zeros(4,  numSamples);
 
 % Pre-allocate space for results using initial run
 DM_MonteCarlo = repmat(DM, 1, numSamples);
 MM_MonteCarlo = repmat(MM, 1, numSamples);
-TimePerSample = 0.002277;       %min    
+TimePerSample = 0.0073;       %min    
 fprintf(['Started a %i sample Monte Carlo Sim!\n' ...
          'Expected completion time: %.2f min\n'], numSamples, TimePerSample * numSamples);
 for i = 1:numSamples
@@ -114,6 +120,12 @@ for i = 1:numSamples
     Delay_MIMO_ss = ActuatorDelay;
     L = L * Delay_MIMO_ss;
 
+    % Digital Filter TF
+    thrust = u0(3) / thrustMax;
+    [Filter_TF, ~] = FilterTF_Gen(thrust);
+    Filter_ss = ss(Filter_TF);
+    L = L * Filter_ss;
+
     % Disk Margins
     [DM, MM] = diskmargin(L);
     DM_MonteCarlo(:,i) = DM;
@@ -134,12 +146,12 @@ for i = 1:numSamples
     freqArray(i) = MM_MonteCarlo(i).Frequency(1);
     gainMarginArray(i) = MM_MonteCarlo(i).GainMargin(2);
 end
-figure(1);
+figure;
 subplot(1,2,1);
 histogram(gainMarginArray, round(sqrt(numSamples))); grid on;
 xlabel('Gain Margin Value');
 ylabel('Frequency');
-title('Disk Margin Distribution [dB]');
+title('Gain Margin Distribution [dB]');
 
 subplot(1,2,2);
 histogram(phaseMarginArray, round(sqrt(numSamples))); grid on;
@@ -147,7 +159,7 @@ xlabel('Low End Phase Margin Value');
 ylabel('Frequency');
 title('Phase Margin Distribution [deg]');
 
-figure(2);
+figure;
 subplot(1,2,1);
 histogram(diskMarginArray, round(sqrt(numSamples))); grid on;
 xlabel('Disk Margin Value');
@@ -159,5 +171,37 @@ histogram(freqArray / (2*pi), round(sqrt(numSamples))); grid on;
 xlabel('Frequency Value [Hz]');
 title('Worst Case Frequency Distribution');
 
+% Total number of data points (Sample Size)
+N = numel(diskMarginArray);
+threshold = 0.4;
 
+% Sort the data (Crucial step for ECDF)
+x_sorted = sort(diskMarginArray);
 
+% Calculate the cumulative probability (F) for each point
+F = (1:N)' / N;
+
+% Adjust for the stairstep plot:
+x_plot = [x_sorted(1) - 0.001; x_sorted]; % Start slightly before the min value
+F_plot = [0; F];
+
+% Plot
+figure;
+plot(x_plot, F_plot, 'LineWidth', 2, 'Color', [0 0.447 0.741]);
+title('Empirical Cumulative Distribution Function (ECDF)');
+xlabel('Disk Margin Value (x)');
+ylabel('Cumulative Probability F(x)');
+xlim([min(diskMarginArray), max(diskMarginArray)]);
+grid on;
+
+% The ECDF value for x=0.4 is the count of points <= 0.4 divided by N.
+countThreshold = sum(diskMarginArray <= threshold);
+probThreshold = countThreshold / N;
+
+% Plot the horizontal and vertical lines for visualization
+hold on;
+xline(threshold, 'r--', 'LineWidth',1);
+yline(probThreshold, 'r--', 'LineWidth',1);
+scatter(0.4, probThreshold, 50, 'r', 'filled');
+hold off;
+fprintf('Cumulative Probability of Disk Margin being below %.2f is: %.2f%%\n', threshold, probThreshold * 100);

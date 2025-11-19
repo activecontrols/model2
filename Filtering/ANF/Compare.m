@@ -69,7 +69,6 @@ for k = 1:numFiles
         % The persistent variables are reset once per file by the 'clear DigitalNF' command.
         
         OUT_row = DigitalNF(IN_row', GND, THRUST, dt); % Note: Transpose to make it N_channels x 1
-        
         filtered_signals(i, :) = OUT_row'; % Transpose back for storage
     end
     

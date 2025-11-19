@@ -60,7 +60,8 @@ xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
 xlim([0 fs/2]);
 grid on;
-for i = 1:3
+for i = 1:2
     xline(Notches(i), 'r--', 'LineWidth', 2);
 end
-legend('Signal', 'Expected Notch Frequencies')
+xline(110, 'g--', 'LineWidth', 2)
+legend('Signal', 'Expected Notch Frequency', 'Expected Notch Frequency', 'LPF Cutoff')
