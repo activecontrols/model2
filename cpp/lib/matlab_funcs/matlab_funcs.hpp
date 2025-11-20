@@ -1,3 +1,4 @@
+#pragma once
 #include <ArduinoEigenDense.h>
 
 using Vector3 = Eigen::Matrix<float, 3, 1>;
@@ -16,6 +17,7 @@ using Matrix12_12 = Eigen::Matrix<float, 12, 12>;
 
 typedef struct {
   float g;
+  float m;
   Vector3 mag;
   Matrix12_12 Q;
   Matrix6_6 R;
