@@ -5,8 +5,9 @@ for a = 1:12
             fprintf("0, ");
         else 
             fprintf("%.6e, ", constantsASTRA.Q(a, b));
-        end
+        end 
     end
+    fprintf(" //\n")
 end
 fprintf("\n");
 
@@ -19,5 +20,6 @@ for a = 1:4
             fprintf("%.6e, ", K(a, b));
         end
     end
+    fprintf("// \n")
 end
 fprintf("\n");
