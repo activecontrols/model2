@@ -42,7 +42,7 @@ end
 %% 1. Filter Data and Perform Fourier Analysis (NEW STEP)
 fourier_raw = struct('data', {}, 'freq', {});
 fourier_filtered = struct('data', {}, 'freq', {});
-plotChannel = 4; % The signal channel to analyze (e.g., Roll Rate)
+plotChannel = 3; % The signal channel to analyze (e.g., Roll Rate)
 
 for k = 1:numFiles
     % Timestep and Fs

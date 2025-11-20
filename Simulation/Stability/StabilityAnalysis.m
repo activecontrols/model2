@@ -84,7 +84,7 @@ L = L * Filter_ss;
 [DM, MM] = diskmargin(L);
 
 %% Sample random operating states
-numSamples = 200;
+numSamples = 300;
 StateVec = zeros(15, numSamples);
 InputVec = zeros(4,  numSamples);
 EulerVec = zeros(3,  numSamples);
