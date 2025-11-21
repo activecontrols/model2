@@ -1,4 +1,4 @@
-#include "matlab_funcs.hpp"
+#include "matlab_funcs.h"
 
 Matrix3_3 zetaCross(Vector3 zeta) {
   Matrix3_3 zc;
@@ -62,7 +62,7 @@ Vector3 EMA_Gyros(Vector15 Y, Vector3 &lastEMA) {
   Vector3 gyros = Y.segment<3>(3);
 
   // Exponential Moving Avg Step
-  Vector3 EMA_G = ExpMovingAvg(gyros, lastEMA, 0.6);
+  Vector3 EMA_G = ExpMovingAvg(gyros, lastEMA, 0.3);
   lastEMA = EMA_G;
   return EMA_G;
 }

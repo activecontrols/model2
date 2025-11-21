@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "matlab_funcs.hpp"
-#include "sample_data.hpp" //contains Z, TargetPos, GND, and expected controller output
+#include "matlab_funcs.h"
+#include "sample_data.h" //contains Z, TargetPos, GND, and expected controller output
 
 void setup() {
   extern uint8_t SetSysClock_PLL_HSE(uint8_t bypass, bool lowspeed);
@@ -12,20 +12,29 @@ void setup() {
 
   t_constantsASTRA constantsASTRA;
   constantsASTRA.g = 9.8100;
+  constantsASTRA.m = 1;
   constantsASTRA.mag << 0.8660, 0, -0.5000;
-  constantsASTRA.Q << 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10, 0, 0, 0, 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10, 0, 0, 0, 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10,
-      0, 0, 0, 6.250000e-07, 0, 0, 2.500000e-04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6.250000e-07, 0, 0, 2.500000e-04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6.250000e-07, 0, 0, 2.500000e-04, 0, 0, 0, 0, 0, 0,
-      2.083333e-09, 0, 0, 6.250000e-07, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.083333e-09, 0, 0, 6.250000e-07, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.083333e-09, 0, 0, 6.250000e-07, 0, 0, 0, -6.250000e-10, 0, 0, 0, 0, 0,
-      0, 0, 0, 1.250000e-07, 0, 0, 0, -6.250000e-10, 0, 0, 0, 0, 0, 0, 0, 0, 1.250000e-07, 0, 0, 0, -6.250000e-10, 0, 0, 0, 0, 0, 0, 0, 0, 1.250000e-07;
+  constantsASTRA.Q << 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10, 0, 0, //
+      0, 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10, 0,                 //
+      0, 0, 1.000004e-05, 0, 0, 0, 0, 0, 0, 0, 0, -6.250000e-10,                 //
+      0, 0, 0, 6.250000e-07, 0, 0, 2.083333e-09, 0, 0, 0, 0, 0,                  //
+      0, 0, 0, 0, 6.250000e-07, 0, 0, 2.083333e-09, 0, 0, 0, 0,                  //
+      0, 0, 0, 0, 0, 6.250000e-07, 0, 0, 2.083333e-09, 0, 0, 0,                  //
+      0, 0, 0, 2.500000e-04, 0, 0, 6.250000e-07, 0, 0, 0, 0, 0,                  //
+      0, 0, 0, 0, 2.500000e-04, 0, 0, 6.250000e-07, 0, 0, 0, 0,                  //
+      0, 0, 0, 0, 0, 2.500000e-04, 0, 0, 6.250000e-07, 0, 0, 0,                  //
+      -6.250000e-10, 0, 0, 0, 0, 0, 0, 0, 0, 1.250000e-07, 0, 0,                 //
+      0, -6.250000e-10, 0, 0, 0, 0, 0, 0, 0, 0, 1.250000e-07, 0,                 //
+      0, 0, -6.250000e-10, 0, 0, 0, 0, 0, 0, 0, 0, 1.250000e-07;                 //
   constantsASTRA.R = Matrix6_6::Zero();
   constantsASTRA.R.block<3, 3>(0, 0) = Matrix3_3::Identity() * 0.1500;
   constantsASTRA.R.block<3, 3>(3, 3) = Matrix3_3::Identity() * 0.1000;
 
   Matrix4_12 K;
-  K << 1.221739e+00, 2.656070e-16, 1.605792e-14, 5.754042e-14, 1.138010e-15, 1.240890e+00, -6.956013e-14, 1.577365e-14, -3.842269e-15, -5.030489e-16, -1.047017e-14, 4.748973e+00, -1.776182e-18,
-      5.304654e-05, -5.286303e-17, 1.334778e-18, -5.304654e-05, -1.777516e-19, -1.077854e-17, 9.473637e-18, -4.322925e-18, 7.801908e-19, 4.559014e-03, 6.725418e-19, 2.964490e-17, 9.648303e-02,
-      -1.028685e-15, 2.688724e-15, -9.648249e-02, 6.718166e-17, -4.583739e-15, -7.161693e-15, -1.793211e-17, -9.218939e-18, 2.281506e+00, 1.992377e-17, 1.971226e-01, 1.725272e-16, 3.380334e-16,
-      5.853777e-15, 1.182562e-16, 2.033502e-01, -1.370787e-14, -5.543101e-16, -3.093029e-16, -4.973344e-17, -4.785263e-16, 5.364513e-01;
+  K << 1.727316e+00, 1.397551e-15, -4.496957e-16, -2.191563e-17, -9.946226e-05, 2.443746e-18, 1.009896e-16, -1.808889e-01, -9.204288e-17, 2.101464e-01, 9.046160e-17, -2.504290e-16,   //
+      -1.001805e-15, 1.752664e+00, -1.979585e-14, 9.946226e-05, -3.640769e-18, 1.341432e-18, 1.808896e-01, 1.090076e-16, 1.485138e-16, -8.495741e-17, 2.163589e-01, -4.800818e-15,     //
+      2.068573e-14, -1.808309e-13, -7.941772e-14, -1.782415e-17, -7.805697e-17, 4.559014e-03, -2.450348e-14, -1.100699e-14, 3.040842e+00, -1.390689e-15, -2.931921e-15, -2.405146e-14, //
+      -3.030093e-15, 1.483349e-14, 5.065571e+00, 4.278588e-18, -5.374655e-18, 2.685444e-18, 2.056540e-15, 1.574826e-16, 2.541668e-16, -1.544970e-16, 9.234013e-16, 2.252961e+00;       //
 
   long long start_t = millis();
   Matrix12_12 P = 1 * Matrix12_12::Identity();
@@ -34,27 +43,38 @@ void setup() {
   x_est[0] = 1;
   Vector3 lastEMA = Vector3::Zero();
 
+  Matrix9_6 dnf_X = Matrix9_6::Ones();
+  Matrix9_6 dnf_Y = Matrix9_6::Ones();
+  float last_thrust = constantsASTRA.g * constantsASTRA.m;
+
   // Loop over all timesteps
   for (int idx = 0; idx < MAX_IDX; idx++) {
-
     // Construct Eigen vectors directly from arrays
     Vector15 z(z_arr[idx]);
-    float dT_val = 0.001;
     float GND_val = GND_arr[idx];
     Vector3 TargetPos(target_pos_arr[idx]);
+
+    Vector9 imu = z.segment<9>(0);
+    Vector9 filt_imu = DigitalNF(imu, GND_val, last_thrust, dT, dnf_X, dnf_Y);
+    z.segment<9>(0) = filt_imu;
 
     Vector15 temp_z = z;
     temp_z.segment<3>(3) = temp_z.segment<3>(3) - x_est.segment<3>(10);
     bool new_imu_packet = (lastZ.segment<9>(0) - temp_z.segment<9>(0)).sum() != 0;
     bool new_gps_packet = (lastZ.segment<6>(9) - temp_z.segment<6>(9)).sum() != 0;
 
-    x_est = EstimateStateFCN(x_est, constantsASTRA, z, dT_val, GND_val, P, new_imu_packet, new_gps_packet);
+    x_est = EstimateStateFCN(x_est, constantsASTRA, z, dT, GND_val, P, new_imu_packet, new_gps_packet);
     Vector3 EMA_G = EMA_Gyros(z, lastEMA);
     Vector15 X = StateAUG(x_est, EMA_G);
     Vector12 error = ref_generator3(X, TargetPos);
     Vector4 raw_co = -K * error;
+    raw_co(2) = raw_co(2) + constantsASTRA.g * constantsASTRA.m;
     raw_co = output_clamp(raw_co);
+    if (GND_val) {
+      raw_co = Vector4::Zero();
+    }
 
+    last_thrust = raw_co(2);
     lastZ = z;
 
     // comparison with expected output

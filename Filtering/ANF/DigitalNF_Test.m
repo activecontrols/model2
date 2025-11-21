@@ -19,9 +19,10 @@ THRUST = 68;
 THRUST_TIME = THRUST * ones(1, N);
 
 % --- Calculate expected notches ---
-TRACK = [1.3525    42.6278;
-         2.6867    84.8000];
-Notches = [TRACK(1, 1) * THRUST + TRACK(1, 2); 
+TRACK = [1.7132    49.6994;
+         3.2067    117.6213];
+Notches = [94;
+           TRACK(1, 1) * THRUST + TRACK(1, 2); 
            TRACK(2, 1) * THRUST + TRACK(2, 2)];
 
 % --- Setup for Filter Run ---
@@ -59,6 +60,38 @@ xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
 xlim([0 fs/2]);
 grid on;
-xline(25, 'g--', 'LineWidth', 2)
-xline(Notches(1), 'r--', 'LineWidth', 2);
-legend('Signal', 'Cutoff LPF', 'Adaptive Notch')
+for i = 1:2
+    xline(Notches(i), 'r--', 'LineWidth', 2);
+end
+xline(110, 'g--', 'LineWidth', 2)
+legend('Signal', 'Expected Notch Frequency', 'Expected Notch Frequency', 'LPF Cutoff')
+
+DO_EXPORT = 0;
+if (DO_EXPORT)
+    fileID = fopen('filter_sample_data.h','w');
+
+    fprintf(fileID, "#pragma once\n");
+    fprintf(fileID, "#define MAX_IDX_FILTER %d\n", N);
+    
+    fprintf(fileID, "float filter_in_arr[MAX_IDX_FILTER][9] = {\n");
+    for i = 1:1:N
+        fprintf(fileID, "    {");
+        for col = 1:1:8 
+         fprintf(fileID, "%.8f, ", IN_Noise(i));
+        end
+        fprintf(fileID, "%.8f", IN_Noise(i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+
+    fprintf(fileID, "float filter_out_arr[MAX_IDX_FILTER][9] = {\n");
+    for i = 1:1:N
+        fprintf(fileID, "    {");
+        for col = 1:1:8 
+         fprintf(fileID, "%.8f, ", OUT_Filtered(i));
+        end
+        fprintf(fileID, "%.8f", OUT_Filtered(i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+end
