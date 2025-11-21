@@ -3,7 +3,7 @@
 // GND switch option so the filter does not run on the ground when no
 // vibrations are present.
 
-#include "matlab_funcs.hpp"
+#include "matlab_funcs.h"
 #include "math.h"
 
 Vector9 FilterStage(Vector9 IN, float f0, float fs, float width, int stage, Matrix9_6 &X, Matrix9_6 &Y) {

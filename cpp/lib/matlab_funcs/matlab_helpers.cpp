@@ -1,4 +1,4 @@
-#include "matlab_funcs.hpp"
+#include "matlab_funcs.h"
 
 Matrix3_3 zetaCross(Vector3 zeta) {
   Matrix3_3 zc;

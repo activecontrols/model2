@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "matlab_funcs.hpp"
-#include "sample_data.hpp" //contains Z, TargetPos, GND, and expected controller output
+#include "matlab_funcs.h"
+#include "sample_data.h" //contains Z, TargetPos, GND, and expected controller output
 
 void setup() {
   extern uint8_t SetSysClock_PLL_HSE(uint8_t bypass, bool lowspeed);

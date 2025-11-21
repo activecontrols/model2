@@ -1,4 +1,4 @@
-#include "matlab_funcs.hpp"
+#include "matlab_funcs.h"
 
 #define FILTER_MODE 1
 #define RTK 1

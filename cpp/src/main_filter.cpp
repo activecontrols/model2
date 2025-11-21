@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "matlab_funcs.hpp"
-#include "filter_sample_data.hpp"
+#include "matlab_funcs.h"
+#include "filter_sample_data.h"
 
 void setup_filter() {
   extern uint8_t SetSysClock_PLL_HSE(uint8_t bypass, bool lowspeed);
