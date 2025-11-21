@@ -26,6 +26,23 @@ function StateSpace = ActuatorDelay
     StateSpace = ss(Delay_MIMO);
 end
 
+function waitbar_update(hWait, total, doReset)
+   persistent count
+    % Reset Logic
+    if doReset
+        count = 0;
+        return; % Exit immediately
+    end 
+
+    % Update Logic
+    if isempty(count)
+        count = 0;
+    end
+    count = count + 1;
+    progress = count / total;
+    waitbar(progress, hWait, sprintf('Simulation Progress: %.0f%%', progress * 100));
+end
+
 % Define the bounds for the operating conditions
 thrustMax = 1.5 * 9.8;   %N
 gimbalMax = pi/18;
@@ -35,23 +52,37 @@ InputBounds = [-gimbalMax       gimbalMax;
                -pi/6            pi/6];
 
 % Euler Angle Limits
-MaxTilt = pi/10;
+MaxTilt = pi/16;
 YawBounds = [-MaxTilt MaxTilt];
 PitchBounds = [-MaxTilt MaxTilt];
-RollBounds = [-pi/12 pi/12];
+RollBounds = [-pi/3 pi/3];
 
 % Other State Limits (Position and Velocity don't affect linearization)
 PosBounds = zeros(3,2);
 VelBounds = zeros(3,2);
-MaxRate = pi/6;
+MaxRate = pi/15;
 RateBounds = [-MaxRate MaxRate;
               -MaxRate MaxRate;
               -MaxRate MaxRate];
 
 % Final State Bounds
-StateBounds = [RollBounds; PitchBounds; YawBounds; PosBounds; VelBounds; RateBounds];
+StateBounds = [YawBounds; PitchBounds; RollBounds; PosBounds; VelBounds; RateBounds];
 
-%% Initial State 
+%% Initial State
+% Load LQR tuning matrices for recomputing
+% Brysons Rule for Q and R.
+a_weights = ones(12,1);
+b_weights = ones(4,1);
+a_weights = a_weights / norm(a_weights);
+b_weights = b_weights / norm(b_weights);
+
+max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.55, 0.55, 1.5, 2, 2, 3];
+max_u = [pi/24, pi/24, 6, 0.4];
+
+Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+
+% First system linearization
 x0 = zeros(15,1);
 u0 = [0; 0; 9.8; 0];
 A = JacobianX(x0, u0);
@@ -84,33 +115,40 @@ L = L * Filter_ss;
 [DM, MM] = diskmargin(L);
 
 %% Sample random operating states
-numSamples = 100;
+numSamples = 500;
 StateVec = zeros(15, numSamples);
 InputVec = zeros(4,  numSamples);
 EulerVec = zeros(3,  numSamples);
 
 % Pre-allocate space for results using initial run
-DM_MonteCarlo = repmat(DM, 1, numSamples);
-MM_MonteCarlo = repmat(MM, 1, numSamples);
-TimePerSample = 0.0073;       %min    
-fprintf(['Started a %i sample Monte Carlo Sim!\n' ...
-         'Expected completion time: %.2f min\n'], numSamples, TimePerSample * numSamples);
-for i = 1:numSamples
+DM_MonteCarlo = cell(1, numSamples);
+MM_MonteCarlo = cell(1, numSamples); 
+
+% Start simulation
+clear waitbar_update
+hWait = waitbar(0, 'Running Monte Carlo Simulation...');
+dq = parallel.pool.DataQueue;
+waitbar_update(hWait, 0, true);
+afterEach(dq, @(~) waitbar_update(hWait, numSamples,  false));
+parfor i = 1:numSamples
 
     % Sample a Random State Vector
-    StateVec(:, i) = [SampleBounds(StateBounds(:, 1), StateBounds(:, 2)); zeros(3,1)];
-    EulerVec(:, i) = StateVec(1:3, i);
+    tempState = [SampleBounds(StateBounds(:, 1), StateBounds(:, 2)); zeros(3,1)];
 
     % Transform Euler Angles to Q_Vec
-    Q = eul2quat(StateVec(1:3, i)', 'XYZ');
-    StateVec(1:3, i) = Q(2:4)';
+    Quat = eul2quat(tempState(1:3)', 'XYZ');
+    EulerVec(:, i) = tempState(1:3);
+    tempState(1:3) = Quat(2:4)';
+
+    % Save state
+    StateVec(:, i) = tempState;
 
     % Relinearize System
-    A = JacobianX(StateVec(:,i), u0);
-    B = JacobianU(StateVec(:,i), u0);
+    A = JacobianX(tempState, u0);
+    B = JacobianU(tempState, u0);
 
     % Compute input trim for steady state
-    DeltaU = -pinv(B) * A * (StateVec(:,i) - x0);
+    DeltaU = -pinv(B) * A * (tempState - x0);
     U = u0 + DeltaU;
     uMax = InputBounds(:, 2);
     uMin = InputBounds(:, 1);
@@ -130,6 +168,8 @@ for i = 1:numSamples
     P = ss(A, B, C, D);
 
     % Feedback TF
+    K = SolveLQR(A, B, Q, R);
+    K_ss = ss(K);
     L = K_ss * P;
 
     % Delayed Feedback TF
@@ -137,19 +177,28 @@ for i = 1:numSamples
     L = L * Delay_MIMO_ss;
 
     % Digital Filter TF
-    thrust = InputVec(3, i) / thrustMax;
+    thrust = U(3) / thrustMax;
     [Filter_TF, ~] = FilterTF_Gen(thrust);
     Filter_ss = ss(Filter_TF);
     L = L * Filter_ss;
 
     % Disk Margins
     [DM, MM] = diskmargin(L);
-    DM_MonteCarlo(:,i) = DM;
-    MM_MonteCarlo(i) = MM;
-    if mod(i, 25) == 0
-        fprintf('%.2f %% done with Monte Carlo Stability Simulation\n', i / numSamples * 100);
-    end
+    DM_MonteCarlo{i} = DM;
+    MM_MonteCarlo{i} = MM;
+    
+    % Update progress
+    send(dq, []);
 end
+fprintf('\nSimulation Complete.\n');
+delete(hWait);
+
+% Cell to struct conversion
+validIdx = ~cellfun(@isempty, MM_MonteCarlo);
+
+% Flatten the Cell Array into a regular Struct Array
+MM_MonteCarlo = [MM_MonteCarlo{validIdx}]; 
+DM_MonteCarlo = [DM_MonteCarlo{validIdx}];
 
 %% Plot a histogram of the distribution of MM values
 diskMarginArray = zeros(numSamples, 1);
@@ -218,7 +267,7 @@ probThreshold = countThreshold / N;
 hold on;
 xline(threshold, 'r--', 'LineWidth',1);
 yline(probThreshold, 'r--', 'LineWidth',1);
-scatter(0.4, probThreshold, 50, 'r', 'filled');
+scatter(threshold, probThreshold, 50, 'r', 'filled');
 hold off;
 fprintf('Cumulative Probability of Disk Margin being below %.2f is: %.2f%%\n', threshold, probThreshold * 100);
 
@@ -228,23 +277,25 @@ PitchRate = StateVec(11, :);
 YawRate = StateVec(12, :);
 
 % Calculate Total Tilt Magnitude (Approximation via RSS of sampled angles in radians)
+EulerVec = rad2deg(EulerVec);
 Tilt_Total = sqrt(EulerVec(1,:).^2 + ...
                   EulerVec(2,:).^2 + ...
                   EulerVec(3,:).^2);
-Tilt_Total_deg = rad2deg(Tilt_Total); % Convert to degrees for plotting
 
 % Calculate Total Angular Rate Magnitude (RSS of p, q, r in deg/sec)
+RollRate = rad2deg(RollRate);
+PitchRate = rad2deg(PitchRate);
+YawRate = rad2deg(YawRate);
 Omega_Total = sqrt(RollRate.^2 + PitchRate.^2 + YawRate.^2);
-Omega_Total_deg = rad2deg(Omega_Total); % Convert to degrees/sec for plotting
 
 % 1. Create a regular 2D grid for interpolation
 num_grid_points = 50;
-Tilt_Grid = linspace(min(Tilt_Total_deg), max(Tilt_Total_deg), num_grid_points);
-Omega_Grid = linspace(min(Omega_Total_deg), max(Omega_Total_deg), num_grid_points);
+Tilt_Grid = linspace(min(Tilt_Total), max(Tilt_Total), num_grid_points);
+Omega_Grid = linspace(min(Omega_Total), max(Omega_Total), num_grid_points);
 [XX, YY] = meshgrid(Tilt_Grid, Omega_Grid);
 
 % 2. Interpolate the scattered data (Disk Margin) onto the grid
-ZZ = griddata(Tilt_Total_deg, Omega_Total_deg, diskMarginArray, XX, YY);
+ZZ = griddata(Tilt_Total, Omega_Total, diskMarginArray, XX, YY);
 
 
 % 3. Plot the surface
@@ -257,5 +308,7 @@ ylabel('Total Angular Rate [deg/s]');
 zlabel('Disk Margin Value (\alpha)');
 title('Robustness Surface: Disk Margin vs. Flight Condition');
 colorbar;
+colormap jet
+clim([0, 0.7])
 view(2); % View from 3D perspective
 grid on;

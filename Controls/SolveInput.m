@@ -8,21 +8,31 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [K, u] = SolveInput(x0, x_ref, u0)
+function [K, U] = SolveInput(x0, x_ref, u0)
+% Input bounds
+thrustMax = 1.7 * 9.8;   %N
+gimbalMax = pi/18;
+InputBounds = [-gimbalMax       gimbalMax;
+               -gimbalMax       gimbalMax;
+               .4 * thrustMax   thrustMax;
+               -pi/6            pi/6];
 
-% Calculate the J_u Jacobian [B matrices] at thrust up
-B = JacobianU([x0; zeros(3,1)], u0);
-B = B(1:12,:);
+% Relinearize System
+A = JacobianX(x_ref, u0);
+B = JacobianU(x_ref, u0);
 
-% Solve for u0 such that Ax0 + Bu0 = 0
-%   invp(B) is the Moore-Penrose pseudoinverse of B
-%   check Eigen availability of this function, prob avaiable under SVD.
-xdot = nominalDynamics([x0; zeros(3,1)], zeros(4,1));
-u0 = -pinv(B) * xdot(1:12);
+% Compute input trim for steady state
+DeltaU = -pinv(B) * A * (x_ref - x0);
+U = u0 + DeltaU;
+uMax = InputBounds(:, 2);
+uMin = InputBounds(:, 1);
+U = min(max(U, uMin), uMax);
 
-% Calculate the J_x Jacobian [A matrices] at current state
-A = JacobianX([x0; zeros(3,1)], u0);
-A = A(1:12,1:12);
+% Save Input and relinearize
+A = JacobianX(x_ref, U);
+B = JacobianU(x_ref, U);
+A = A(1:12, 1:12);
+B = B(1:12, :);
 
 % Define Q and R matrices for LQR using Bryson's Rule
 a_weights = ones(12,1);
@@ -40,11 +50,7 @@ R = eye(size(B,2)) .* b_weights ./ max_u.^2;
 K = SolveLQR(A, B, Q, R);
 
 % Compute optimal input
-u = -K * (x0 - x_ref) + u0;
+U = -K * (x0(1:12) - x_ref(1:12)) + u0;
 
 % Input saturation
-thrust_max = 1.5 * 9.8;
-maxU = [pi/24; pi/24; thrust_max; thrust_max * 10];
-minU = [-pi/24; -pi/24; thrust_max * 0.4; -thrust_max * 10];
-u = max(minU, u);
-u = min(maxU, u);
+U = min(max(U, uMin), uMax);

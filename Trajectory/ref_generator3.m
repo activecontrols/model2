@@ -71,6 +71,7 @@ function ref = ref_generator3(x, t, TargetPos, HoldTimeReqs)
         TargetVel = PosGain .* PosError;
         TargetVel(1:2) = max(min(TargetVel(1:2), MaxLatSpeed), -MaxLatSpeed);
         TargetVel(3) = max(min(TargetVel(3), MaxAscentSpeed), MaxDescentSpeed);
+        Q_ROLL = [0.866, 0, 0, 0.500]';
     
         TargetVec = [zeros(3,1); TargetPos(:, i); TargetVel; zeros(3,1)];
     
