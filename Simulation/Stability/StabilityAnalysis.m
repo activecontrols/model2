@@ -52,15 +52,15 @@ InputBounds = [-gimbalMax       gimbalMax;
                -pi/6            pi/6];
 
 % Euler Angle Limits
-MaxTilt = pi/16;
+MaxTilt = pi/6;
 YawBounds = [-MaxTilt MaxTilt];
 PitchBounds = [-MaxTilt MaxTilt];
-RollBounds = [-pi/3 pi/3];
+RollBounds = [-pi/2 pi/2];
 
 % Other State Limits (Position and Velocity don't affect linearization)
 PosBounds = zeros(3,2);
 VelBounds = zeros(3,2);
-MaxRate = pi/15;
+MaxRate = pi/6;
 RateBounds = [-MaxRate MaxRate;
               -MaxRate MaxRate;
               -MaxRate MaxRate];
@@ -256,7 +256,7 @@ plot(x_plot, F_plot, 'LineWidth', 2, 'Color', [0 0.447 0.741]);
 title('Empirical Cumulative Distribution Function (ECDF)');
 xlabel('Disk Margin Value (x)');
 ylabel('Cumulative Probability F(x)');
-xlim([min(diskMarginArray), max(diskMarginArray)]);
+xlim([0, max(diskMarginArray)]);
 grid on;
 
 % The ECDF value for x=0.4 is the count of points <= 0.4 divided by N.
@@ -296,7 +296,6 @@ Omega_Grid = linspace(min(Omega_Total), max(Omega_Total), num_grid_points);
 
 % 2. Interpolate the scattered data (Disk Margin) onto the grid
 ZZ = griddata(Tilt_Total, Omega_Total, diskMarginArray, XX, YY);
-
 
 % 3. Plot the surface
 figure;
