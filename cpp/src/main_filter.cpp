@@ -8,14 +8,14 @@ void setup_filter() {
 
   delay(5000);
   Serial.begin(115200);
-  Serial.println("Connected - starting astra sim");
+  Serial.println("Connected - starting filter sim");
 
   long long start_t = millis();
 
-  Matrix9_6 X;
-  Matrix9_6 Y;
+  Matrix9_4 X;
+  Matrix9_4 Y;
   Vector9 pre_sample(filter_in_arr[0]);
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 4; i++) {
     X.block<9, 1>(0, i) = pre_sample;
     Y.block<9, 1>(0, i) = pre_sample;
   }

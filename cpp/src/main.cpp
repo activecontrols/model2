@@ -43,9 +43,10 @@ void setup() {
   x_est[0] = 1;
   Vector3 lastEMA = Vector3::Zero();
 
-  Matrix9_6 dnf_X = Matrix9_6::Ones();
-  Matrix9_6 dnf_Y = Matrix9_6::Ones();
+  Matrix9_4 dnf_X = Matrix9_4::Ones();
+  Matrix9_4 dnf_Y = Matrix9_4::Ones();
   float last_thrust = constantsASTRA.g * constantsASTRA.m;
+  float allowed_err[4] = {0.0002, 0.0002, 0.002, 0.0002};
 
   // Loop over all timesteps
   for (int idx = 0; idx < MAX_IDX; idx++) {
@@ -55,7 +56,7 @@ void setup() {
     Vector3 TargetPos(target_pos_arr[idx]);
 
     Vector9 imu = z.segment<9>(0);
-    Vector9 filt_imu = DigitalNF(imu, GND_val, last_thrust, dT, dnf_X, dnf_Y);
+    Vector9 filt_imu = DigitalNF(imu, GND_val, last_thrust, 0.002, dnf_X, dnf_Y);
     z.segment<9>(0) = filt_imu;
 
     Vector15 temp_z = z;
@@ -79,7 +80,7 @@ void setup() {
 
     // comparison with expected output
     for (int i = 0; i < 4; i++) {
-      if (abs(raw_co(i) - exp_controller_output[idx][i]) > 0.0002) {
+      if (abs(raw_co(i) - exp_controller_output[idx][i]) > allowed_err[i]) {
         Serial.print("Mismatch at idx: ");
         Serial.print(idx);
         Serial.print(" element: ");

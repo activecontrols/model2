@@ -9,9 +9,10 @@ state_arr = data.data{2}.Values.Data;
 z_arr = data.data{3}.Values.Data;
 GND_arr = data.data{4}.Values.Data;
 disc_controller_output = zeros(4, MAX);
-% disc_state = zeros(15, MAX);
+disc_state = zeros(15, MAX);
 disc_target = zeros(3, MAX);
-% disc_dnf_out = zeros(9, MAX);
+disc_dnf_out = zeros(9, MAX);
+disc_last_cmd_thrust = zeros(1, MAX);
 % disc_P = zeros(144, MAX);
 dT = 0.002;
 
@@ -26,9 +27,9 @@ x_est(1) = 1;
 last_cmd_thrust = constantsASTRA.m * constantsASTRA.g;
 
 for i = 1:STEP:MAX
-    ANF_IMU = DigitalNF(z_arr(1:9,i), GND_arr(i), last_cmd_thrust, dT * STEP);
+    ANF_IMU = DigitalNF(z_arr(1:9,i), GND_arr(i), last_cmd_thrust, dT);
     Y_FILT = [ANF_IMU; z_arr(10:15,i)];
-    %Y_FILT = z_arr(:,i); // bypass filter
+    % Y_FILT = z_arr(:,i); % bypass filter
     
     x_est = EstimateStateFCN(x_est, constantsASTRA, Y_FILT, dT * STEP, GND_arr(i));
     EMA_G = EMA_Gyros_MLFUNC(Y_FILT);
@@ -47,16 +48,17 @@ for i = 1:STEP:MAX
 
     for j = i:1:i+STEP
         tp_index = min(floor(dT * j / 5) + 1, 8); % step through 1-8, advancing every 5 secs
-        % disc_dnf_out(:,j) = ANF_IMU;
+        disc_dnf_out(:,j) = ANF_IMU;
         disc_target(:,j) = Checkpoints(:,tp_index);
-        % disc_state(:,j) = X;
+        disc_state(:,j) = X;
         disc_controller_output(:,j) = raw_co;
+        disc_last_cmd_thrust(:,j) = last_cmd_thrust;
         % disc_P(:,j) = reshape(P,[144,1]);
     end
 end
 
 %% Plots
-DO_PLOTS = 0;
+DO_PLOTS = 1;
 
 if (DO_PLOTS)
     figure;
@@ -142,16 +144,24 @@ if (DO_EXPORT)
     end
     fprintf(fileID, "};\n");
     
-    % fprintf(fileID, "float dnf_out_arr[MAX_IDX][9] = {\n");
-    % for i = 1:STEP:MAX
-    %     fprintf(fileID, "    {");
-    %     for col = 1:1:8 
-    %      fprintf(fileID, "%.8f, ", disc_dnf_out(col, i));
-    %     end
-    %     fprintf(fileID, "%.8f", disc_dnf_out(9, i));
-    %     fprintf(fileID, "},\n");
-    % end
-    % fprintf(fileID, "};\n");
+    fprintf(fileID, "float dnf_out_arr[MAX_IDX][9] = {\n");
+    for i = 1:STEP:MAX
+        fprintf(fileID, "    {");
+        for col = 1:1:8 
+         fprintf(fileID, "%.8f, ", disc_dnf_out(col, i));
+        end
+        fprintf(fileID, "%.8f", disc_dnf_out(9, i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+
+    fprintf(fileID, "float last_cmd_thurst_arr[MAX_IDX][1] = {\n");
+    for i = 1:STEP:MAX
+        fprintf(fileID, "    {");
+        fprintf(fileID, "%.8f", disc_last_cmd_thrust(1, i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
 
     % fprintf(fileID, "float exp_state[MAX_IDX][15] = {\n");
     % for i = 1:STEP:MAX
