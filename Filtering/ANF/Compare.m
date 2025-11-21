@@ -1,9 +1,9 @@
 clear;
 clear DigitalNF;
-addpath('Filtering\ANF\Roll Data\');
+addpath('Filtering\ANF\Roll Data 2\');
 
 % File list
-list = dir('Filtering\ANF\Roll Data\');
+list = dir('Filtering\ANF\Roll Data 2\');
 
 % Get the number of files found
 numFiles = length(list);
@@ -12,9 +12,9 @@ numFiles = length(list);
 allData = struct('filename', {}, 'raw_data', {}, 'filtered_data', {}, 'thrust', {});
 
 % --- NOTE: Your manual assignments (k=1, k=2) are used as-is ---
-allData(1).raw_data = readmatrix('7.5_12.5.csv');
+allData(1).raw_data = readmatrix('7.50_12.50.csv');
 allData(1).thrust = 10;
-allData(2).raw_data = readmatrix('8.70_11.20.csv');
+allData(2).raw_data = readmatrix('10.00_10.00.csv');
 allData(2).thrust = 9.95;
 startFile = 3; % Start the loop from k=3
 
@@ -35,14 +35,15 @@ for k = startFile:1:numFiles
     end
     
     allData(k).filename = filename;
-    allData(k).raw_data = readmatrix(filename);
+    dataArray = readmatrix(filename);
+    allData(k).raw_data = sortrows(dataArray, 1, 'ascend');
 end
 
 
 %% 1. Filter Data and Perform Fourier Analysis (NEW STEP)
 fourier_raw = struct('data', {}, 'freq', {});
 fourier_filtered = struct('data', {}, 'freq', {});
-plotChannel = 3; % The signal channel to analyze (e.g., Roll Rate)
+plotChannel = 1; % The signal channel to analyze (e.g., Roll Rate)
 
 for k = 1:numFiles
     % Timestep and Fs
@@ -187,10 +188,10 @@ fprintf(['Max Noise Amplitude Pre-Filter: %.3f \n' ...
          'Max Noise Amplitude Post-Filter: %.3f \n'], max_ampl_raw, max_ampl_filt);
 
 figure;
-TestNumber = 42;
+TestNumber = 20;
 Channel = plotChannel + 1;
-plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).raw_data(:, Channel)); hold on;
-plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).filtered_data(:, Channel))
+plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).raw_data(:, Channel), 'LineWidth', 2); hold on;
+plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).filtered_data(:, Channel), 'LineWidth', 2)
 legend('Raw Data', 'ANF-S Filtered')
 xlabel('Time [s]')
 ylabel('Acceleration [m/s^2]')

@@ -29,6 +29,7 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
         TF = G * (1 - 2 * cos(w0) * z^-1 + z^-2) / (1 - 2 * r *cos(w0) * z^-1 + r^2 * z^-2);
     end
     function TF = LPF_D(Cutoff, fs)
+        % OUTDATED (!!!)
         Cutoff = Cutoff * 2 * pi;
         Ts = 1 / fs;
         z = tf('z', Ts);
@@ -37,7 +38,7 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
     function TF = LPF_C(Cutoff)
         Cutoff = Cutoff * 2 * pi;
         s = tf('s');
-        TF = Cutoff / (Cutoff + s);
+        TF = Cutoff^2 / (s^2 + sqrt(2)*Cutoff*s + Cutoff^2);
     end
     function TF = convTF(TF_Array)
         n = size(TF_Array, 1);
@@ -51,29 +52,25 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
     f0 = 94;
     width1 = 18;
     fs = 1000;
-    numNotch = 3;
+    numNotch = 2;
     res = 200;
     NotchC_Array = zeros(numNotch, 1) * tf('s');
     NotchD_Array = NotchC_Array;
     
     % Center Freq. vs Thrust Tracks
-    tracks = [1.7672    50.4512;
-              3.1740    109.242];
-    
-    % Build constant Notch at 120 Hz
-    NotchC_Array(1,1) = Notch_TFC(f0, width1);
-    NotchD_Array(1,1) = Notch_TFD(f0, width1, fs);
+    tracks = [1.3525    42.6278;
+              2.6867    84.8000];
 
     % Build Adaptive notch
     width2 = width1 + thrust / 100 * 20;
     NotchFreq = tracks(1, 1) * thrust + tracks(1, 2);
-    NotchC_Array(2,1) = Notch_TFC(NotchFreq, width2);
-    NotchD_Array(2,1) = Notch_TFD(NotchFreq, width2, fs);
+    NotchC_Array(1,1) = Notch_TFC(NotchFreq, width2);
+    NotchD_Array(1,1) = Notch_TFD(NotchFreq, width2, fs);
 
     % Build LPF
     Cutoff = 30;
-    NotchC_Array(3,1) = LPF_C(Cutoff);
-    NotchD_Array(3,1) = LPF_D(Cutoff, fs);
+    NotchC_Array(2,1) = LPF_C(Cutoff);
+    NotchD_Array(2,1) = LPF_D(Cutoff, fs);
 
     % Convolve the transfer functions
     TFC = convTF(NotchC_Array);

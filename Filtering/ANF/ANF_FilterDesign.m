@@ -28,7 +28,7 @@ w = 2 * pi * f;                % Convert to rad/s for 'bode' or 'freqresp'
 magC = zeros(res, size(f, 2));
 phaseC = magC;
 for thrust = 1:1:res
-    [mag, phase] = bode(NotchD_Array(1, thrust), w);
+    [mag, phase] = bode(NotchC_Array(1, thrust), w);
     mag = squeeze(mag);
     phase = squeeze(phase);
     phase = wrapTo180(phase);
@@ -60,7 +60,7 @@ ylabel('Frequency [Hz]');      % <-- Swapped
 zlabel('Magnitude [dB]');
 title('ANF Magnitude (3D Surface)');
 colorbar;
-clim([-30, 0]);      % Anything under 5dB is considered cutoff.
+clim([-40, 0]);      % Anything under 5dB is considered cutoff.
 view(-90,90);
 xline(40, 'g--', 'LineWidth', 2);
 yline(10, 'r--', 'LineWidth', 2);
@@ -77,7 +77,7 @@ ylabel('Frequency [Hz]');      % <-- Swapped
 zlabel('Phase [degrees]');
 title('ANF Phase (3D Surface - Unwrapped)');
 colorbar;
-clim([-90 90]);
+clim([-180 0]);
 view(-90,90);
 % view(-70, 40);
 xline(40, 'g--', 'LineWidth', 2);

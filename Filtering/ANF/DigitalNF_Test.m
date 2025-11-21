@@ -19,10 +19,9 @@ THRUST = 68;
 THRUST_TIME = THRUST * ones(1, N);
 
 % --- Calculate expected notches ---
-TRACK = [1.7132    49.6994;
-         3.2067    117.6213];
-Notches = [94;
-           TRACK(1, 1) * THRUST + TRACK(1, 2); 
+TRACK = [1.3525    42.6278;
+         2.6867    84.8000];
+Notches = [TRACK(1, 1) * THRUST + TRACK(1, 2); 
            TRACK(2, 1) * THRUST + TRACK(2, 2)];
 
 % --- Setup for Filter Run ---
@@ -60,8 +59,6 @@ xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
 xlim([0 fs/2]);
 grid on;
-for i = 1:2
-    xline(Notches(i), 'r--', 'LineWidth', 2);
-end
-xline(110, 'g--', 'LineWidth', 2)
-legend('Signal', 'Expected Notch Frequency', 'Expected Notch Frequency', 'LPF Cutoff')
+xline(25, 'g--', 'LineWidth', 2)
+xline(Notches(1), 'r--', 'LineWidth', 2);
+legend('Signal', 'Cutoff LPF', 'Adaptive Notch')
