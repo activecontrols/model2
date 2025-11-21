@@ -6,7 +6,7 @@
 #include "matlab_funcs.h"
 #include "math.h"
 
-Vector9 FilterStage(Vector9 IN, float f0, float fs, float width, int stage, Matrix9_6 &X, Matrix9_6 &Y) {
+Vector9 FilterStage(Vector9 IN, float f0, float fs, float width, int stage, Matrix9_4 &X, Matrix9_4 &Y) {
   float w0 = 2 * M_PI * f0 / fs;
   float r = exp(-M_PI * width / fs);
 
@@ -29,35 +29,37 @@ Vector9 FilterStage(Vector9 IN, float f0, float fs, float width, int stage, Matr
   return OUT;
 }
 
-Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_6 &X, Matrix9_6 &Y) {
+Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_4 &X, Matrix9_4 &Y) {
   Vector9 OUT;
 
   Matrix2_2 TRACK;
-  TRACK << 1.7054, 50.9375, 3.2139, 117.1451;
+  TRACK << 1.3525, 42.6278, 2.6867, 84.8000;
 
   float fs = 1 / dT;
-  float width1 = 16; // Hz
-  float width2 = width1 + 0.7 * (THRUST - 15);
+  float width1 = 25; // Hz
 
   // Sequential Notch Filter
   if (GND == 0) {
     // Notch #1
-    // Setup first notch at constant frequency
-    float f0 = 94; // Hz
+    // Setup second notch following track #1
+    float f0 = TRACK(0, 0) * THRUST + TRACK(0, 1); // Hz
     IN = FilterStage(IN, f0, fs, width1, 0, X, Y);
 
-    // Notch #2
-    // Setup second notch following track #1
-    f0 = TRACK(0, 0) * THRUST + TRACK(0, 1); // Hz
-    IN = FilterStage(IN, f0, fs, width2, 1, X, Y);
+    // 2nd Order Butterworth Filter
+    // Set up a 2nd Order Butterworth Filter
+    f0 = 25;
+    float C = tan(M_PI * f0 / fs);
+    float A1 = 2 * (C * C - 1) / (1 + sqrt(2) * C + C * C);
+    float A2 = (1 - sqrt(2) * C + C * C) / (1 + sqrt(2) * C + C * C);
+    float B0 = C * C / (1 + sqrt(2) * C + C * C);
+    float B1 = 2 * B0;
+    float B2 = B0;
+    OUT = B0 * IN + B1 * X.block<9, 1>(0, 2) + B2 * X.block<9, 1>(0, 3) - A1 * Y.block<9, 1>(0, 2) - A2 * Y.block<9, 1>(0, 3);
 
-    // Notch 3 as a 1st order LPF at 120Hz
-    float cut = 35 * 2 * M_PI;
-    float C1 = cut / (2 * fs + cut);
-    float C2 = (cut - 2 * fs) / (cut + 2 * fs);
-    OUT = C1 * IN + C1 * X.block<9, 1>(0, 4) - C2 * Y.block<9, 1>(0, 4);
-    Y.block<9, 1>(0, 4) = OUT;
-    X.block<9, 1>(0, 4) = IN;
+    X.block<9, 1>(0, 3) = X.block<9, 1>(0, 2);
+    X.block<9, 1>(0, 2) = IN;
+    Y.block<9, 1>(0, 3) = Y.block<9, 1>(0, 2);
+    Y.block<9, 1>(0, 2) = OUT;
   } else {
     // The output is just the input(passthrough)
     OUT = IN;
@@ -80,18 +82,8 @@ Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_6 &X, M
     Y.block<9, 1>(0, 3) = Y.block<9, 1>(0, 2);
     Y.block<9, 1>(0, 2) = OUT_2;
 
-    // The input to stage 3 is the output of stage 2
-    Vector9 IN_3 = OUT_2;
-    Vector9 OUT_3 = IN_3; // Passthrough for stage 3
-
-    // Stage 3: History is updated
-    X.block<9, 1>(0, 5) = X.block<9, 1>(0, 4);
-    X.block<9, 1>(0, 4) = IN_3;
-    Y.block<9, 1>(0, 5) = Y.block<9, 1>(0, 4);
-    Y.block<9, 1>(0, 4) = OUT_3;
-
     // The final output is the passthrough from the last stage
-    OUT = OUT_3;
+    OUT = OUT_2;
   }
 
   return OUT;
