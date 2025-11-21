@@ -32,8 +32,8 @@ Vector9 FilterStage(Vector9 IN, float f0, float fs, float width, int stage, Matr
 Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_6 &X, Matrix9_6 &Y) {
   Vector9 OUT;
 
-  Matrix4_4 TRACK;
-  TRACK << 1.7054, 50.9375, 3.2139, 117.1451; // TODO - check this insertion order
+  Matrix2_2 TRACK;
+  TRACK << 1.7054, 50.9375, 3.2139, 117.1451;
 
   float fs = 1 / dT;
   float width1 = 16; // Hz
@@ -44,12 +44,12 @@ Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_6 &X, M
     // Notch #1
     // Setup first notch at constant frequency
     float f0 = 94; // Hz
-    OUT = FilterStage(IN, f0, fs, width1, 0, X, Y);
+    IN = FilterStage(IN, f0, fs, width1, 0, X, Y);
 
     // Notch #2
     // Setup second notch following track #1
     f0 = TRACK(0, 0) * THRUST + TRACK(0, 1); // Hz
-    OUT = FilterStage(IN, f0, fs, width2, 1, X, Y);
+    IN = FilterStage(IN, f0, fs, width2, 1, X, Y);
 
     // Notch 3 as a 1st order LPF at 120Hz
     float cut = 35 * 2 * M_PI;

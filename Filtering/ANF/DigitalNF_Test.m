@@ -65,3 +65,33 @@ for i = 1:2
 end
 xline(110, 'g--', 'LineWidth', 2)
 legend('Signal', 'Expected Notch Frequency', 'Expected Notch Frequency', 'LPF Cutoff')
+
+DO_EXPORT = 0;
+if (DO_EXPORT)
+    fileID = fopen('filter_sample_data.h','w');
+
+    fprintf(fileID, "#pragma once\n");
+    fprintf(fileID, "#define MAX_IDX_FILTER %d\n", N);
+    
+    fprintf(fileID, "float filter_in_arr[MAX_IDX_FILTER][9] = {\n");
+    for i = 1:1:N
+        fprintf(fileID, "    {");
+        for col = 1:1:8 
+         fprintf(fileID, "%.8f, ", IN_Noise(i));
+        end
+        fprintf(fileID, "%.8f", IN_Noise(i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+
+    fprintf(fileID, "float filter_out_arr[MAX_IDX_FILTER][9] = {\n");
+    for i = 1:1:N
+        fprintf(fileID, "    {");
+        for col = 1:1:8 
+         fprintf(fileID, "%.8f, ", OUT_Filtered(i));
+        end
+        fprintf(fileID, "%.8f", OUT_Filtered(i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+end
