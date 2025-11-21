@@ -43,13 +43,20 @@ void setup() {
   x_est[0] = 1;
   Vector3 lastEMA = Vector3::Zero();
 
+  Matrix9_6 dnf_X = Matrix9_6::Ones();
+  Matrix9_6 dnf_Y = Matrix9_6::Ones();
+  float last_thrust = constantsASTRA.g * constantsASTRA.m;
+
   // Loop over all timesteps
   for (int idx = 0; idx < MAX_IDX; idx++) {
-
     // Construct Eigen vectors directly from arrays
     Vector15 z(z_arr[idx]);
     float GND_val = GND_arr[idx];
     Vector3 TargetPos(target_pos_arr[idx]);
+
+    Vector9 imu = z.segment<9>(0);
+    Vector9 filt_imu = DigitalNF(imu, GND_val, last_thrust, dT, dnf_X, dnf_Y);
+    z.segment<9>(0) = filt_imu;
 
     Vector15 temp_z = z;
     temp_z.segment<3>(3) = temp_z.segment<3>(3) - x_est.segment<3>(10);
@@ -67,6 +74,7 @@ void setup() {
       raw_co = Vector4::Zero();
     }
 
+    last_thrust = raw_co(2);
     lastZ = z;
 
     // comparison with expected output
