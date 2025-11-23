@@ -52,7 +52,7 @@ matlabFunction(x_dot, 'File', './Simulation/nominalDynamics.m', 'Vars', [{x}, {u
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
-ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
+% ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate LQR Controller for Simulation
 % Brysons Rule for Q and R.
@@ -61,8 +61,8 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [1, 1, 0.35, 1000, 1000, 1000, 0.6, 0.6, 0.3, 1000, 1000, 1000];
-max_u = [pi/40, pi/40, 6, 0.4];
+max_x = [1, 1, 0.35, 1000, 1000, 1000, 0.55, 0.55, 0.3, 1000, 1000, 1000];
+max_u = [pi/80, pi/80, 6, 0.4];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
 R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;

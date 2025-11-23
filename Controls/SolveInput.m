@@ -50,7 +50,7 @@ R = eye(size(B,2)) .* b_weights ./ max_u.^2;
 K = SolveLQR(A, B, Q, R);
 
 % Compute optimal input
-U = -K * (x0(1:12) - x_ref(1:12)) + u0;
+U = -K * (x0(1:12) - x_ref(1:12)) + U;
 
 % Input saturation
 U = min(max(U, uMin), uMax);
