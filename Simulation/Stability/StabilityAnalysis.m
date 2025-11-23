@@ -52,10 +52,10 @@ InputBounds = [-gimbalMax       gimbalMax;
                -pi/6            pi/6];
 
 % Euler Angle Limits
-MaxTilt = pi/6;
+MaxTilt = pi/60;
 YawBounds = [-MaxTilt MaxTilt];
 PitchBounds = [-MaxTilt MaxTilt];
-RollBounds = [-pi/2 pi/2];
+RollBounds = [-pi/12 pi/12];
 
 % Other State Limits (Position and Velocity don't affect linearization)
 PosBounds = zeros(3,2);
@@ -168,8 +168,8 @@ parfor i = 1:numSamples
     P = ss(A, B, C, D);
 
     % Feedback TF
-    K = SolveLQR(A, B, Q, R);
-    K_ss = ss(K);
+    % K = SolveLQR(A, B, Q, R);
+    % K_ss = ss(K);
     L = K_ss * P;
 
     % Delayed Feedback TF

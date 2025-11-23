@@ -18,7 +18,7 @@ end
 TRACK = [1.3525    42.6278;
          2.6867    84.8000];
 fs = 1 / dT;
-width1 = 25;     % Hz
+width1 = 35;     % Hz
 
 % Sequential Notch Filter
 if ~GND
@@ -45,7 +45,7 @@ if ~GND
     
     %% 2nd Order Butterworth Filter
         % Set up a 2nd Order Butterworth Filter
-        f0 = 25;
+        f0 = 20;
         C = tan(pi * f0 / fs);
         A1 = 2*(C^2 - 1) / (1 + sqrt(2)*C + C^2);
         A2 = (1 - sqrt(2)*C + C^2) / (1 + sqrt(2)*C + C^2);
