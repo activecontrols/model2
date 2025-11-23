@@ -160,6 +160,18 @@ end
 %     pause(1);
 % end
 
-
-
-
+%% Arm Kill and Finished event plots
+figure; grid on;
+for i = 1:countARM
+    plot(validData(i).MET); grid on;
+    if ~isempty(validData(i).events.Arm)
+        Arms = xline(validData(i).events.Arm, 'g--');
+    end
+    if ~isempty(validData(i).events.Finished)
+        Kills = xline(validData(i).events.Finished, 'b--');
+    end
+    if ~isempty(validData(i).events.Kill)
+        Ends = xline(validData(i).events.Kill, 'r--');
+    end
+    pause(5);
+end
