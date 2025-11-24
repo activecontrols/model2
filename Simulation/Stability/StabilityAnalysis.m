@@ -14,7 +14,7 @@ end
 function StateSpace = ActuatorDelay
     %Creates a first order actuator model
     ActuatorModel = cell(4, 1);
-    tau = [0.05; 0.05; 0.15; 0.15];
+    tau = [0.08; 0.08; 0.15; 0.15];
 
     for i =1:size(tau, 1)
         tau_i = tau(i);
@@ -52,10 +52,10 @@ InputBounds = [-gimbalMax       gimbalMax;
                -pi/6            pi/6];
 
 % Euler Angle Limits
-MaxTilt = pi/60;
+MaxTilt = pi/18;
 YawBounds = [-MaxTilt MaxTilt];
 PitchBounds = [-MaxTilt MaxTilt];
-RollBounds = [-pi/12 pi/12];
+RollBounds = [-pi/40 pi/40];
 
 % Other State Limits (Position and Velocity don't affect linearization)
 PosBounds = zeros(3,2);
@@ -76,11 +76,11 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [5, 5, 0.06, 1000, 1000, 1000, 0.55, 0.55, 1.5, 2, 2, 3];
-max_u = [pi/24, pi/24, 6, 0.4];
+max_x = [3, 3, 0.5, 1000, 1000, 1000, 1, 1, 0.4, pi/8, pi/8, 2];
+max_u = [pi/18, pi/18, 6, 0.4];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+R = diag([260, 260, 4, 10]);
 
 % First system linearization
 x0 = zeros(15,1);
@@ -115,7 +115,7 @@ L = L * Filter_ss;
 [DM, MM] = diskmargin(L);
 
 %% Sample random operating states
-numSamples = 500;
+numSamples = 300;
 StateVec = zeros(15, numSamples);
 InputVec = zeros(4,  numSamples);
 EulerVec = zeros(3,  numSamples);
@@ -256,7 +256,7 @@ plot(x_plot, F_plot, 'LineWidth', 2, 'Color', [0 0.447 0.741]);
 title('Empirical Cumulative Distribution Function (ECDF)');
 xlabel('Disk Margin Value (x)');
 ylabel('Cumulative Probability F(x)');
-xlim([0, max(diskMarginArray)]);
+xlim([0, 1]);
 grid on;
 
 % The ECDF value for x=0.4 is the count of points <= 0.4 divided by N.
@@ -265,11 +265,12 @@ probThreshold = countThreshold / N;
 
 % Plot the horizontal and vertical lines for visualization
 hold on;
-xline(threshold, 'r--', 'LineWidth',1);
-yline(probThreshold, 'r--', 'LineWidth',1);
-scatter(threshold, probThreshold, 50, 'r', 'filled');
+xline(mean(diskMarginArray), 'r--', 'LineWidth',1);
+yline(0.5, 'r--', 'LineWidth',1);
+scatter(mean(diskMarginArray), 0.5, 50, 'r', 'filled');
 hold off;
 fprintf('Cumulative Probability of Disk Margin being below %.2f is: %.2f%%\n', threshold, probThreshold * 100);
+fprintf('Average Disk Margin: %.2f\n', mean(diskMarginArray, 1));
 
 % 3. Angular Rates (States 10-12)
 RollRate = StateVec(10, :);
@@ -308,6 +309,6 @@ zlabel('Disk Margin Value (\alpha)');
 title('Robustness Surface: Disk Margin vs. Flight Condition');
 colorbar;
 colormap jet
-clim([0, 0.7])
+clim([0.2, 1])
 view(2); % View from 3D perspective
 grid on;

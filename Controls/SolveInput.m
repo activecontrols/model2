@@ -17,6 +17,9 @@ InputBounds = [-gimbalMax       gimbalMax;
                .4 * thrustMax   thrustMax;
                -pi/6            pi/6];
 
+% Zero pad the x_ref vector
+x_ref = [x_ref; zeros(3,1)];
+
 % Relinearize System
 A = JacobianX(x_ref, u0);
 B = JacobianU(x_ref, u0);
@@ -40,8 +43,8 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [2, 2, 0.08, 1000, 1000, 1000, 0.8, 0.8, 2, 2, 2, 10];
-max_u = [pi/30, pi/30, 6, 0.5];
+max_x = [1, 1, 0.35, 1000, 1000, 1000, 0.55, 0.55, 0.3, 1000, 1000, 1000];
+max_u = [pi/80, pi/80, 6, 0.4];
 
 Q = eye(size(A,1)) .* a_weights ./ max_x.^2;
 R = eye(size(B,2)) .* b_weights ./ max_u.^2;
