@@ -1,3 +1,4 @@
+
 function StateSpace = ActuatorDelay
     %Creates a first order actuator model
     ActuatorModel = cell(4, 1);
@@ -12,6 +13,14 @@ function StateSpace = ActuatorDelay
     Delay_MIMO = blkdiag(ActuatorModel{:});
     StateSpace = ss(Delay_MIMO);
 end
+
+addpath('.\Filtering');
+addpath('.\Filtering\ANF');
+addpath('.\Simulation');
+addpath('.\Simulation\Disturbances\');
+addpath('.\Simulation\Helper\');
+addpath('.\Simulation\Stability\');
+addpath('.\Simulation\Vehicle Motion\');
 
 %% Initial State
 % Build constants array
