@@ -23,7 +23,9 @@ addpath('.\Simulation\Stability\');
 addpath('.\Simulation\Vehicle Motion\');
 
 %% Initial State
-% Build constants array
+% Build constants array (You probably only wanna run this once at the
+% beggining. Eats up a bit of performance but it is necessary to load in
+% matrices and vehicle constants)
 constantsASTRA = constructConstants;
 [x, u2, x_dot] = EoMGenerator(constantsASTRA, 2);
 [linSys, disLinSys] = dynamics(x, u2, x_dot, constantsASTRA);
@@ -76,11 +78,12 @@ L = K_ss * P;
 Delay_MIMO_ss = ActuatorDelay;
 L = L * Delay_MIMO_ss;
 
-% Digital Filter TF
+% Digital Filter TF (Using the transfer function of the worst-case digital
+% filter we'll have on board)
 thrust = u0(3) / thrustMax;
 [Filter_TF, ~] = FilterTF_Gen(thrust);
 Filter_ss = ss(Filter_TF);
 L = L * Filter_ss;
 
-% Disk Margins
+% Final Disk Margin structs.
 [DM, MM] = diskmargin(L);
