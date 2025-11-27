@@ -9,8 +9,8 @@ function xdot = ActuatorDynamics(x, u, GND)
     % x(6) Roll
 
     % Assume identical servos for gimbal
-    a = 700;
-    b = 40;
+    a = 400;
+    b = 35;
 
     k1 = 1;
     k2 = 1;
