@@ -17,7 +17,7 @@
 function [lin, linDis] = dynamics(x, u, x_dot, constants)
     
     % Linearized around static vertical position
-    delx = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
+    delx = [1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
     delu = [0; 0; constants.m * constants.g; 0];
     
     % Linear relations
@@ -25,21 +25,29 @@ function [lin, linDis] = dynamics(x, u, x_dot, constants)
     % the values at our desired point of linearization.
     % NOTE: replace "[x; u], [delx; delu]" with "[x; u; w], [delx; delu;
     % delw]" when disturbance is added
-    lin.A = double(subs(jacobian(x_dot, x), [x; u], [delx; delu])); % Jacobian of f with respect to x
-    lin.B = double(subs(jacobian(x_dot, u), [x; u], [delx; delu])); % Jacobian of f with respect to u
+    % lin.A = double(subs(jacobian(x_dot, x), [x; u], [delx; delu])); % Jacobian of f with respect to x
+    % lin.B = double(subs(jacobian(x_dot, u), [x; u], [delx; delu])); % Jacobian of f with respect to u
+    lin.A = jacobian(x_dot, x);
+    lin.B = jacobian(x_dot, u);
+
+    % Map to 12 states.
+    T = [zeros(1,15); eye(15)];
+    T(1:4,1:3) = 0.5 * [zeros(1,3); eye(3)];
+    lin.A = T' * lin.A * T;
+    lin.B = T' * lin.B;
 
     % Numerical functions for Jacobians for Controls.
-    matlabFunction(jacobian(x_dot, x), 'File', './Controls/JacobianX.m', 'Vars', [{x}, {u}]);
-    matlabFunction(jacobian(x_dot, u), 'File', './Controls/JacobianU.m', 'Vars', [{x}, {u}]);
+    matlabFunction(lin.A, 'File', './Controls/JacobianX.m', 'Vars', [{x}, {u}]);
+    matlabFunction(lin.B, 'File', './Controls/JacobianU.m', 'Vars', [{x}, {u}]);
 
     % Assumes direct measurement of positions via GPS and angular velocity
     % via gyroscope (In the future, could expand to measure quaterion
     % directly via accelerometer data and DCM).
     % Adds 6 due to bias augmentation
+    lin.A = double(subs(lin.A, [x; u], [delx; delu]));
+    lin.B = double(subs(lin.B, [x; u], [delx; delu]));
     lin.C = eye(size(lin.A, 1));
-    lin.C = lin.C([1:7 10:12], :);
-    lin.D = zeros(size(lin.C, 1), size(lin.B, 2));
-    y = x;    
+    lin.D = zeros(size(lin.C, 1), size(lin.B, 2));   
     
     % Discrete Linear
     % Creates a system object using continuous matrices and converts them to
@@ -51,10 +59,6 @@ function [lin, linDis] = dynamics(x, u, x_dot, constants)
     linDis.Bd = sysDis.B;
     linDis.Cd = sysDis.C;
     linDis.Dd = sysDis.D;
-
-    % Update the C matrix to augmented form
-    lin.C = eye(size(lin.A, 1) + 3);
-    lin.C = lin.C([1:7 10:12], :);
     
     % Output linear and discrete functions for matlab. Use matlabFunciton to
     % get nonlinear plant model
