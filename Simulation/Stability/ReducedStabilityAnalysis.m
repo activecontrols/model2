@@ -41,7 +41,7 @@ InputBounds = [-gimbalMax       gimbalMax;
                -pi/6            pi/6];
 
 % Load LQR tuning matrices for recomputing
-% Brysons Rule for Q and R.
+% Brysons Rule for Q
 a_weights = ones(12,1);
 b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
@@ -52,7 +52,6 @@ max_u = [pi/18, pi/18, 6, 0.4];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
 R = diag([260, 260, 4, 10]);
-
 [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
 % First system linearization
