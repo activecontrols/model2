@@ -1,4 +1,4 @@
-classdef gene
+classdef gene < matlab.mixin.Copyable
     %GENE
     %   Genome class used to generate population within genetic algorithm.
     %   Properties:
@@ -19,14 +19,21 @@ classdef gene
         states = {} % Cell array of variables associated with task performance 
         constCheck % logical array of which state constraints are met (might want to remove to make gene more generally applicable)
         parameters % Additional parameters specific to the system being optimized
+        generation % Generation number that gene belongs to
+        elite = false % If the gene is considered elite
+        alive = true % If the gene is considered alive
+        children = {} % Cell array of the gene's children
+        parent1 % 
+        parent2 % 
     end
 
     methods
         % CONSTRUCTOR
         %   Populates alleles with allele seed
-        function obj = gene(allele_seed, parameters)
+        function obj = gene(allele_seed, parameters, generation)
             obj.alleles = allele_seed;
             obj.parameters = parameters;
+            obj.generation = generation;
         end
 
         %CROSSOVER Summary of this function goes here
@@ -43,7 +50,6 @@ classdef gene
             temp = child1(p1:p2);
             child1(p1:p2) = child2(p1:p2);
             child2(p1:p2) = temp;
-            clear temp
         end
 
         % MUTATE applies random mutation to solution set of genetic algorithm

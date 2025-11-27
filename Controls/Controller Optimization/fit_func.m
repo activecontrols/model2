@@ -18,8 +18,10 @@ end
             minFrequency = min(minFrequency, DM(i).Frequency);
         end
     
-        if minFrequency ~= inf % unstable system will set Frequency to NaN resulting in minFrequency still being inf
+        if minFrequency ~= inf && minDiskMargin > 1 % unstable system will set Frequency to NaN resulting in minFrequency still being inf
             fitness = 0.9 * minDiskMargin + 0.1 * minFrequency;
+        elseif minFrequency ~= inf && minDiskMargin <= 1 % If disk margin below 1 ignore crossover freq so it doesn't dominate the solution
+            fitness = minDiskMargin;
         else
             fitness = -1;
         end
