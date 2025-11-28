@@ -43,7 +43,7 @@ R = constantsASTRA.R;
 % Process Noise Covariance and a-priori propagation step
 Q = 0.4 * Q;
 P = Phi * P * Phi' + Q;
-RTK = 1;
+RTK = 0;
 
 if sum(lastZ(1:9) - z(1:9)) ~=0 && (FILTER_MODE == 1 || GND == 1)
 
@@ -78,7 +78,7 @@ if sum(lastZ(10:15) - z(10:15)) ~=0 && (FILTER_MODE == 1 || GND == 1)
 
     % Measurement Covariance Matrix
     gps_pos_covar = 1 * RTK + 10 * (1 - RTK);
-    gps_vel_covar = gps_pos_covar;
+    gps_vel_covar = gps_pos_covar * 0.1;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain
