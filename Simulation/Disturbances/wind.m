@@ -5,7 +5,7 @@ ASTRA_vel = X(7:9); % Lateral velocities
 q1 = X(1);
 q2 = X(2);
 q3 = X(3);
-q0 = sqrt(1 - q1^2 - q2^2 - q3^2);
+q0 = sign(1 - q1^2 - q2^2 - q3^2) * sqrt(abs(1 - q1^2 - q2^2 - q3^2));
 
 mass = constantsASTRA.m;
 MoI = constantsASTRA.J;
