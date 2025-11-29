@@ -42,7 +42,7 @@ U = zeros(4,1);
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
-    K_P = [0.35; 0.35; 0.7];
+    K_P = [0.55; 0.55; 0.7];
     VelTarget = K_P .* PosError;
 
     % Velocity Saturation Step
@@ -54,7 +54,7 @@ U = zeros(4,1);
     VelError = VelTarget - X(8:10);
 
     % Integral Accumulator
-    K_I = [0.05; 0.05; 0.05] * 0;
+    K_I = [0.005; 0.005; 0.005] * 0;
     MaxAttError = [0.2; 0.2; 0.2];
     Leak = 0.1;
     Clamp = [1; 1; 2];
@@ -64,7 +64,7 @@ U = zeros(4,1);
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [1.7; 1.7; 2];
+    K_P = [2.35; 2.35; 3];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
