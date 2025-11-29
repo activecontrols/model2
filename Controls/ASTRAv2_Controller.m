@@ -17,23 +17,27 @@
 function U = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
 
 % Time Counter
-persistent lastT VelErrorI AttErrorI
-if isempty(error_pos)
+persistent lastT VelErrorI AttErrorI lastAttError
+if isempty(lastT)
     lastT = 0;
     VelErrorI = zeros(3,1);
-    AttErrorI = zeros(3,1);
+    AttErrorI = zeros(4,1);
+    lastAttError = zeros(4,1);
 end
 dT = t - lastT;
-
+lastT = t;
+K_Att = constantsASTRA.K_Att;
 %% First Loop (P Loop)
     % Position Error Vector
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
     K_P = [0.7; 0.7; 0.7];
-    VelTarget = VelGain_P .* PosError;
+    VelTarget = K_P .* PosError;
 
-    % ADD Velocity Saturation Step
+    % Velocity Saturation Step
+    MaxVel = [1 1 2]';
+    VelTarget = max(min(VelTarget, MaxVel), -MaxVel);
 
 %% Second Loop (PI Loop)
     % Velocity Error Vector
@@ -46,40 +50,58 @@ dT = t - lastT;
     Clamp = [3; 3; 5];
 
     % Soft Gating for Integral Accumulator and Clamping
-    Gate = max(min(1 - abs(AttError) ./ MaxAttError, 1), Leak);
-    K_I = K_I * Gate;
+    Gate = max(min(1 - abs(lastAttError(2:4)) ./ MaxAttError, 1), Leak);
+    K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
     K_P = [0.1; 0.1; 0.1];
 
     % Acceleration Target
-    AccelTarget = K_P .* VelError + K_I * VelErrorI;
+    AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
 
-    % ADD Acceleration Saturation Step. Constraint to 20° Cone for laterals
+    % Acceleration Saturation Step
+    MaxAccelUp = [2 2 15]';
+    MaxAccelDown = [-2 -2 5]';
+    AccelTarget = max(min(AccelTarget, MaxAccelUp), MaxAccelDown);
 
 %% Kinematics Step
     % Compute thrust target
-    TargetForce_I = constantsASTRA.m * AccelTarget + [0; 0; constantsASTRA.g];
+    TargetForce_I = constantsASTRA.m * AccelTarget;
     TargetForce_B = quatRot(X(1:4)) * TargetForce_I;
     U(3) = TargetForce_B(3);
     
     % Compute target attitude via GSP.
     AccelTarget(3) = max(AccelTarget(3), constantsASTRA.g);
-    Z = AccelTarget / norm(AccelTarget);
+    Z_b = AccelTarget / norm(AccelTarget);
 
     % Heading reference (+X axis rolled to north)
-    HDGRef = [1; 0; 0];
-    Y = cross(Z, HDGRef);
-    Y = Y / norm(Y);
+    HDGRef = [0; -1; 0];
+    Y_b = cross(Z_b, HDGRef);
+    Y_b = Y_b / norm(Y_b);
 
     % Complete the triad
-    X = cross(Y, Z);
+    X_b = cross(Y_b, Z_b);
 
     % Create DCM and convert to quaternion
-    DCM = [X Y Z];
-    TargetAtt = DCM_Quat_Conversion;
-
+    DCM = [X_b Y_b Z_b];
+    TargetAtt = DCM_Quat_Conversion(DCM);
 
 %% Third Loop (LQRi)
+    % Attitude Error computation
+    AttError = HamiltonianProd([X(1); -X(2:4)]) * TargetAtt;
+    lastAttError = AttError;
+
+    % Error accumulation and clamping
+    Clamp = [0.1; 0.1; 0.1];
+    AttErrorI = AttErrorI + AttError(2:4) .* dT;
+    AttErrorI = max(min(AttErrorI, Clamp), -Clamp);
+
+    % State vector and error
+    X_Err = [AttError(2:4); X(11:13); AttErrorI];
+
+    % LQR Controller
+    U([1 2 4]) = -K_Att * X_Err;
+
+
     
 

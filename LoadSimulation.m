@@ -81,6 +81,7 @@ K1 = [0.017107038138553	-0.000000000000000	-0.000000000000000	-0.000000000000000
 
 %% Attitude Controller Generation
 K_Att = Controller2_Gen(constantsASTRA);
+constantsASTRA.K_Att = K_Att;
 
 %% Checkpoints and HoldTimes for Trajectory
 Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
