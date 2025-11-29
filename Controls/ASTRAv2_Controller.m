@@ -14,25 +14,35 @@
 % channels.
 %
 % By: Pablo Plata   -   11/27/25 (Happy Thanksgiving!)
-function U = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
+function [U, TargetAtt] = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
 
 % Time Counter
 persistent lastT VelErrorI AttErrorI lastAttError
 if isempty(lastT)
     lastT = 0;
     VelErrorI = zeros(3,1);
-    AttErrorI = zeros(4,1);
-    lastAttError = zeros(4,1);
+    AttErrorI = zeros(3,1);
+    lastAttError = zeros(3,1);
 end
 dT = t - lastT;
 lastT = t;
 K_Att = constantsASTRA.K_Att;
+
+% Controller Limits
+thrustMax = 1.5 * 9.8;   %N
+gimbalMax = pi/18;
+InputBounds = [-gimbalMax       gimbalMax;
+               -gimbalMax       gimbalMax;
+               .4 * thrustMax   thrustMax;
+               -pi/6            pi/6];
+U = zeros(4,1);
+
 %% First Loop (P Loop)
     % Position Error Vector
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
-    K_P = [0.7; 0.7; 0.7];
+    K_P = [0.35; 0.35; 0.7];
     VelTarget = K_P .* PosError;
 
     % Velocity Saturation Step
@@ -44,38 +54,37 @@ K_Att = constantsASTRA.K_Att;
     VelError = VelTarget - X(8:10);
 
     % Integral Accumulator
-    K_I = [0.05; 0.05; 0.05];
+    K_I = [0.05; 0.05; 0.05] * 0;
     MaxAttError = [0.2; 0.2; 0.2];
     Leak = 0.1;
-    Clamp = [3; 3; 5];
+    Clamp = [1; 1; 2];
 
     % Soft Gating for Integral Accumulator and Clamping
-    Gate = max(min(1 - abs(lastAttError(2:4)) ./ MaxAttError, 1), Leak);
+    Gate = max(min(1 - abs(lastAttError) ./ MaxAttError, 1), Leak);
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [0.1; 0.1; 0.1];
+    K_P = [1.7; 1.7; 2];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
 
     % Acceleration Saturation Step
     MaxAccelUp = [2 2 15]';
-    MaxAccelDown = [-2 -2 5]';
+    MaxAccelDown = [-2 -2 4]';
     AccelTarget = max(min(AccelTarget, MaxAccelUp), MaxAccelDown);
 
 %% Kinematics Step
     % Compute thrust target
     TargetForce_I = constantsASTRA.m * AccelTarget;
-    TargetForce_B = quatRot(X(1:4)) * TargetForce_I;
-    U(3) = TargetForce_B(3);
+    U(3) = norm(TargetForce_I);
     
     % Compute target attitude via GSP.
     AccelTarget(3) = max(AccelTarget(3), constantsASTRA.g);
     Z_b = AccelTarget / norm(AccelTarget);
 
     % Heading reference (+X axis rolled to north)
-    HDGRef = [0; -1; 0];
+    HDGRef = [1; 0; 0];
     Y_b = cross(Z_b, HDGRef);
     Y_b = Y_b / norm(Y_b);
 
@@ -88,19 +97,28 @@ K_Att = constantsASTRA.K_Att;
 
 %% Third Loop (LQRi)
     % Attitude Error computation
-    AttError = HamiltonianProd([X(1); -X(2:4)]) * TargetAtt;
-    lastAttError = AttError;
+    Q_Conj = [X(1); -X(2:4)];
+    AttError = HamiltonianProd(Q_Conj) * TargetAtt;
+    if AttError(1) < 0
+        AttError = -AttError;
+    end
+    lastAttError = AttError(2:4);
 
     % Error accumulation and clamping
     Clamp = [0.1; 0.1; 0.1];
     AttErrorI = AttErrorI + AttError(2:4) .* dT;
-    AttErrorI = max(min(AttErrorI, Clamp), -Clamp);
+    AttErrorI = max(min(AttErrorI, Clamp), -Clamp) * 0;
 
     % State vector and error
-    X_Err = [AttError(2:4); X(11:13); AttErrorI];
+    X_Err = [-AttError(2:4); X(11:13); AttErrorI];
 
     % LQR Controller
     U([1 2 4]) = -K_Att * X_Err;
+
+%% Controls Saturation
+uMax = InputBounds(:, 2);
+uMin = InputBounds(:, 1);
+U = min(max(U, uMin), uMax);
 
 
     

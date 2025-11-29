@@ -55,6 +55,11 @@ matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/disturbedDynamics.m',
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
+
+%% Attitude Controller Generation
+K_Att = Controller2_Gen(constantsASTRA);
+constantsASTRA.K_Att = K_Att;
+
 ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate LQR Controller for Simulation
@@ -79,15 +84,11 @@ K1 = [0.017107038138553	-0.000000000000000	-0.000000000000000	-0.000000000000000
 0.000000000000007	-0.000000000000001	0.000000000000000	-0.000000000000000	-0.000000000000000	0.000043130805076	-0.000000000000000	-0.000000000000000	2.537760653503638	0.000000000000002	-0.000000000000001	-0.000000000000000;
 -0.000000000000003	0.000000000000000	0.000031622776602	-0.000000000000000	0.000000000000000	0.000000000000000	-0.000000000000000	0.000000000000000	-0.000000000000002	-0.000000000000000	-0.000000000000000	2.623358221415387];
 
-%% Attitude Controller Generation
-K_Att = Controller2_Gen(constantsASTRA);
-constantsASTRA.K_Att = K_Att;
-
 %% Checkpoints and HoldTimes for Trajectory
 Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
                0, 0, 3,  3,  0, 0, 0, 0;
                0, 3, 3,  3,  3, 3, 0, 0];
-HoldTimeReqs = [4, 3, 3, 3, 3, 3, 0, 0.2];
+HoldTimeReqs = [4, 30, 3, 3, 3, 3, 0, 0.2];
 
 % Disturbances (1 for on, 0 for off)
 distMode = 0; 
