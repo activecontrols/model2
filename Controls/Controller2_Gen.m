@@ -54,23 +54,23 @@ T(1:4,1:3) = 0.5 * [zeros(1,3); eye(3)];
 lin.A = pinv(T) * lin.A * T;
 lin.B = pinv(T) * lin.B;
 
+% Augment system with Error-Integral
+lin.A = [lin.A zeros(6,3);
+         eye(3) zeros(3,6)];
+lin.B = [lin.B; zeros(3)];
+
 % Linearization point
 delx = [1; 0; 0; 0; 0; 0; 0];
 delu = [0; 0; 0];
 lin.A = double(subs(lin.A, [x; u], [delx; delu]));
 lin.B = double(subs(lin.B, [x; u], [delx; delu]));
 
-% Augment system with Error-Integral
-lin.A = [lin.A zeros(6,3);
-         eye(3) zeros(3,6)];
-lin.B = [lin.B; zeros(3)];
-
 % Hand tuning for Q for now
 a_weights = ones(6,1);
 a_weights = a_weights / norm(a_weights);
-max_x = [0.25, 0.25, 0.25, 3, 3, 1.0];
+max_x = [0.4, 0.4, 0.25, 5.5, 5.5, 1.0];
 Q = eye(6) .* a_weights ./ max_x.^2;
-R = diag([10, 10, 0.2]);
+R = diag([5, 5, 0.2]);
 
 % Augment Q with integral states
 Qi = diag([0.01, 0.01, 0.0000002]);
