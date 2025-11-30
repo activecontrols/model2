@@ -14,7 +14,7 @@
 % channels.
 %
 % By: Pablo Plata   -   11/27/25 (Happy Thanksgiving!)
-function [U, TargetAtt] = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
+function [U, VEI] = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
 
 % Time Counter
 persistent lastT VelErrorI AttErrorI lastAttError
@@ -42,11 +42,11 @@ U = zeros(4,1);
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
-    K_P = [0.55; 0.55; 0.7];
+    K_P = [0.5; 0.5; 0.65];
     VelTarget = K_P .* PosError;
 
     % Velocity Saturation Step
-    MaxVel = [1 1 2]';
+    MaxVel = [1 1 1.5]';
     VelTarget = max(min(VelTarget, MaxVel), -MaxVel);
 
 %% Second Loop (PI Loop)
@@ -54,17 +54,29 @@ U = zeros(4,1);
     VelError = VelTarget - X(8:10);
 
     % Integral Accumulator
-    K_I = [0.005; 0.005; 0.005] * 0;
-    MaxAttError = [0.2; 0.2; 0.2];
-    Leak = 0.1;
+    K_I = [1.5; 1.5; 5];
+    Leak = 0.10;
     Clamp = [1; 1; 2];
 
-    % Soft Gating for Integral Accumulator and Clamping
-    Gate = max(min(1 - abs(lastAttError) ./ MaxAttError, 1), Leak);
+    % Normalize errors (0 to 1 scale)
+    MaxAttError = [0.07; 0.07; 0.3];
+    MaxVelError = [0.6; 0.6; 0.4];
+    MaxRateError = [pi/5; pi/5; pi/3];
+    NormAttErr = abs(lastAttError) ./ MaxAttError;
+    NormVelErr = abs(VelError) ./ MaxVelError;
+    NormRateErr = abs(X(11:13)) ./ MaxRateError;
+    
+    % Combine errors (Vector magnitude)
+    TotalErrorMetric = NormAttErr + NormVelErr + NormRateErr;
+    
+    % Calculate Gate using Gaussian function
+    Gate = (1 - Leak) * exp(-2 * TotalErrorMetric.^2) + Leak;
+
+    % Integrator
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [2.35; 2.35; 3];
+    K_P = [2.2; 2.2; 3.5];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
@@ -105,9 +117,9 @@ U = zeros(4,1);
     lastAttError = AttError(2:4);
 
     % Error accumulation and clamping
-    Clamp = [0.1; 0.1; 0.1];
+    Clamp = [3; 3; 0.4];
     AttErrorI = AttErrorI + AttError(2:4) .* dT;
-    AttErrorI = max(min(AttErrorI, Clamp), -Clamp) * 0;
+    AttErrorI = max(min(AttErrorI, Clamp), -Clamp);
 
     % State vector and error
     X_Err = [-AttError(2:4); X(11:13); AttErrorI];
@@ -119,6 +131,7 @@ U = zeros(4,1);
 uMax = InputBounds(:, 2);
 uMin = InputBounds(:, 1);
 U = min(max(U, uMin), uMax);
+VEI = VelErrorI;
 
 
     

@@ -56,7 +56,7 @@ lin.B = pinv(T) * lin.B;
 
 % Augment system with Error-Integral
 lin.A = [lin.A zeros(6,3);
-         eye(3) zeros(3,6)];
+         -eye(3) zeros(3,6)];
 lin.B = [lin.B; zeros(3)];
 
 % Linearization point
@@ -68,12 +68,12 @@ lin.B = double(subs(lin.B, [x; u], [delx; delu]));
 % Hand tuning for Q for now
 a_weights = ones(6,1);
 a_weights = a_weights / norm(a_weights);
-max_x = [0.4, 0.4, 0.25, 5.5, 5.5, 1.0];
+max_x = [0.28, 0.28, 0.25, 40, 40, 1.0];
 Q = eye(6) .* a_weights ./ max_x.^2;
 R = diag([5, 5, 0.2]);
 
 % Augment Q with integral states
-Qi = diag([0.01, 0.01, 0.0000002]);
+Qi = diag([2, 2, 4]);
 Q = [Q zeros(6,3);
      zeros(3,6) Qi];
 

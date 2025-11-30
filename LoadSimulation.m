@@ -7,8 +7,6 @@
 
 %% Initialize parameters and clear functions
 % Initial conditions for state
-% YOU CHANGED THE ACTUATORS DUMMY, IF IT DOESNT WORK IT'S CUZ OF THAT DONT
-% GO INSANE THX -Pablo
 clear;
 clear ref_generator3;
 clear inputfcn3;
@@ -59,7 +57,6 @@ constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 %% Attitude Controller Generation
 K_Att = Controller2_Gen(constantsASTRA);
 constantsASTRA.K_Att = K_Att;
-
 ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate LQR Controller for Simulation
@@ -69,13 +66,13 @@ b_weights = ones(4,1);
 a_weights = a_weights / norm(a_weights);
 b_weights = b_weights / norm(b_weights);
 
-max_x = [3, 3, 0.3, 1000, 1000, 1000, 0.5, 0.5, 0.4, pi/8, pi/8, 0.5];
+max_x = [3, 3, 0.3, 1000, 1000, 1000, 0.5, 0.5, 0.4, 1000, 1000, 0.5];
 % max_x = [0.5, 0.5, 0.5, 1000, 1000, 1000, 1, 1, 0.4, 1000, 1000, 2];
 max_u = [pi/24, pi/24, 6, 2];
 
 Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-% R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
-R = diag([260, 260, 0.05, 0.2]);
+R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+% R = diag([260, 260, 0.05, 0.2]);
 % R = diag([60, 60, 3, 10]);
 
 [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
@@ -85,12 +82,16 @@ K1 = [0.017107038138553	-0.000000000000000	-0.000000000000000	-0.000000000000000
 -0.000000000000003	0.000000000000000	0.000031622776602	-0.000000000000000	0.000000000000000	0.000000000000000	-0.000000000000000	0.000000000000000	-0.000000000000002	-0.000000000000000	-0.000000000000000	2.623358221415387];
 
 %% Checkpoints and HoldTimes for Trajectory
-Checkpoints = [0, 0, 0,  3,  3, 0, 0, 0;
-               0, 0, 3,  3,  0, 0, 0, 0;
-               0, 3, 3,  3,  3, 3, 0, 0];
-HoldTimeReqs = [4, 4, 4, 4, 4, 4, 0, 0.2];
+% Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
+%                 0, 0, 3,  3,  0, 0, 0, 0;
+%                 0, 3, 3,  3,  3, 3, 0, 0];
+% HoldTimeReqs = [4, 3, 3, 3, 3, 3, 0, 0.2];
+Checkpoints =  [0, 0, 0;
+                0, 0, 0;
+                0, 2, 0];
+HoldTimeReqs = [4, 20, 4];
 
 % Disturbances (1 for on, 0 for off)
-distMode = 0; 
+distMode = 1; 
 
 
