@@ -11,13 +11,13 @@ for a = 1:12
 end
 fprintf("\n");
 
-fprintf("K << ")
-for a = 1:4
-    for b = 1:12
-        if K(a, b) == 0
+fprintf("constantsASTRA.K_Att << ")
+for a = 1:3
+    for b = 1:9
+        if constantsASTRA.K_Att(a, b) == 0
             fprintf("0, ");
         else 
-            fprintf("%.6e, ", K(a, b));
+            fprintf("%.6e, ", constantsASTRA.K_Att(a, b));
         end
     end
     fprintf("// \n")
