@@ -67,10 +67,10 @@ Vector3 EMA_Gyros(Vector15 Y, Vector3 &lastEMA) {
   return EMA_G;
 }
 
-Vector15 StateAUG(Vector13 XKF, Vector3 G) {
+Vector16 StateAUG(Vector13 XKF, Vector3 G) {
   // Change Filter State to Controls State
-  Vector15 X;
-  X << XKF.segment<3>(1), XKF.segment<3>(4), XKF.segment<3>(7), G - XKF.segment<3>(10), XKF.segment<3>(10);
+  Vector16 X;
+  X << XKF.segment<4>(0), XKF.segment<3>(4), XKF.segment<3>(7), G - XKF.segment<3>(10), XKF.segment<3>(10);
   return X;
 }
 

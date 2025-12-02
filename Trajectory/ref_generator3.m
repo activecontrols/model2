@@ -25,6 +25,7 @@ function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
         TargetVec = [zeros(3,1); TargetPos(:, i); TargetVel; zeros(3,1)];
     
         ref = x - TargetVec;
+        trg = TargetPos(:, i);
     else
         
         % Sets the time to execute an abort at

@@ -27,7 +27,7 @@ void ASTRAv2_Controller_reset() {
   lastAttError = Vector3::Zero();
 }
 
-Vector4 ASTRAv2_Controller(Vector3 PosTarget, Vector15 X, t_constantsASTRA constantsASTRA, float dT) {
+Vector4 ASTRAv2_Controller(Vector3 PosTarget, Vector16 X, t_constantsASTRA constantsASTRA, float dT) {
   // Controller Limits
   float thrustMax = 1.5 * 9.8; // N
   float gimbalMax = M_PI / 18;

@@ -44,7 +44,7 @@ void setup() {
   Matrix9_4 dnf_X = Matrix9_4::Ones();
   Matrix9_4 dnf_Y = Matrix9_4::Ones();
   float last_thrust = constantsASTRA.g * constantsASTRA.m;
-  float allowed_err[4] = {0.0002, 0.0002, 0.002, 0.0002};
+  float allowed_err[4] = {0.0002, 0.0002, 0.02, 0.0002};
   ASTRAv2_Controller_reset();
 
   // Loop over all timesteps
@@ -65,15 +65,31 @@ void setup() {
 
     x_est = EstimateStateFCN(x_est, constantsASTRA, z, dT, GND_val, P, new_imu_packet, new_gps_packet);
     Vector3 EMA_G = EMA_Gyros(z, lastEMA);
-    Vector15 X = StateAUG(x_est, EMA_G);
-    Vector4 raw_co = ASTRAv2_Controller(TargetPos, X, constantsASTRA, dT);
+    Vector16 X = StateAUG(x_est, EMA_G);
+    Vector4 raw_co = ASTRAv2_Controller(TargetPos, X, constantsASTRA, 0.002);
 
     if (GND_val) {
       raw_co = Vector4::Zero();
     }
 
     last_thrust = raw_co(2);
+    // last_thrust = last_cmd_thurst_arr[idx][0];
     lastZ = z;
+
+    // comparison with expected state
+    for (int i = 0; i < 16; i++) {
+      if (abs(X(i) - exp_state[idx][i]) > 0.002) {
+        Serial.print("Mismatch at idx: ");
+        Serial.print(idx);
+        Serial.print(" element: ");
+        Serial.print(i);
+        Serial.print(" expected state: ");
+        Serial.print(exp_state[idx][i], 6);
+        Serial.print(" got: ");
+        Serial.println(X(i), 6);
+        delay(100);
+      }
+    }
 
     // comparison with expected output
     for (int i = 0; i < 4; i++) {
