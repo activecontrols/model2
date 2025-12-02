@@ -79,7 +79,9 @@ Vector4 ASTRAv2_Controller(Vector3 PosTarget, Vector15 X, t_constantsASTRA const
   Vector3 TotalErrorMetric = NormAttErr + NormVelErr + NormRateErr;
 
   // Calculate Gate using Gaussian function
-  Vector3 Gate = (1 - Leak) * (-2 * TotalErrorMetric.cwiseAbs2()).exp() + Leak;
+  Vector3 LeakVec3;
+  LeakVec3 << Leak, Leak, Leak;
+  Vector3 Gate = (1 - Leak) * (-2 * TotalErrorMetric.cwiseAbs2()).array().exp().matrix() + LeakVec3;
 
   // Integrator
   K_I = K_I.cwiseProduct(Gate);
