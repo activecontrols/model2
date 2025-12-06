@@ -32,9 +32,9 @@ function [lin, linDis] = dynamics(x, u, x_dot, constants)
 
     % Map to 12 states.
     T = [zeros(1,15); eye(15)];
-    T(1:4,1:3) = 0.5 * [zeros(1,3); eye(3)];
-    lin.A = T' * lin.A * T;
-    lin.B = T' * lin.B;
+    T(1:4,1:3) = [zeros(1,3); eye(3)];
+    lin.A = pinv(T) * lin.A * T;
+    lin.B = pinv(T) * lin.B;
 
     % Numerical functions for Jacobians for Controls.
     matlabFunction(lin.A, 'File', './Controls/JacobianX.m', 'Vars', [{x}, {u}]);

@@ -50,7 +50,7 @@ lin.B = jacobian(xdot, u);
 
 % Map to 6 states.
 T = [zeros(1,6); eye(6)];
-T(1:4,1:3) = 0.5 * [zeros(1,3); eye(3)];
+T(1:4,1:3) = [zeros(1,3); eye(3)];
 lin.A = pinv(T) * lin.A * T;
 lin.B = pinv(T) * lin.B;
 
