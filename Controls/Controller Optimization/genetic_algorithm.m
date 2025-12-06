@@ -1,39 +1,101 @@
-function [Q, R, root] = genetic_algorithm(x, Q_g, R_g, paramArray, popSize, mut_rates, mut_factor, cutoffs, mut_func, task_func, fit_func)
-% GENETIC_ALGORITHM
-%   Unique Inputs: popSize = initial population size
-%                  mut_rate1 = initial mutation rate
-%                  mut_rate2 = final mutation rate
-%                      - mutation rate decreases on a power scale from 
-%                        mut_rate1 to mut_rate2 as the population decreases
-%                  gen_cut = cuttoff point for general population
-%                  elite_cut = cuttoff point for elite population (top 1 
-%                              solution will always be preserved regardless
-%                              of the cuttoff rate)
-%
-%   General Info: The genetic algorithm has X stages. First, an initial 
-%                 population is generated using Bryson's Rule as a basis
-%                 then performing mutation and crossover on all but one 
-%                 solution to create variation. Second, the dynamics of the
-%                 system are modeled in order to evaluate fitness. Third,
-%                 the population undergoes the culling/reproduction stage.
-%                 The top gen_cut solutions are kept and undergo mutation
-%                 and crossover with eachother. The top elite_cut solutions
-%                 do not undergo mutation or crossover with any other
-%                 solutions.
-    mut_rate1 = mut_rates(1);
-    mut_rate2 = mut_rates(2);
-    gen_cut = cutoffs(1);
-    elite_cut = cutoffs(2);
-    
-    % Initialize population and root node
-    pop = population(1, [Q_g; R_g], popSize, mut_rate1, mut_rate2, mut_factor, mut_func, gen_cut, elite_cut, task_func, fit_func, paramArray);
-    root = node.init_tree(int64(0), pop.nodes);
-    
-    % Run genetic algorithm on population
-    pop.runGA;
-    
-    Q = diag(pop.nodes{1}.gene.alleles(1:size(x,1)));
-    R = diag(pop.nodes{1}.gene.alleles(size(x,1) + 1:end));
-    root.gene = pop.nodes{1}.gene;
+%% GENETIC_ALGORITHM
+%   Optimize control gains using genetic algorithm
 
+%% Required sub-functions
+function StateSpace = ActuatorDelay
+    %Creates a first order actuator model
+    ActuatorModel = cell(4, 1);
+    tau = [0.08; 0.08; 0.15; 0.15];
+
+    for i =1:size(tau, 1)
+        tau_i = tau(i);
+        ActuatorModel{i} = tf(1, [tau_i, 1]);
+    end
+
+    % Assemble actuator models
+    Delay_MIMO = blkdiag(ActuatorModel{:});
+    StateSpace = ss(Delay_MIMO);
 end
+
+clear;
+addpath('.\Filtering');
+addpath('.\Filtering\ANF');
+addpath('.\Simulation');
+addpath('.\Simulation\Disturbances\');
+addpath('.\Simulation\Helper\');
+addpath('.\Simulation\Stability\');
+addpath('.\Simulation\Vehicle Motion\');
+
+
+%% Genetic Algorithm Settings
+popSize = 1000;
+mut_rate_i = .7;
+mut_rate_f = .1;
+mut_factor_i = 100;
+mut_factor_f = 1;
+mut_func = @mut_func_fitBased;
+gen_cut = .5;
+elite_cut = 0;
+task_func = @task_func;
+fit_func = @fit_func;
+
+
+%% Generate gene seed based on hand tuning
+% % First loop K_P
+% K_P1 = [0.5; 0.5; 0.65];
+% 
+% % Second loop K_P and K_I
+% K_P2 = [2.2; 2.2; 3.5];
+% K_I = [1.5; 1.5; 5];
+
+% Q and R (based on Bryson's rule)
+a_weights = ones(6,1);
+a_weights = a_weights / norm(a_weights);
+max_x = [0.28, 0.28, 0.25, 40, 40, 1.0];
+Q = eye(6) .* a_weights ./ max_x.^2;
+R = diag([5, 5, 0.2]);
+
+% Augment Q with integral states
+Qi = diag([2, 2, 4]);
+Q = [Q zeros(6,3);
+     zeros(3,6) Qi];
+
+gene_seed = [diag(Q); diag(R)]; % TODO: reduce size of gene by considering symmetric weights
+
+%% Get parameters required to perform task
+constants = constructConstants;
+params = {constants, @Controller2_Gen_GA, ActuatorDelay};
+
+%% Run GA
+popInit = population(0, gene_seed, popSize, mut_rate_i, mut_rate_f, ...
+    mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, ...
+    fit_func, params);
+
+pops = {popInit};
+while pops{end}.popSize > 1
+    fprintf("\nPOPULATION: %d\n", pops{end}.generation)
+    pops{end}.prefTask;
+    pops{end}.fitEval;
+    pops{end}.kill;
+    pops{end+1} = pops{end}.reproduce;
+end
+
+popFinal = pops{end};
+
+%% Genetic algorithm results
+% root.gene = pop.nodes{1}.gene;
+a = popFinal.genes{1}.alleles;
+Q = diag(a(1:9));
+R = diag(a(10:12));
+K = Controller2_Gen_GA(constants, Q, R);
+
+% Save final pop and root as a struct
+gaData.('populations') = pops;
+% gaData.('root') = root;
+gaData.('Q') = Q;
+gaData.('R') = R;
+gaData.('K') = K;
+save('.\Controls\Controller Optimization\GA Runs\GA_' + ...
+    string(datetime(now,'ConvertFrom','datenum', 'Format', 'yyyy-MM-dd_HH.mm.ss')) + ...
+    '__popSize' + string(popSize) + ...
+    '_fit' + string(popFinal.genes{1}.fitness) + '.mat', 'gaData')

@@ -1,5 +1,6 @@
 close all;
 
+%% Controller v1 Runs
 % Promissing run of 10,000 from 11/26 evening
 % load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-11-26_19.06.02__popSize10000_fit1.4327.mat'
 
@@ -11,9 +12,12 @@ close all;
 % load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-11-26_21.52.58__popSize250_fit1.2239.mat'
 
 % Run of 10000 mut_rate at .15 and mut_factor at 10 to demonstrate low mutation rate behavior
-load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-11-27_03.55.15__popSize10000_fit1.7026.mat'
+%load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\v1 Controller\GA_2025-11-30_13.54.55__popSize1000_fit1.5428.mat'
 
 % load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.41.19__popSize100_fit1.0392.mat'
+
+%% Controller v2 Runs
+
 
 %% Plot fitness versus generation
 pops = gaData.populations;
@@ -82,9 +86,9 @@ xlabel("Channel 3 Disk Margin")
 ylabel("Channel 3 Crossover Frequency")
 title("Pareto Horizon of Channel 3 Disk Margin and Crossover Frequency")
 
-figure(5)
-scatter(dmargins(4, :), freqs(4, :), '.')
-grid on
-xlabel("Channel 4 Disk Margin")
-ylabel("Channel 4 Crossover Frequency")
-title("Pareto Horizon of Channel 4 Disk Margin and Crossover Frequency")
+% figure(5)
+% scatter(dmargins(4, :), freqs(4, :), '.')
+% grid on
+% xlabel("Channel 4 Disk Margin")
+% ylabel("Channel 4 Crossover Frequency")
+% title("Pareto Horizon of Channel 4 Disk Margin and Crossover Frequency")

@@ -30,8 +30,8 @@ classdef gene < matlab.mixin.Copyable
     methods
         % CONSTRUCTOR
         %   Populates alleles with allele seed
-        function obj = gene(allele_seed, parameters, generation)
-            obj.alleles = allele_seed;
+        function obj = gene(gene_seed, parameters, generation)
+            obj.alleles = gene_seed;
             obj.parameters = parameters;
             obj.generation = generation;
         end

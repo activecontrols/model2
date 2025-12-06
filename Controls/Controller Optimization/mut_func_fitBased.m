@@ -4,7 +4,7 @@ function mut_factor = mut_func_fitBased(pop, fit)
 %   current population.
 arguments (Input)
     pop population
-    fit float
+    fit
 end
 
 arguments (Output)

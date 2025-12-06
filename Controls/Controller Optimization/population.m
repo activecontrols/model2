@@ -4,7 +4,7 @@ classdef population < handle & matlab.mixin.Copyable
 
     properties
         generation % generation number
-        allele_seed % starting seed for alleles of each gene in population
+        gene_seed % starting seed for alleles of each gene in population
         popSize % population size
         mut_rate_i % initial mutation rate
         mut_rate_f % final mutation rate
@@ -28,10 +28,10 @@ classdef population < handle & matlab.mixin.Copyable
         %   Constructs initial population
         %       Arguments:
         %           parameters = cell array of important parameters for the GA (in our case segArray)
-        function obj = population(generation, allele_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, parameters)
+        function obj = population(generation, gene_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, parameters)
             % Add user defined params
             obj.generation = generation;
-            obj.allele_seed = allele_seed;
+            obj.gene_seed = gene_seed;
             obj.popSize = popSize;
             obj.mut_rate_i = mut_rate_i;
             obj.mut_rate_f = mut_rate_f;
@@ -46,17 +46,17 @@ classdef population < handle & matlab.mixin.Copyable
             obj.numAlive = popSize;
             obj.parameters = parameters;
 
-            if generation == 1
+            if generation == 0
                 % Generate genes
                 for i = 1:obj.popSize
-                    obj.genes{i} = gene(allele_seed, parameters, generation);
+                    obj.genes{i} = gene(gene_seed, parameters, generation);
     
                 end
     
                 % Initial mutation and crossover (not reproduction! this just
                 % introduces some initial randomness to the population)
                 for i = 2:length(obj.genes)
-                    child = obj.genes{i}.mutate(mut_rate_i, allele_seed, mut_factor_i);
+                    child = obj.genes{i}.mutate(mut_rate_i, gene_seed, mut_factor_i);
                     obj.genes{i}.alleles = child;
                 end
     
@@ -175,13 +175,14 @@ classdef population < handle & matlab.mixin.Copyable
                 newPopSize = oldPop.numAlive;
             end
 
-            newPop = population(oldPop.generation + 1,oldPop.allele_seed, newPopSize, oldPop.mut_rate_i, oldPop.mut_rate_f, oldPop.mut_factor_i, oldPop.mut_factor_f, oldPop.mut_func, oldPop.gen_cut, oldPop.elite_cut, oldPop.task_func, oldPop.fit_func, oldPop.parameters);
+            newPop = population(oldPop.generation + 1,oldPop.gene_seed, newPopSize, oldPop.mut_rate_i, oldPop.mut_rate_f, oldPop.mut_factor_i, oldPop.mut_factor_f, oldPop.mut_func, oldPop.gen_cut, oldPop.elite_cut, oldPop.task_func, oldPop.fit_func, oldPop.parameters);
             r = oldPop.geneRanking;
 
             % Add elite genes that will not mutate or crossover
             for i = 1 : oldPop.numElite
                 newPop.genes{i} = copy(oldPop.genes{r(i)}); % newPop.genes default order should match the order specified by oldPop.nodeRanking
                 newPop.genes{i}.generation = oldPop.genes{i}.generation + 1;
+                newPop.fitnesses(i) = newPop.genes{i}.fitness;
             end
 
             % Add remaining genes and clone elites if more than two genes
@@ -194,10 +195,10 @@ classdef population < handle & matlab.mixin.Copyable
                 end
                 newPop.genes{i}.generation = oldPop.generation + 1;
                 newPop.genes{i}.elite = false;
+                newPop.fitnesses(i) = newPop.genes{i}.fitness;
             end
             
             % Get mutation rate and factor from mut_func
-            % [~, mut_factor] = newPop.mut_func(newPop);
             for i = oldPop.numElite + 1 : newPop.popSize
                 % Perform mutation
                 mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
@@ -205,7 +206,6 @@ classdef population < handle & matlab.mixin.Copyable
                 b = newPop.genes{i}.alleles .* mut_factor;
                 sigma = (b - a) ./ 3;
                 child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
-                % child = newPop.genes{i}.mutate(mut_rate, newPop.genes{i}.alleles, mut_factor);
                 newPop.genes{i}.alleles = child;
 
                 % Track parentage
@@ -214,7 +214,7 @@ classdef population < handle & matlab.mixin.Copyable
             end
             
             % Generate a random order of indexes to perform
-            for i = oldPop.numElite + 1 : 2 : newPop.popSize - 2 % ceil(length(newPop.popSize)*newPop.elite_cut):2:length(newPop.popSize)-2
+            for i = oldPop.numElite + 1 : 2 : newPop.popSize - 2
                 % Perform crossover
                 [child1, child2] = newPop.genes{i}.crossover(newPop.genes{i+1});
                 newPop.genes{i}.alleles = child1;
