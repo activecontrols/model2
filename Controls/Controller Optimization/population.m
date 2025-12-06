@@ -77,13 +77,16 @@ classdef population < handle & matlab.mixin.Copyable
             gs = pop.genes;
             
             for i = 1:length(gs)
-                try
-                    states = pop.task_func(gs{i});
-                    gs{i}.states = states;
-                catch
-                    warning('Problem performing task for Node %d. Setting gene.error as true.', i);
-                    gs{i}.error = true;
-                end
+                states = pop.task_func(gs{i});
+                gs{i}.states = states;
+
+                % try
+                %     states = pop.task_func(gs{i});
+                %     gs{i}.states = states;
+                % catch
+                %     warning('Problem performing task for Gene %d. Setting gene.error as true.', i);
+                %     gs{i}.error = true;
+                % end
             end
             pop.genes = gs;
         end
@@ -194,10 +197,15 @@ classdef population < handle & matlab.mixin.Copyable
             end
             
             % Get mutation rate and factor from mut_func
-            [mut_rate, mut_factor] = newPop.mut_func(newPop);
-            for i = oldPop.numElite + 1 : newPop.popSize % length(newPop.popSize)
+            % [~, mut_factor] = newPop.mut_func(newPop);
+            for i = oldPop.numElite + 1 : newPop.popSize
                 % Perform mutation
-                child = newPop.genes{i}.mutate(mut_rate, newPop.genes{i}.alleles, mut_factor);
+                mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
+                a = ones(size(newPop.genes{i}.alleles)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
+                b = newPop.genes{i}.alleles .* mut_factor;
+                sigma = (b - a) ./ 3;
+                child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
+                % child = newPop.genes{i}.mutate(mut_rate, newPop.genes{i}.alleles, mut_factor);
                 newPop.genes{i}.alleles = child;
 
                 % Track parentage
