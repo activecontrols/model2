@@ -1,4 +1,4 @@
-function K = Controller2_Gen(constants)
+function [K, lin] = Controller2_Gen(constants)
 %% Generation script for v2 Controls (LQRi Step, Third Loop)
 % Symbolic Variables
 syms q0 q1 q2 q3            % earth-body quaternion
@@ -50,7 +50,7 @@ lin.B = jacobian(xdot, u);
 
 % Map to 6 states.
 T = [zeros(1,6); eye(6)];
-T(1:4,1:3) = 0.5 * [zeros(1,3); eye(3)];
+T(1:4,1:3) = [zeros(1,3); eye(3)];
 lin.A = pinv(T) * lin.A * T;
 lin.B = pinv(T) * lin.B;
 

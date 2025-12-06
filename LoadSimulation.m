@@ -55,7 +55,7 @@ linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 
 %% Attitude Controller Generation
-K_Att = Controller2_Gen(constantsASTRA);
+[K_Att, ~] = Controller2_Gen(constantsASTRA);
 constantsASTRA.K_Att = K_Att;
 ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
