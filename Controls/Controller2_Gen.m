@@ -1,4 +1,4 @@
-function K = Controller2_Gen(constants)
+function [K, lin] = Controller2_Gen(constants)
 %% Generation script for v2 Controls (LQRi Step, Third Loop)
 % Symbolic Variables
 syms q0 q1 q2 q3            % earth-body quaternion

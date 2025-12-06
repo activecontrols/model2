@@ -7,8 +7,8 @@ function states = task_func(gene_instance)
     
     a = gene_instance.alleles;
 
-    Q = diag([ones(2,1) * a(1); a(2); ones(3,1) * a(3); ones(2,1) * a(4); a(5); ones(2,1) * a(6); a(7)]);
-    R = diag([ones(2,1) * a(8); a(9); a(10)]);
+    Q = diag([ones(2,1) * a(1); a(2); ones(2,1) * a(3); a(4); ones(2,1) * a(5); a(6)]);
+    R = diag([ones(2,1) * a(7); a(8)]);
     linSys = gene_instance.parameters{1};
     constantsASTRA = gene_instance.parameters{2};
     thrustMax = gene_instance.parameters{3};

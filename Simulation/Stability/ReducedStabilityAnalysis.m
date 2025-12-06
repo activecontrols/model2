@@ -1,7 +1,7 @@
 function StateSpace = ActuatorDelay
     %Creates a first order actuator model
-    ActuatorModel = cell(4, 1);
-    tau = [0.08; 0.08; 0.15; 0.15];
+    ActuatorModel = cell(3, 1);
+    tau = [0.08; 0.08; 0.15];
 
     for i =1:size(tau, 1)
         tau_i = tau(i);
@@ -15,16 +15,26 @@ end
 
 function [DM, MM] = evalDiskMarginReduced(Q, R, linSys, constantsASTRA, thrustMax)
     [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
-    
+    persistent count
+    if isempty(count)
+        count = 0;
+    end
+
     % First system linearization
-    x0 = zeros(15,1);
-    u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
-    A = JacobianX(x0, u0);
-    A = A(1:12, 1:12);
-    B = JacobianU(x0, u0);
-    B = B(1:12, :);
-    C = eye(12);
-    D = zeros(12, 4);
+    % x0 = zeros(15,1);
+    % u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
+    % A = JacobianX(x0, u0);
+    % A = A(1:12, 1:12);
+    % B = JacobianU(x0, u0);
+    % B = B(1:12, :);
+    % C = eye(12);
+    % D = zeros(12, 4);
+    x0 = zeros(9,1);
+    u0 = [0; 0; 0];
+    A = linSys.A;
+    B = linSys.B;
+    C = eye(size(linSys.A, 1));
+    D = zeros(size(linSys.A, 1), size(linSys.B, 2));
     
     % Plant TF
     P = ss(A, B, C, D);
@@ -41,16 +51,19 @@ function [DM, MM] = evalDiskMarginReduced(Q, R, linSys, constantsASTRA, thrustMa
     
     % Digital Filter TF (Using the transfer function of the worst-case digital
     % filter we'll have on board)
-    thrust = u0(3) / thrustMax;
+    thrust = 80;
     [Filter_TF, ~] = FilterTF_Gen(thrust);
     Filter_ss = ss(Filter_TF);
     L = L * Filter_ss;
     
     % Final Disk Margin structs.
     [DM, MM] = diskmargin(L);
+    fprintf('Disk Margin Analysized! Counter:  %i\n', count);
+    count = count + 1;
 end
 
 clear;
+clear evalDiskMarginReduced;
 addpath('.\Filtering');
 addpath('.\Filtering\ANF');
 addpath('.\Simulation');
@@ -69,6 +82,9 @@ constantsASTRA = constructConstants;
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 
+% PABLO TEST
+[~, linSys] = Controller2_Gen(constantsASTRA);
+
 % Define the bounds for the actuators
 thrustMax = 1.5 * 9.8;   
 gimbalMax = pi/18;
@@ -79,16 +95,29 @@ InputBounds = [-gimbalMax       gimbalMax;
 
 % Load LQR tuning matrices for recomputing
 % Brysons Rule for Q and R.
-a_weights = ones(12,1);
-b_weights = ones(4,1);
+% a_weights = ones(12,1);
+% b_weights = ones(4,1);
+% a_weights = a_weights / norm(a_weights);
+% b_weights = b_weights / norm(b_weights);
+% 
+% max_x = [3, 3, 0.5, 1000, 1000, 1000, 1, 1, 0.4, pi/8, pi/8, 2];
+% max_u = [pi/18, pi/18, 6, 0.4];
+% 
+% Q_g = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+% R_g = diag([260, 260, 4, 10]);
+
+% PABLO GUESS
+% Hand tuning for Q for now
+a_weights = ones(6,1);
 a_weights = a_weights / norm(a_weights);
-b_weights = b_weights / norm(b_weights);
+max_x = [0.28, 0.28, 0.25, 40, 40, 1.0];
+Q = eye(6) .* a_weights ./ max_x.^2;
+R_g = diag([5, 5, 0.2]);
 
-max_x = [3, 3, 0.5, 1000, 1000, 1000, 1, 1, 0.4, pi/8, pi/8, 2];
-max_u = [pi/18, pi/18, 6, 0.4];
-
-Q_g = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-R_g = diag([260, 260, 4, 10]);
+% Augment Q with integral states
+Qi = diag([2, 2, 4]);
+Q_g = [Q zeros(6,3);
+     zeros(3,6) Qi];
 
 % Q_g = [0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 %     0, 0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
@@ -111,7 +140,7 @@ DM_min = 1.0; % minimum disk margin, if disk margin is below this do not conside
 % [DM, MM] = evalDiskMarginReduced(Q_g, R_g, linSys, constantsASTRA, thrustMax);
 
 %% Genetic Algorithm
-popSize = 1000;
+popSize = 100;
 mut_rate_i = .7;
 mut_rate_f = .1;
 mut_factor_i = 100;
@@ -125,7 +154,8 @@ paramArray = {linSys, constantsASTRA, thrustMax, @evalDiskMarginReduced, popSize
 
 
 % Initialize population and root node
-allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(7,7); Q_g(9,9); Q_g(10,10); Q_g(12,12); R_g(1,1); R_g(3,3); R_g(4,4)]; % if using updated controller check order of inputs (might be T first)
+% allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(7,7); Q_g(9,9); Q_g(10,10); Q_g(12,12); R_g(1,1); R_g(3,3); R_g(4,4)]; % if using updated controller check order of inputs (might be T first)
+allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(6,6); Q_g(7,7); Q_g(9,9); R_g(1,1); R_g(3,3)];
 popInitial = population(1, allele_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, paramArray);
 
 % Start parallel pool if not started yet
