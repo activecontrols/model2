@@ -17,7 +17,7 @@ close all;
 % load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.41.19__popSize100_fit1.0392.mat'
 
 %% Controller v2 Runs
-
+load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-12-06_11.40.06__popSize1000_fit1.4863.mat'
 
 %% Plot fitness versus generation
 pops = gaData.populations;
@@ -65,30 +65,12 @@ for p = 1:length(pops)
     end
 end
 
-figure(2)
-scatter(dmargins(1, :), freqs(1, :), '.')
-grid on
-xlabel("Channel 1 Disk Margin")
-ylabel("Channel 1 Crossover Frequency")
-title("Pareto Horizon of Channel 1 Disk Margin and Crossover Frequency")
+for i = 1:size(dmargins, 1)
+    figure(i+1)
+    scatter(dmargins(i, :), freqs(i, :), '.')
+    grid on
+    xlabel("Channel " + string(i) + " Disk Margin")
+    ylabel("Channel " + string(i) + " Crossover Frequency")
+    title("Pareto Frontier of Channel " + string(i) + " Disk Margin and Crossover Frequency")
+end
 
-figure(3)
-scatter(dmargins(2, :), freqs(2, :), '.')
-grid on
-xlabel("Channel 2 Disk Margin")
-ylabel("Channel 2 Crossover Frequency")
-title("Pareto Horizon of Channel 2 Disk Margin and Crossover Frequency")
-
-figure(4)
-scatter(dmargins(3, :), freqs(3, :), '.')
-grid on
-xlabel("Channel 3 Disk Margin")
-ylabel("Channel 3 Crossover Frequency")
-title("Pareto Horizon of Channel 3 Disk Margin and Crossover Frequency")
-
-% figure(5)
-% scatter(dmargins(4, :), freqs(4, :), '.')
-% grid on
-% xlabel("Channel 4 Disk Margin")
-% ylabel("Channel 4 Crossover Frequency")
-% title("Pareto Horizon of Channel 4 Disk Margin and Crossover Frequency")

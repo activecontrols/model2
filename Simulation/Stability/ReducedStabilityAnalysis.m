@@ -21,14 +21,6 @@ function [DM, MM] = evalDiskMarginReduced(Q, R, linSys, constantsASTRA, thrustMa
     end
 
     % First system linearization
-    % x0 = zeros(15,1);
-    % u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
-    % A = JacobianX(x0, u0);
-    % A = A(1:12, 1:12);
-    % B = JacobianU(x0, u0);
-    % B = B(1:12, :);
-    % C = eye(12);
-    % D = zeros(12, 4);
     x0 = zeros(9,1);
     u0 = [0; 0; 0];
     A = linSys.A;
@@ -93,19 +85,6 @@ InputBounds = [-gimbalMax       gimbalMax;
                .4 * thrustMax   thrustMax;
                -pi/6            pi/6];
 
-% Load LQR tuning matrices for recomputing
-% Brysons Rule for Q and R.
-% a_weights = ones(12,1);
-% b_weights = ones(4,1);
-% a_weights = a_weights / norm(a_weights);
-% b_weights = b_weights / norm(b_weights);
-% 
-% max_x = [3, 3, 0.5, 1000, 1000, 1000, 1, 1, 0.4, pi/8, pi/8, 2];
-% max_u = [pi/18, pi/18, 6, 0.4];
-% 
-% Q_g = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-% R_g = diag([260, 260, 4, 10]);
-
 % PABLO GUESS
 % Hand tuning for Q for now
 a_weights = ones(6,1);
@@ -119,25 +98,7 @@ Qi = diag([2, 2, 4]);
 Q_g = [Q zeros(6,3);
      zeros(3,6) Qi];
 
-% Q_g = [0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-%     0, 0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-%     0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-%     0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0;
-%     0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0;
-%     0, 0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0;
-%     0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0, 0;
-%     0, 0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0;
-%     0, 0, 0, 0, 0, 0, 0, 0, 6.590156173100899e+02, 0, 0, 0;
-%     0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0, 0;
-%     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0;
-%     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.490187042445407e-07];
-% R_g = [1.489332493744518e+04, 0, 0, 0;
-%     0, 1.489332493744518e+04, 0, 0;
-%     0, 0, 26.044672063044732, 0;
-%     0, 0, 0, 1.000000000000000e-08];
 DM_min = 1.0; % minimum disk margin, if disk margin is below this do not consider crossover freq
-
-% [DM, MM] = evalDiskMarginReduced(Q_g, R_g, linSys, constantsASTRA, thrustMax);
 
 %% Genetic Algorithm
 popSize = 20;
@@ -152,16 +113,13 @@ task_func = @task_func;
 fit_func = @fit_func;
 paramArray = {linSys, constantsASTRA, thrustMax, @evalDiskMarginReduced, popSize, DM_min};
 
-
 % Initialize population and root node
-% allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(7,7); Q_g(9,9); Q_g(10,10); Q_g(12,12); R_g(1,1); R_g(3,3); R_g(4,4)]; % if using updated controller check order of inputs (might be T first)
-allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(6,6); Q_g(7,7); Q_g(9,9); R_g(1,1); R_g(3,3)];
-popInitial = population(1, allele_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, paramArray);
+gene_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(6,6); Q_g(7,7); Q_g(9,9); R_g(1,1); R_g(3,3)];
+popInitial = population(1, gene_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, paramArray);
 
 % Start parallel pool if not started yet
 % n_cores = 6;
 % if isempty(gcp('nocreate')), parpool(n_cores); end % start parallel pool (set number of workers depending on how CPU intensive you want the process to be
-
 
 % RUN GENETIC ALGORITHM
 %   Runs the genetic algorithm process until the population size
@@ -177,7 +135,6 @@ end
 popFinal = pops{end};
 
 % Genetic algorithm results
-% root.gene = pop.nodes{1}.gene;
 a = popFinal.genes{1}.alleles;
 Q = diag([ones(2,1) * a(1); a(2); ones(3,1) * a(3); ones(2,1) * a(4); a(5); ones(2,1) * a(6); a(7)]);
 R = diag([ones(2,1) * a(8); a(9); a(10)]);
@@ -189,7 +146,7 @@ gaData.('populations') = pops;
 gaData.('Q') = Q;
 gaData.('R') = R;
 gaData.('K') = K;
-save('GA_' + ...
+save('.\Controls\Controller Optimization\GA_' + ...
     string(datetime(now,'ConvertFrom','datenum', 'Format', 'yyyy-MM-dd_HH.mm.ss')) + ...
     '__popSize' + string(popSize) + ...
     '_fit' + string(popFinal.genes{1}.fitness) + '.mat', 'gaData')

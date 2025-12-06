@@ -76,8 +76,7 @@ classdef population < handle & matlab.mixin.Copyable
         function prefTask(pop)
             gs = pop.genes;
             
-            for i = 1:pop.popSize
-                % Perform task for current gene
+            for i = 1:length(gs)
                 try
                     states = pop.task_func(gs{i});
                     gs{i}.states = states;
@@ -85,17 +84,7 @@ classdef population < handle & matlab.mixin.Copyable
                     warning('Problem performing task for Gene %d. Setting gene.error as true.', i);
                     gs{i}.error = true;
                 end
-
-                % Status updates
-                if i == round(.25 * pop.popSize)
-                    fprintf('   Task Evaluation:     25%%\n')
-                elseif i == round(.5 * pop.popSize)
-                    fprintf('   Task Evaluation:     50%%\n')
-                elseif i == round(.75 * pop.popSize)
-                    fprintf('   Task Evaluation:     75%%\n')
-                elseif i == round(pop.popSize)
-                    fprintf('   Task Evaluation:    100%%\n')
-                end
+                
             end
             pop.genes = gs;
         end
@@ -108,28 +97,13 @@ classdef population < handle & matlab.mixin.Copyable
             gs = pop.genes; %makes code cleaner
             fitArray = zeros(size(gs)); %initialize fitArray
             
-            for i = 1:pop.popSize
-               % Evaluate fitness for each gene
+            for i = 1:length(gs)
                fit = pop.fit_func(gs{i});
                gs{i}.fitness = fit;
                fitArray(i) = fit;
-
-               % Status updates
-                if i == round(.25 * pop.popSize)
-                    fprintf('   Fitness Evaluation:     25%%\n')
-                elseif i == round(.5 * pop.popSize)
-                    fprintf('   Fitness Evaluation:     50%%\n')
-                elseif i == round(.75 * pop.popSize)
-                    fprintf('   Fitness Evaluation:     75%%\n')
-                elseif i == round(pop.popSize)
-                    fprintf('   Fitness Evaluation:    100%%\n')
-                end
-
             end
             pop.genes = gs;
-            
-            % Rank genes
-            fprintf('   Ranking genes\n')
+
             pop.fitnesses = fitArray;
             pop.geneRanking = conditional_quicksort(1:length(gs), fitArray);
 

@@ -4,8 +4,8 @@
 %% Required sub-functions
 function StateSpace = ActuatorDelay
     %Creates a first order actuator model
-    ActuatorModel = cell(4, 1);
-    tau = [0.08; 0.08; 0.15; 0.15];
+    ActuatorModel = cell(3, 1);
+    tau = [0.08; 0.08; 0.15];
 
     for i =1:size(tau, 1)
         tau_i = tau(i);
@@ -28,7 +28,7 @@ addpath('.\Simulation\Vehicle Motion\');
 
 
 %% Genetic Algorithm Settings
-popSize = 1000;
+popSize = ;
 mut_rate_i = .7;
 mut_rate_f = .1;
 mut_factor_i = 100;
@@ -64,7 +64,10 @@ gene_seed = [diag(Q); diag(R)]; % TODO: reduce size of gene by considering symme
 
 %% Get parameters required to perform task
 constants = constructConstants;
-params = {constants, @Controller2_Gen_GA, ActuatorDelay};
+[~, linSys] = Controller2_Gen(constants);
+
+
+params = {constants, linSys, ActuatorDelay};
 
 %% Run GA
 popInit = population(0, gene_seed, popSize, mut_rate_i, mut_rate_f, ...
@@ -73,7 +76,7 @@ popInit = population(0, gene_seed, popSize, mut_rate_i, mut_rate_f, ...
 
 pops = {popInit};
 while pops{end}.popSize > 1
-    fprintf("\nPOPULATION: %d\n", pops{end}.generation)
+    fprintf("\nGeneration:    %d\n", pops{end}.generation)
     pops{end}.prefTask;
     pops{end}.fitEval;
     pops{end}.kill;
