@@ -140,7 +140,7 @@ DM_min = 1.0; % minimum disk margin, if disk margin is below this do not conside
 % [DM, MM] = evalDiskMarginReduced(Q_g, R_g, linSys, constantsASTRA, thrustMax);
 
 %% Genetic Algorithm
-popSize = 100;
+popSize = 20;
 mut_rate_i = .7;
 mut_rate_f = .1;
 mut_factor_i = 100;
