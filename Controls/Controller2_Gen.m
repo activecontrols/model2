@@ -68,12 +68,12 @@ lin.B = double(subs(lin.B, [x; u], [delx; delu]));
 % Hand tuning for Q for now
 a_weights = ones(6,1);
 a_weights = a_weights / norm(a_weights);
-max_x = [0.28, 0.28, 0.25, 40, 40, 1.0];
+max_x = [0.27, 0.27, 0.25, 40, 40, 1.0];
 Q = eye(6) .* a_weights ./ max_x.^2;
-R = diag([5, 5, 0.2]);
+R = diag([4, 4, 0.2]);
 
 % Augment Q with integral states
-Qi = diag([2, 2, 4]);
+Qi = diag([2, 2, 3]);
 Q = [Q zeros(6,3);
      zeros(3,6) Qi];
 

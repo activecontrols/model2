@@ -42,7 +42,7 @@ U = zeros(4,1);
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
-    K_P = [0.5; 0.5; 0.65];
+    K_P = [0.55; 0.55; 0.65];
     VelTarget = K_P .* PosError;
 
     % Velocity Saturation Step
@@ -54,20 +54,18 @@ U = zeros(4,1);
     VelError = VelTarget - X(8:10);
 
     % Integral Accumulator
-    K_I = [1.5; 1.5; 5];
-    Leak = 0.10;
+    K_I = [2.3; 2.3; 5];
+    Leak = 0.30;
     Clamp = [1; 1; 2];
 
     % Normalize errors (0 to 1 scale)
-    MaxAttError = [0.07; 0.07; 0.3];
-    MaxVelError = [0.6; 0.6; 0.4];
-    MaxRateError = [pi/5; pi/5; pi/3];
+    MaxAttError = [0.03; 0.03; 0.3];
+    MaxVelError = [0.4; 0.4; 0.3];
     NormAttErr = abs(lastAttError) ./ MaxAttError;
     NormVelErr = abs(VelError) ./ MaxVelError;
-    NormRateErr = abs(X(11:13)) ./ MaxRateError;
     
     % Combine errors (Vector magnitude)
-    TotalErrorMetric = NormAttErr + NormVelErr + NormRateErr;
+    TotalErrorMetric = NormAttErr + NormVelErr;
     
     % Calculate Gate using Gaussian function
     Gate = (1 - Leak) * exp(-2 * TotalErrorMetric.^2) + Leak;
@@ -76,7 +74,7 @@ U = zeros(4,1);
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [2.2; 2.2; 3.5];
+    K_P = [2.85; 2.85; 3.5];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
