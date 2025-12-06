@@ -11,9 +11,9 @@ close all;
 % load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-11-26_21.52.58__popSize250_fit1.2239.mat'
 
 % Run of 10000 mut_rate at .15 and mut_factor at 10 to demonstrate low mutation rate behavior
-% load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-27_03.55.15__popSize10000_fit1.7026.mat'
+load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-11-27_03.55.15__popSize10000_fit1.7026.mat'
 
-load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-27_11.32.15__popSize1000_fit1.81.mat'
+% load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.41.19__popSize100_fit1.0392.mat'
 
 %% Plot fitness versus generation
 pops = gaData.populations;
@@ -44,19 +44,20 @@ for p = 1:length(pops)
     gene_list = pops{p}.genes;
 
     for g = 1:length(gene_list)
-        DM = gene_list{g}.states{1};
-
-        temp1 = zeros(length(DM), 1);
-        temp2 = temp1;
-        for d = 1:length(DM)
-            temp1(d) = DM(d).DiskMargin;
-            temp2(d) = DM(d).Frequency;
-
+        if ~gene_list{g}.error
+            DM = gene_list{g}.states{1};
+    
+            temp1 = zeros(length(DM), 1);
+            temp2 = temp1;
+            for d = 1:length(DM)
+                temp1(d) = DM(d).DiskMargin;
+                temp2(d) = DM(d).Frequency;
+    
+            end
+    
+            dmargins = [dmargins, temp1];
+            freqs = [freqs, temp2];
         end
-
-        dmargins = [dmargins, temp1];
-        freqs = [freqs, temp2];
-
     end
 end
 

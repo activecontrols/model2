@@ -87,36 +87,36 @@ b_weights = b_weights / norm(b_weights);
 max_x = [3, 3, 0.5, 1000, 1000, 1000, 1, 1, 0.4, pi/8, pi/8, 2];
 max_u = [pi/18, pi/18, 6, 0.4];
 
-% Q_g = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-% R_g = diag([260, 260, 4, 10]);
+Q_g = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+R_g = diag([260, 260, 4, 10]);
 
-Q_g = [0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    0, 0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 0, 0, 6.590156173100899e+02, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0, 0;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.490187042445407e-07];
-R_g = [1.489332493744518e+04, 0, 0, 0;
-    0, 1.489332493744518e+04, 0, 0;
-    0, 0, 26.044672063044732, 0;
-    0, 0, 0, 1.000000000000000e-08];
+% Q_g = [0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+%     0, 0.590594299020442, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+%     0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+%     0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0, 0;
+%     0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0, 0;
+%     0, 0, 0, 0, 0, 1.000000000000000e-08, 0, 0, 0, 0, 0, 0;
+%     0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0, 0;
+%     0, 0, 0, 0, 0, 0, 0, 8.036356619219551e-08, 0, 0, 0, 0;
+%     0, 0, 0, 0, 0, 0, 0, 0, 6.590156173100899e+02, 0, 0, 0;
+%     0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0, 0;
+%     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84.750825308901454, 0;
+%     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.490187042445407e-07];
+% R_g = [1.489332493744518e+04, 0, 0, 0;
+%     0, 1.489332493744518e+04, 0, 0;
+%     0, 0, 26.044672063044732, 0;
+%     0, 0, 0, 1.000000000000000e-08];
 DM_min = 1.0; % minimum disk margin, if disk margin is below this do not consider crossover freq
 
-% [DM, MM] = evalDiskMarginReduced(Q, R, linSys, constantsASTRA, thrustMax);
+% [DM, MM] = evalDiskMarginReduced(Q_g, R_g, linSys, constantsASTRA, thrustMax);
 
 %% Genetic Algorithm
 popSize = 1000;
 mut_rate_i = .7;
 mut_rate_f = .1;
 mut_factor_i = 100;
-mut_factor_f = 10;
-mut_func = @mut_func_linear;
+mut_factor_f = 1;
+mut_func = @mut_func_fitBased;
 gen_cut = .5;
 elite_cut = 0;
 task_func = @task_func;
@@ -125,7 +125,7 @@ paramArray = {linSys, constantsASTRA, thrustMax, @evalDiskMarginReduced, popSize
 
 
 % Initialize population and root node
-allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(7,7); Q_g(9,9); Q_g(10,10); Q_g(12,12); R_g(1,1); R_g(3,3); R_g(4,4)];
+allele_seed = [Q_g(1,1); Q_g(3,3); Q_g(4,4); Q_g(7,7); Q_g(9,9); Q_g(10,10); Q_g(12,12); R_g(1,1); R_g(3,3); R_g(4,4)]; % if using updated controller check order of inputs (might be T first)
 popInitial = population(1, allele_seed, popSize, mut_rate_i, mut_rate_f, mut_factor_i, mut_factor_f, mut_func, gen_cut, elite_cut, task_func, fit_func, paramArray);
 
 % Start parallel pool if not started yet

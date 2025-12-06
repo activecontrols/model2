@@ -36,7 +36,7 @@ classdef gene < matlab.mixin.Copyable
             obj.generation = generation;
         end
 
-        %CROSSOVER Summary of this function goes here
+        %CROSSOVER
         %   Performs crossover between two gene objects
         %   
         %   RETURNS: array of alleles for child1 and child2
@@ -52,7 +52,7 @@ classdef gene < matlab.mixin.Copyable
             child2(p1:p2) = temp;
         end
 
-        % MUTATE applies random mutation to solution set of genetic algorithm
+        % MUTATE
         %   Performs mutation on alleles of gene. 
         %   Note: seed correpsonds to the seed value of the gene pool
         %         (initially this is just Bryson's Rule but could change as
@@ -71,6 +71,47 @@ classdef gene < matlab.mixin.Copyable
             
             child(child > maxVal) = maxVal(child > maxVal);
             child(child < minVal) = minVal(child < minVal);
+        end
+
+        % GAUSSIAN MUTATION 
+        %   Applies Gaussian mutation operator to the alleles of a gene,
+        %   each allele will be bounded based on the associated index of a
+        %   and b.
+        %   INPUTS:
+        %       a: lower bound of each allele, vector of the same size as 
+        %           the gene
+        %       b: upper bound of each allele, vector of the same size as
+        %           the gene
+        %       sigma: the standard deviation of the desired gaussian
+        %           distribution from which the mutation will be generated
+        %   OUTPUTS:
+        %       child: a set of mutated alleles
+        function child = gaussian_mutate(obj, a, b, sigma)
+            child = obj.alleles;
+            alpha = (8 * (pi - 3)) / (3 * pi * (4 - pi)); % constant used in approximating inverse of erf()
+
+            % Iterate through each allele and apply the mutation operator
+            for i = 1:length(obj.alleles)
+                u = rand;
+                sigma_nd = sigma(i) / (b(i) - a(i)); % create nondimensionalized sigma value
+
+                u_L = 0.5 * (erf((a(i) - child(i)) / (sqrt(2) * (b(i) - a(i)) * sigma_nd)) + 1);
+                u_R = 0.5 * (erf((b(i) - child(i)) / (sqrt(2) * (b(i) - a(i)) * sigma_nd)) - 1);
+
+                if u <= 0.5 % Compute u_i' based on uniformly sampled u_i
+                    u_prime = 2 * u_L * (1 - 2 * u);
+                else
+                    u_prime = 2 * u_R * (2 * u - 1);
+                end
+
+                erf_inv = sign(u) * sqrt(sqrt((2 / (pi * alpha) + ...
+                    log(1 - u_prime^2) / 2) ^ 2 - ...
+                    log(1 - u_prime^2) / alpha) - ...
+                    (2 / (pi * alpha) + log(1 - u_prime^2) / 2));
+
+                % Apply mutation operator
+                child(i) = child(i) + sqrt(2) * sigma_nd * (b(i) - a(i)) * erf_inv;
+            end
         end
 
         %CONSTRAINT CHECK
