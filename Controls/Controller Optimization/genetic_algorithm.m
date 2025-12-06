@@ -28,7 +28,7 @@ addpath('.\Simulation\Vehicle Motion\');
 
 
 %% Genetic Algorithm Settings
-popSize = ;
+popSize = 3000;
 mut_rate_i = .7;
 mut_rate_f = .1;
 mut_factor_i = 100;

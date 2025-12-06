@@ -17,7 +17,7 @@ close all;
 % load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.41.19__popSize100_fit1.0392.mat'
 
 %% Controller v2 Runs
-load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-12-06_11.40.06__popSize1000_fit1.4863.mat'
+load Controls\'Controller Optimization'\'GA Runs'\GA_2025-12-06_12.38.15__popSize3000_fit1.3066.mat
 
 %% Plot fitness versus generation
 pops = gaData.populations;
