@@ -67,44 +67,60 @@ Vector3 EMA_Gyros(Vector15 Y, Vector3 &lastEMA) {
   return EMA_G;
 }
 
-Vector15 StateAUG(Vector13 XKF, Vector3 G) {
+Vector16 StateAUG(Vector13 XKF, Vector3 G) {
   // Change Filter State to Controls State
-  Vector15 X;
-  X << XKF.segment<3>(1), XKF.segment<3>(4), XKF.segment<3>(7), G - XKF.segment<3>(10), XKF.segment<3>(10);
+  Vector16 X;
+  X << XKF.segment<4>(0), XKF.segment<3>(4), XKF.segment<3>(7), G - XKF.segment<3>(10), XKF.segment<3>(10);
   return X;
 }
 
-Vector12 ref_generator3(Vector15 full_x, Vector3 TargetPos) {
-  Vector12 x = full_x.segment<12>(0);
-  Vector3 PosError = TargetPos - x.segment<3>(3);
-  Vector3 PosGain;
-  PosGain << 0.55, 0.55, 0.75;
-  Vector3 TargetVel = PosGain.cwiseProduct(PosError);
+// Convert a DCM to a quaternion robustly
+Vector4 DCM_Quat_Conversion(Matrix3_3 R) {
 
-  float MaxAscentSpeed = 4;   // m/s
-  float MaxDescentSpeed = -4; // m/s
-  float MaxLatSpeed = 1;      // m/s
+  // Extract trace
+  float tr = R(0, 0) + R(1, 1) + R(2, 2);
 
-  Vector3 MaxVel;
-  MaxVel << MaxLatSpeed, MaxLatSpeed, MaxAscentSpeed;
-  Vector3 MinVel;
-  MinVel << -MaxLatSpeed, -MaxLatSpeed, MaxDescentSpeed;
+  // Pre-allocate output
+  Vector4 q = Vector4::Zero();
 
-  TargetVel = TargetVel.cwiseMin(MaxVel).cwiseMax(MinVel);
+  // CASE 1: Standard Case (Trace > 0)
+  // This works for most orientations (small angles, < 90 deg tilt)
+  if (tr > 0) {
+    float S = sqrt(tr + 1.0) * 2; // S = 4 * qw
+    q[0] = 0.25 * S;
+    q[1] = (R(2, 1) - R(1, 2)) / S;
+    q[2] = (R(0, 2) - R(2, 0)) / S;
+    q[3] = (R(1, 0) - R(0, 1)) / S;
+  }
+  // CASE 2: Singularity Avoidance (Trace <= 0)
+  // We must find the largest diagonal element to avoid dividing by zero.
+  else {
+    if ((R(0, 0) > R(1, 1)) && (R(0, 0) > R(2, 2))) {
+      // Column 1 (X) is dominant
+      float S = sqrt(1.0 + R(0, 0) - R(1, 1) - R(2, 2)) * 2;
+      q[0] = (R(2, 1) - R(1, 2)) / S;
+      q[1] = 0.25 * S;
+      q[2] = (R(0, 1) + R(1, 0)) / S;
+      q[3] = (R(0, 2) + R(2, 0)) / S;
+    } else if (R(1, 1) > R(2, 2)) {
+      // Column 2 (Y) is dominant
+      float S = sqrt(1.0 + R(1, 1) - R(0, 0) - R(2, 2)) * 2;
+      q[0] = (R(0, 2) - R(2, 0)) / S;
+      q[1] = (R(0, 1) + R(1, 0)) / S;
+      q[2] = 0.25 * S;
+      q[3] = (R(1, 2) + R(2, 1)) / S;
+    } else {
+      // Column 3 (Z) is dominant
+      float S = sqrt(1.0 + R(2, 2) - R(0, 0) - R(1, 1)) * 2;
+      q[0] = (R(1, 0) - R(0, 1)) / S;
+      q[1] = (R(0, 2) + R(2, 0)) / S;
+      q[2] = (R(1, 2) + R(2, 1)) / S;
+      q[3] = 0.25 * S;
+    }
+  }
 
-  Vector12 TargetVec;
-  TargetVec << Vector3::Zero(), TargetPos, TargetVel, Vector3::Zero();
-  Vector12 ref = x - TargetVec;
-  return ref;
-}
+  // Enforce normalization to correct numerical drift
+  q.normalize();
 
-Vector4 output_clamp(Vector4 U) {
-  float thrust_max = 1.5 * 9.8; // N
-  Vector4 maxU;
-  maxU << M_PI / 24, M_PI / 24, thrust_max, thrust_max * 10;
-  Vector4 minU;
-  minU << -M_PI / 24, -M_PI / 24, thrust_max * 0.4, -thrust_max * 10;
-
-  U = U.cwiseMin(maxU).cwiseMax(minU);
-  return U;
+  return q;
 }

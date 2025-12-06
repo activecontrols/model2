@@ -1,4 +1,4 @@
-function ref = ref_generator3(x, t, TargetPos, HoldTimeReqs)
+function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     CPP_REF_GEN = 0;
 
     persistent timeFlag
@@ -8,7 +8,7 @@ function ref = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     persistent HoldMode
 
     if (CPP_REF_GEN == 1)
-        x = x(1:12,1);
+        x = x(2:13);
         i = min(floor(t / 5) + 1, 8); % step through 1-8, advancing every 5 secs
             
         MaxAscentSpeed = 4;         %m/s
@@ -25,13 +25,14 @@ function ref = ref_generator3(x, t, TargetPos, HoldTimeReqs)
         TargetVec = [zeros(3,1); TargetPos(:, i); TargetVel; zeros(3,1)];
     
         ref = x - TargetVec;
+        trg = TargetPos(:, i);
     else
         
         % Sets the time to execute an abort at
         % A value of 0 result in no abort being run
         ABORT = 0;
     
-        x = x(1:12,1);
+        x = x(2:13);
         MaxAscentSpeed = 4;         %m/s
         MaxDescentSpeed = -4;       %m/s
         MaxLatSpeed = 1;            %m/s
@@ -84,4 +85,5 @@ function ref = ref_generator3(x, t, TargetPos, HoldTimeReqs)
             i = i + 1;
             timeCounter = 0;
         end
+        trg = TargetPos(:, i);
     end

@@ -81,7 +81,7 @@ Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vecto
 
     // Measurement Covariance Matrix
     float gps_pos_covar = 1 * RTK + 10 * (1 - RTK);
-    float gps_vel_covar = gps_pos_covar;
+    float gps_vel_covar = gps_pos_covar * 0.1;
     Vector6 R_vec;
     R_vec << gps_pos_covar * gps_pos_covar * Vector3::Ones(), gps_vel_covar * gps_vel_covar * Vector3::Ones();
     Matrix6_6 R = R_vec.asDiagonal();

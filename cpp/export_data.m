@@ -1,22 +1,24 @@
 %% Load Data
 
-data = load("C:\Users\rober\Purdue\Clubs\PSP-AC-GNC\model2\full_controller_run_anf.mat");
+data = load("C:\Users\rober\Purdue\Clubs\PSP-AC-GNC\model2\cpp\full_v2_controller_run.mat");
 MAX = 25000;
 STEP = 25;
 
-exp_controller_output = data.data{1}.Values.Data';
+exp_controller_output = data.data{1}.Values.Data;
 state_arr = data.data{2}.Values.Data;
 z_arr = data.data{3}.Values.Data;
 GND_arr = data.data{4}.Values.Data;
 disc_controller_output = zeros(4, MAX);
-disc_state = zeros(15, MAX);
+disc_state = zeros(16, MAX);
 disc_target = zeros(3, MAX);
-disc_dnf_out = zeros(9, MAX);
+disc_dnf_out = zeros(15, MAX);
 disc_last_cmd_thrust = zeros(1, MAX);
-% disc_P = zeros(144, MAX);
+disc_xkf = zeros(13, MAX);
+disc_P = zeros(144, MAX);
 dT = 0.002;
 
 clear EstimateStateFCN
+clear ASTRAv2_Controller
 clear EMA_Gyros_MLFUNC
 clear DigitalNF
 
@@ -33,13 +35,12 @@ for i = 1:STEP:MAX
     
     x_est = EstimateStateFCN(x_est, constantsASTRA, Y_FILT, dT * STEP, GND_arr(i));
     EMA_G = EMA_Gyros_MLFUNC(Y_FILT);
-    X = [x_est(2:4); x_est(5:7); x_est(8:10); EMA_G - x_est(11:13); x_est(11:13)];
-    
-    error = ref_generator3(X, dT * i, Checkpoints, 0);
-    raw_co = -K * error;
-    raw_co = raw_co + u0;
-    raw_co = inputfcn3(raw_co, 0);
+    X = [x_est(1:4); x_est(5:7); x_est(8:10); EMA_G - x_est(11:13); x_est(11:13)];
 
+    
+    [error, trg] = ref_generator3(X, dT * i, Checkpoints, 0);
+    [raw_co, VEI] = ASTRAv2_Controller(trg, X, constantsASTRA, dT * i / STEP);
+    
     if (GND_arr(i) == 1)
         raw_co = zeros(4, 1);
     end
@@ -48,17 +49,18 @@ for i = 1:STEP:MAX
 
     for j = i:1:i+STEP
         tp_index = min(floor(dT * j / 5) + 1, 8); % step through 1-8, advancing every 5 secs
-        disc_dnf_out(:,j) = ANF_IMU;
+        disc_dnf_out(:,j) = Y_FILT;
         disc_target(:,j) = Checkpoints(:,tp_index);
         disc_state(:,j) = X;
         disc_controller_output(:,j) = raw_co;
         disc_last_cmd_thrust(:,j) = last_cmd_thrust;
-        % disc_P(:,j) = reshape(P,[144,1]);
+        disc_xkf(:,j) = x_est;
+        disc_P(:,j) = reshape(P,[144,1]);
     end
 end
 
 %% Plots
-DO_PLOTS = 1;
+DO_PLOTS = 0;
 
 if (DO_PLOTS)
     figure;
@@ -144,17 +146,17 @@ if (DO_EXPORT)
     end
     fprintf(fileID, "};\n");
     
-    fprintf(fileID, "float dnf_out_arr[MAX_IDX][9] = {\n");
+    fprintf(fileID, "float dnf_out_arr[MAX_IDX][15] = {\n");
     for i = 1:STEP:MAX
         fprintf(fileID, "    {");
-        for col = 1:1:8 
+        for col = 1:1:14
          fprintf(fileID, "%.8f, ", disc_dnf_out(col, i));
         end
-        fprintf(fileID, "%.8f", disc_dnf_out(9, i));
+        fprintf(fileID, "%.8f", disc_dnf_out(15, i));
         fprintf(fileID, "},\n");
     end
     fprintf(fileID, "};\n");
-
+    
     fprintf(fileID, "float last_cmd_thurst_arr[MAX_IDX][1] = {\n");
     for i = 1:STEP:MAX
         fprintf(fileID, "    {");
@@ -163,16 +165,27 @@ if (DO_EXPORT)
     end
     fprintf(fileID, "};\n");
 
-    % fprintf(fileID, "float exp_state[MAX_IDX][15] = {\n");
-    % for i = 1:STEP:MAX
-    %     fprintf(fileID, "    {");
-    %     for col = 1:1:14 
-    %      fprintf(fileID, "%.8f, ", disc_state(col, i));
-    %     end
-    %     fprintf(fileID, "%.8f", disc_state(15, i));
-    %     fprintf(fileID, "},\n");
-    % end
-    % fprintf(fileID, "};\n");
+    fprintf(fileID, "float exp_state[MAX_IDX][16] = {\n");
+    for i = 1:STEP:MAX
+        fprintf(fileID, "    {");
+        for col = 1:1:15 
+         fprintf(fileID, "%.8f, ", disc_state(col, i));
+        end
+        fprintf(fileID, "%.8f", disc_state(16, i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
+
+    fprintf(fileID, "float exp_xkf[MAX_IDX][13] = {\n");
+    for i = 1:STEP:MAX
+        fprintf(fileID, "    {");
+        for col = 1:1:12
+         fprintf(fileID, "%.8f, ", disc_xkf(col, i));
+        end
+        fprintf(fileID, "%.8f", disc_xkf(13, i));
+        fprintf(fileID, "},\n");
+    end
+    fprintf(fileID, "};\n");
 
     % fprintf(fileID, "float exp_P[MAX_IDX][144] = {\n");
     % for i = 1:STEP:MAX

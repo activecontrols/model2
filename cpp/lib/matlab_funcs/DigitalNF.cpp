@@ -36,7 +36,7 @@ Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_4 &X, M
   TRACK << 1.3525, 42.6278, 2.6867, 84.8000;
 
   float fs = 1 / dT;
-  float width1 = 25; // Hz
+  float width1 = 35; // Hz
 
   // Sequential Notch Filter
   if (GND == 0) {
@@ -47,7 +47,7 @@ Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_4 &X, M
 
     // 2nd Order Butterworth Filter
     // Set up a 2nd Order Butterworth Filter
-    f0 = 25;
+    f0 = 20;
     float C = tan(M_PI * f0 / fs);
     float A1 = 2 * (C * C - 1) / (1 + sqrt(2) * C + C * C);
     float A2 = (1 - sqrt(2) * C + C * C) / (1 + sqrt(2) * C + C * C);
