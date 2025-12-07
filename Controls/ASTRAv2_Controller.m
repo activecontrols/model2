@@ -74,7 +74,7 @@ U = zeros(4,1);
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [2.85; 2.85; 3.5];
+    K_P = [3; 3; 3.5];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
