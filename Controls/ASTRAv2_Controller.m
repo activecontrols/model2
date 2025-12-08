@@ -59,7 +59,7 @@ U = zeros(4,1);
     Clamp = [5; 5; 5];
 
     % Normalize errors (0 to 1 scale)
-    MaxAttError = [0.1; 0.1; 0.3];
+    MaxAttError = [0.05; 0.05; 0.3];
     MaxVelError = [0.4; 0.4; 0.3];
     NormAttErr = abs(lastAttError) ./ MaxAttError;
     NormVelErr = abs(VelError) ./ MaxVelError;
