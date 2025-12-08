@@ -192,8 +192,8 @@ fprintf(['Max Noise Amplitude Pre-Filter: %.3f \n' ...
          'Max Noise Amplitude Post-Filter: %.3f \n'], max_ampl_raw, max_ampl_filt);
 
 figure;
-TestNumber = 38;
-Channel = plotChannel + 1;
+TestNumber = 48;
+Channel = plotChannel + 0;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).raw_data(:, Channel), 'LineWidth', 2); hold on;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).filtered_data(:, Channel), 'LineWidth', 2)
 legend('Raw Data', 'ANF-S Filtered')

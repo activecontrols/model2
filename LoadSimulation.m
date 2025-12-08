@@ -35,6 +35,7 @@ constants_port;
 constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
 constantsASTRA.R = p2.obsv_cov_mat;
+constantsASTRA.MaxT = constantsASTRA.g * 1.697;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 IMU_Rate = 1000;     %Hz
 
@@ -88,10 +89,11 @@ Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
 HoldTimeReqs = [4, 5, 3, 3, 3, 3, 0, 0.2];
 % Checkpoints =  [0, 0, 0;
 %                 0, 0, 0;
-%                 0, 2, 0];
-% HoldTimeReqs = [4, 20, 4];
+%                 0, 0.5, 0];
+% HoldTimeReqs = [5, 8, 5];
 
 % Disturbances (1 for on, 0 for off)
 distMode = 1; 
+dt_SIM = 1/1000;
 
 

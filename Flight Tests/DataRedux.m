@@ -212,7 +212,7 @@ uMax = InputBounds(:, 2);
 uMin = InputBounds(:, 1);
 
 figure;
-for i = 2:totalTests-1
+for i = 2:totalTests-2
 
     % Local input reconstruction
     arrayLen = size(testData(i).x_vec(:, 2:13), 1);
@@ -227,11 +227,12 @@ for i = 2:totalTests-1
     eulerAngles = quat2eul(testData(i).x_vec(:,1:4), 'XYZ');
     % plot(testData(i).Time, eulerAngles(:,3) * 180 / pi, 'y', 'LineWidth', 1); hold on; grid on;
     yyaxis left
-    plot(testData(i).Time, testData(i).x_vec(:,7), 'g', 'LineWidth', 1); hold on; grid on;
-    ylabel('Altitude [m]');
+    accelTot = sqrt(testData(i).z_vec(:,1).^2 + testData(i).z_vec(:,2).^2 + testData(i).z_vec(:,3).^2) / constantsASTRA.g;
+    plot(testData(i).Time, accelTot, 'g', 'LineWidth', 1); hold on; grid on;
+    ylabel('Accel Reading Norm [G]');
     hold off;
     yyaxis right
-    plot(testData(i).Time, testData(i).u_vec(:,3), 'b', 'LineWidth', 1);
+    % plot(testData(i).Time, testData(i).u_vec(:,1), 'b', 'LineWidth', 1);
     % plot(testData(i).Time, uLocalv1(4, :) * 180 / pi, 'r', 'LineWidth', 1);
     hold off;
     str = sprintf('Ang. Rate and Gimbal vs. Time  ||  Test: %i', i);
@@ -239,7 +240,7 @@ for i = 2:totalTests-1
     xlabel('Test Cycle Timer [s]');
     ylabel('Thrust CMD [N]');
     yline(constantsASTRA.m * constantsASTRA.g, 'r--');
-    legend('Altitude','Thrust', '1 TWR');
+    legend('Accel Reading','Thrust', '1 TWR');
     xlim([-2 15]);
     pause(5);
 end

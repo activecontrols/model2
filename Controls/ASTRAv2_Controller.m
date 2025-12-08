@@ -56,10 +56,10 @@ U = zeros(4,1);
     % Integral Accumulator
     K_I = [2.3; 2.3; 5];
     Leak = 0.30;
-    Clamp = [1; 1; 2];
+    Clamp = [5; 5; 5];
 
     % Normalize errors (0 to 1 scale)
-    MaxAttError = [0.03; 0.03; 0.3];
+    MaxAttError = [0.1; 0.1; 0.3];
     MaxVelError = [0.4; 0.4; 0.3];
     NormAttErr = abs(lastAttError) ./ MaxAttError;
     NormVelErr = abs(VelError) ./ MaxVelError;
@@ -129,8 +129,6 @@ U = zeros(4,1);
 uMax = InputBounds(:, 2);
 uMin = InputBounds(:, 1);
 U = min(max(U, uMin), uMax);
-VEI = VelErrorI;
-
-
+VEI = VelTarget;
     
 

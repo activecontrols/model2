@@ -70,7 +70,7 @@ a_weights = ones(6,1);
 a_weights = a_weights / norm(a_weights);
 max_x = [0.27, 0.27, 0.3, 2, 2, 1.0];
 Q = eye(6) .* a_weights ./ max_x.^2;
-R = diag([20, 20, 2]);
+R = diag([5, 5, 2]);
 
 % Augment Q with integral states
 Qi = diag([1.7, 1.7, 4]);

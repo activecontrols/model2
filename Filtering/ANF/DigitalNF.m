@@ -24,28 +24,28 @@ width1 = 35;     % Hz
 if ~GND
     %% Notch #1
         % Setup first notch at constant frequency
-        f0 = TRACK(1, 1) * THRUST + TRACK(1, 2);    %Hz
-        w0 = 2 * pi * f0 / fs;
-        r = exp(-pi * width1 / fs);
-
-        % Calculate Normalization Gain
-        G_num = 1 - 2*r*cos(w0) + r^2;
-        G_den = 2 - 2*cos(w0);
-        G = G_num / G_den;
-
-        % Filter Out
-        NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
-        DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
-        OUT = NUM + DEN;
+        % f0 = TRACK(1, 1) * THRUST + TRACK(1, 2);    %Hz
+        % w0 = 2 * pi * f0 / fs;
+        % r = exp(-pi * width1 / fs);
+        % 
+        % % Calculate Normalization Gain
+        % G_num = 1 - 2*r*cos(w0) + r^2;
+        % G_den = 2 - 2*cos(w0);
+        % G = G_num / G_den;
+        % 
+        % % Filter Out
+        % NUM = G * (IN - 2*cos(w0)*X1(:, 1) + X1(:, 2));
+        % DEN = 2*r*cos(w0)*Y1(:,1) - r^2*Y1(:,2);
+        % OUT = NUM + DEN;
     
         % Update memory for first Notch
-        X1 = [IN    X1(:, 1)];
-        Y1 = [OUT   Y1(:, 1)];
-        IN = OUT;
+        % X1 = [IN    X1(:, 1)];
+        % Y1 = [OUT   Y1(:, 1)];
+        % IN = OUT;
     
     %% 2nd Order Butterworth Filter
         % Set up a 2nd Order Butterworth Filter
-        f0 = 20;
+        f0 = 48;
         C = tan(pi * f0 / fs);
         A1 = 2*(C^2 - 1) / (1 + sqrt(2)*C + C^2);
         A2 = (1 - sqrt(2)*C + C^2) / (1 + sqrt(2)*C + C^2);
