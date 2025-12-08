@@ -15,7 +15,7 @@ function matrix = zeroPad(stream, numCols)
 end
 
 %% Begin Redux
-dataFolder = 'Flight Tests\Dec 6 Tests';
+dataFolder = 'Flight Tests\Nov 22 Tests';
 
 % File list
 path = fullfile(pwd, dataFolder);
@@ -379,3 +379,4 @@ grid on;
 Colors = colororder('glow');
 xline(best_tau,'--', ['Best Fit PCA: ' num2str(best_tau)], 'Color', Colors(1, :));
 legend('Minor / Major Axis Ratio for Data Cloud', 'Squared Residuals from linear Fit', 'Best Fit');
+
