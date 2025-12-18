@@ -65,9 +65,9 @@ Controller_Output get_controller_output(Controller_Input ci) {
        ci.gps_vel_north, ci.gps_vel_west, ci.gps_vel_up;
   // clang-format on
 
-  Vector9 imu = z.segment<9>(0);
-  Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, ci.dT, dnf_X, dnf_Y);
-  z.segment<9>(0) = filt_imu;
+  // Vector9 imu = z.segment<9>(0);
+  // Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, ci.dT, dnf_X, dnf_Y);
+  // z.segment<9>(0) = filt_imu;
 
   x_est = EstimateStateFCN(x_est, constantsASTRA, z, ci.dT, ci.GND_val, P, ci.new_imu_packet, ci.new_gps_packet);
   Vector3 EMA_G = EMA_Gyros(z, lastEMA);
@@ -81,8 +81,8 @@ Controller_Output get_controller_output(Controller_Input ci) {
   last_thrust = raw_co(2);
 
   Controller_Output co;
-  co.gimbal_yaw_deg = raw_co(0) * 180 / M_PI;
-  co.gimbal_pitch_deg = raw_co(1) * 180 / M_PI;
+  co.gimbal_yaw_deg = 0;   // raw_co(0);   // * 180 / M_PI;
+  co.gimbal_pitch_deg = 0; // raw_co(1); // * 180 / M_PI;
   co.thrust_N = raw_co(2);
   co.roll_rad_sec_squared = raw_co(3);
   return co;
