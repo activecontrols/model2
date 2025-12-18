@@ -1,5 +1,7 @@
 #pragma once
-#include <ArduinoEigenDense.h>
+#include <Eigen/Dense>
+#define M_PI EIGEN_PI
+#define max(a, b) (((a) > (b)) ? (a) : (b))
 
 // Note - using matlab funcs based off of ASTRA simulation: e5e0557ebb837f220d9740cd96e1020724bceb48
 // TODO - update matlab func commit

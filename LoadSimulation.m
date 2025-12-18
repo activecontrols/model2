@@ -16,6 +16,7 @@ clear GPS_Sim;
 clear DigitalNF;
 
 addpath('.\cpp');
+addpath('.\cpp_mex')
 addpath('.\Parameters');
 addpath('.\Filtering');
 addpath('.\Filtering\EMA Filter');

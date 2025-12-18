@@ -9,6 +9,7 @@ struct Controller_Output {
 
 struct Controller_Input {
   // System Status
+  float dT;
   float GND_val;
   bool new_imu_packet;
   bool new_gps_packet;

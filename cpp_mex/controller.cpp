@@ -10,8 +10,6 @@ Matrix9_4 dnf_X;
 Matrix9_4 dnf_Y;
 float last_thrust;
 
-unsigned long last_call_time; // ms
-
 void begin() {
   reset_controller_state();
 }
@@ -49,15 +47,9 @@ void reset_controller_state() {
   last_thrust = 0;
 
   ASTRAv2_Controller_reset();
-
-  last_call_time = micros();
 }
 
 Controller_Output get_controller_output(Controller_Input ci) {
-  unsigned long call_time = micros();
-  float dT = (call_time - last_call_time) / 1000000.0;
-  last_call_time = call_time;
-
   Vector15 z;
   // clang-format off
   z << ci.accel_x, ci.accel_y, ci.accel_z, 
@@ -68,15 +60,15 @@ Controller_Output get_controller_output(Controller_Input ci) {
   // clang-format on
 
   Vector9 imu = z.segment<9>(0);
-  Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, dT, dnf_X, dnf_Y);
+  Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, ci.dT, dnf_X, dnf_Y);
   z.segment<9>(0) = filt_imu;
 
-  x_est = EstimateStateFCN(x_est, constantsASTRA, z, dT, ci.GND_val, P, ci.new_imu_packet, ci.new_gps_packet);
+  x_est = EstimateStateFCN(x_est, constantsASTRA, z, ci.dT, ci.GND_val, P, ci.new_imu_packet, ci.new_gps_packet);
   Vector3 EMA_G = EMA_Gyros(z, lastEMA);
   Vector16 X = StateAUG(x_est, EMA_G);
   Vector3 TargetPos;
   TargetPos << ci.target_pos_north, ci.target_pos_west, ci.target_pos_up;
-  Vector4 raw_co = ASTRAv2_Controller(TargetPos, X, constantsASTRA, dT);
+  Vector4 raw_co = ASTRAv2_Controller(TargetPos, X, constantsASTRA, ci.dT);
   if (ci.GND_val) {
     raw_co = Vector4::Zero();
   }
