@@ -9,6 +9,7 @@ Vector3 lastEMA;
 Matrix9_4 dnf_X;
 Matrix9_4 dnf_Y;
 float last_thrust;
+bool has_been_called = false;
 
 void begin() {
   reset_controller_state();
@@ -50,6 +51,11 @@ void reset_controller_state() {
 }
 
 Controller_Output get_controller_output(Controller_Input ci) {
+  if (!has_been_called) {
+    reset_controller_state();
+    has_been_called = true;
+  }
+
   Vector15 z;
   // clang-format off
   z << ci.accel_x, ci.accel_y, ci.accel_z, 

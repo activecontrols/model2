@@ -1,5 +1,5 @@
-function [ref, trg, err] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
-    CPP_REF_GEN = 0;
+function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
+    CPP_REF_GEN = 1;
 
     persistent timeFlag
     persistent i
@@ -9,23 +9,8 @@ function [ref, trg, err] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     persistent errorAccum
 
     if (CPP_REF_GEN == 1)
-        x = x(2:13);
         i = min(floor(t / 5) + 1, 8); % step through 1-8, advancing every 5 secs
-            
-        MaxAscentSpeed = 4;         %m/s
-        MaxDescentSpeed = -4;       %m/s
-        MaxLatSpeed = 1;            %m/s
-    
-        PosGain = [0.55; 0.55; 0.75];
-        
-        PosError = TargetPos(:, i) - x(4:6);
-        TargetVel = PosGain .* PosError;
-        TargetVel(1:2) = max(min(TargetVel(1:2), MaxLatSpeed), -MaxLatSpeed);
-        TargetVel(3) = max(min(TargetVel(3), MaxAscentSpeed), MaxDescentSpeed);
-    
-        TargetVec = [zeros(3,1); TargetPos(:, i); TargetVel; zeros(3,1)];
-    
-        ref = x - TargetVec;
+        ref = 0;
         trg = TargetPos(:, i);
     else
         
