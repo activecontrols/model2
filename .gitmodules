@@ -1,0 +1,3 @@
+[submodule "cpp_mex/eigen"]
+	path = cpp_mex/eigen
+	url = https://gitlab.com/libeigen/eigen.git
