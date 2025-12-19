@@ -1,14 +1,9 @@
-function [x_est, dx] = EstimateStateFCN(x_est,constantsASTRA,z,dT,GND)
-
+function x_est = GroundEstimator(x_est,constantsASTRA,z,dT)
 %% M-EKF Implementation
-% Filter mode (1 for full INS when GPS signals available, 0 for pure
-% integration after launch when no GPS available | limit flight time)
-FILTER_MODE = 1;
-
-% Remove bias fromIMU
-z(1:3) = z(1:3) - x_est(14:16) * (FILTER_MODE == 1 || GND == 1);
-z(4:6) = z(4:6) - x_est(11:13) * (FILTER_MODE == 1 || GND == 1);
-z(7:9) = z(7:9) - x_est(17:19) * (FILTER_MODE == 1 || GND == 1);
+% Remove bias from IMU
+z(1:3) = z(1:3) - x_est(14:16);
+z(4:6) = z(4:6) - x_est(11:13);
+z(7:9) = z(7:9) - x_est(17:19);
 
 % Extract quaternion
 dx = zeros(18,1);
@@ -29,7 +24,7 @@ if isempty(P)
 end
 
 % State Transition Matrix (CHANGE!!)
-F = StateTransitionMat(z(1:3), z(4:6), R_b2i);
+F = StateTransitionMat(z(1:3), z(4:6), R_b2i, 1);
 
 % Propagate rest of state using IMU
 x_est(8:10) = x_est(8:10) + (R_b2i * z(1:3) - [0; 0; constantsASTRA.g]) * dT;
@@ -47,7 +42,8 @@ Q = 0.5 * Q;
 P = Phi * P * Phi' + Q;
 RTK = 0;
 
-if sum(lastZ(1:9) - z(1:9)) ~=0 && (FILTER_MODE == 1 && GND == 1)
+%% IMU Update
+if sum(lastZ(1:9) - z(1:9)) ~=0
 
     % Measurement matrix
     H = zeros(6,18);
@@ -56,10 +52,6 @@ if sum(lastZ(1:9) - z(1:9)) ~=0 && (FILTER_MODE == 1 && GND == 1)
     H(4:6, 1:3) = zetaCross(R_b2i' * constantsASTRA.mag);
     H(4:6, 16:18) = eye(3);
 
-    % Measurement Noise Covariance
-    w = 1 + 1e5 * (1 - GND);
-    R(1:3,1:3) = R(1:3,1:3) * w;
-    
     % A priori covariance and Kalman gain
     L = P * H' / (H * P * H' + R);
     
@@ -73,7 +65,9 @@ if sum(lastZ(1:9) - z(1:9)) ~=0 && (FILTER_MODE == 1 && GND == 1)
     residual = (z([1:3 7:9]) - z_hat);
     dx = dx + L * residual;
 end
-if sum(lastZ(10:15) - z(10:15)) ~=0 && (FILTER_MODE == 1 || GND == 1)
+
+%% GPS Update
+if sum(lastZ(10:15) - z(10:15)) ~=0
 
     % Measurement matrix
     H = zeros(6,18);
@@ -81,7 +75,7 @@ if sum(lastZ(10:15) - z(10:15)) ~=0 && (FILTER_MODE == 1 || GND == 1)
     H(4:6, 7:9) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 1 * RTK + 150 * (1 - RTK);
+    gps_pos_covar = 1 * RTK + 130 * (1 - RTK);
     gps_vel_covar = gps_pos_covar * 0.1;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
@@ -99,17 +93,15 @@ if sum(lastZ(10:15) - z(10:15)) ~=0 && (FILTER_MODE == 1 || GND == 1)
     inn = L * residual;
     dx = dx + inn;
 end
-if FILTER_MODE == 1 || GND == 1
-    % Update full-state estimates
-    dq = [1; dx(1:3) / 2];
-    dq = dq / norm(dq);
-    
-    q_nom = quatmultiply(q', dq');
-    q_nom = q_nom / norm(q_nom); 
-    dx(10:18) = dx(10:18) * GND;
-    x_est(1:4) = q_nom';
-    x_est(5:19) = x_est(5:19) + dx(4:18);
-end
-x_est(5:10) = x_est(5:10) * (1 - GND);
+
+% Update full-state estimates
+dq = [1; dx(1:3) / 2];
+dq = dq / norm(dq);
+
+q_nom = quatmultiply(q', dq');
+q_nom = q_nom / norm(q_nom); 
+x_est(1:4) = q_nom';
+x_est(5:19) = x_est(5:19) + dx(4:18);
+x_est(5:10) = 0;
 lastZ = z;
 end
