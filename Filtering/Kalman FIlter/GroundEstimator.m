@@ -1,4 +1,4 @@
-function x_est = GroundEstimator(x_est,constantsASTRA,z,dT)
+function [x_est, lastP] = GroundEstimator(x_est,constantsASTRA,z,dT)
 %% M-EKF Implementation
 % Remove bias from IMU
 z(1:3) = z(1:3) - x_est(14:16);
@@ -40,7 +40,7 @@ R = constantsASTRA.R;
 % Process Noise Covariance and a-priori propagation step
 Q = 0.5 * Q;
 P = Phi * P * Phi' + Q;
-RTK = 0;
+RTK = 1;
 
 %% IMU Update
 if sum(lastZ(1:9) - z(1:9)) ~=0
@@ -104,4 +104,5 @@ x_est(1:4) = q_nom';
 x_est(5:19) = x_est(5:19) + dx(4:18);
 x_est(5:10) = 0;
 lastZ = z;
+lastP = P;
 end

@@ -15,7 +15,7 @@ dT = t - lastTime;
 
 if t - lastTime > 1 / GPS_Rate
     % Correlated noise measurements (GMP)
-    RTK = 0;
+    RTK = 1;
     gps_pos_covar = 0.01 * RTK + 0.5 * (1 - RTK);
     gps_vel_covar = 0.005 * RTK + 0.05 * (1 - RTK);
     decay = 50;

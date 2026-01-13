@@ -73,7 +73,7 @@ Q = eye(6) .* a_weights ./ max_x.^2;
 R = diag([6, 6, 2]);
 
 % Augment Q with integral states
-Qi = diag([1.35, 1.35, 3.5]);
+Qi = diag([1.3, 1.3, 5]);
 Q = [Q zeros(6,3);
      zeros(3,6) Qi];
 
