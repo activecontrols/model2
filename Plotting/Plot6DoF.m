@@ -12,7 +12,7 @@ function Plot6DoF(Checkpoints)
     
     % Extract states (q_vec is 3x1 vector part)
     % q_vec = x(1:3, :)';  % [qx qy qz]
-    r = x(4:6, :)';      % Position [x y z]
+    r = x(5:7, :)';      % Position [x y z]
     % v = x(7:9, :)';    % Not plotted
     % ang_rate = x(10:12, :)';  % Not plotted
     % gyro_bias = x(13:15, :)'; % Not plotted
@@ -88,4 +88,13 @@ function Plot6DoF(Checkpoints)
     cb.Label.String = 'Time (s)';
     
     sgtitle('2D Trajectory Traces');  % Overall title
+
+    measurementLog = simOut.meas_log;
+    %% FFT
+    figure;
+    fs = 1 / mean(diff(t));
+    windowSize = 256;       % ~0.25 seconds of data
+    overlap = floor(windowSize * 0.9); % 90% overlap
+    nfft = 2048;            % High NFFT for smooth Y-axis
+    spectrogram(measurementLog.Data(4,:), kaiser(windowSize, 5), overlap, nfft, fs, 'yaxis');
 end
