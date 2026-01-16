@@ -54,6 +54,7 @@ matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/disturbedDynamics.m',
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
+magDistMatrix = eye(3) + 0.02 * randn(3);
 
 %% Attitude Controller Generation
 [K_Att, ~] = Controller2_Gen(constantsASTRA);
