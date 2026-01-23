@@ -126,7 +126,7 @@ function AnimateFlight(t, r, q, Checkpoints)
 
     % 3. Define Vehicle Geometry (Aligned with Z-Axis / UP)
     % This creates a "Stick" drone with legs at the bottom.
-    scale = 0.35; 
+    scale = 0.25; 
     
     % Vertices: [X, Y, Z]
     % Nose is at +Z. Tail/Legs are at -Z.
@@ -154,9 +154,9 @@ function AnimateFlight(t, r, q, Checkpoints)
     hAxisZ = plot3(ax, [0 0], [0 0], [0 0], 'b', 'LineWidth', 2); % Blue = Z
 
     % Set Axis Limits (Tracking the flight)
-    xlim(ax, [min(r(:,1))-2, max(r(:,1))+2]);
-    ylim(ax, [min(r(:,2))-2, max(r(:,2))+2]);
-    zlim(ax, [min(r(:,3))-2, max(r(:,3))+2]);
+    xlim(ax, [min(r(:,1))-1, max(r(:,1))+1]);
+    ylim(ax, [min(r(:,2))-1, max(r(:,2))+1]);
+    zlim(ax, [min(r(:,3)), max(r(:,3))+1]);
 
     % 5. Real-Time Animation Loop
     title(ax, 'Preparing Animation...', 'Color', 'w');
@@ -166,9 +166,9 @@ function AnimateFlight(t, r, q, Checkpoints)
     vY = [0 axisLen 0];
     vZ = [0 0 axisLen];
 
+    pause(10);
     startTime = tic;
     finalTime = t(end);
-    pause(5)
     while true
         % Get current wall-clock time relative to start
         tApp = toc(startTime);

@@ -192,14 +192,14 @@ fprintf(['Max Noise Amplitude Pre-Filter: %.3f \n' ...
          'Max Noise Amplitude Post-Filter: %.3f \n'], max_ampl_raw, max_ampl_filt);
 
 figure;
-TestNumber = 48;
+TestNumber = 24;
 Channel = plotChannel + 0;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).raw_data(:, Channel), 'LineWidth', 2); hold on;
 plot(allData(TestNumber).raw_data(:, 1), allData(TestNumber).filtered_data(:, Channel), 'LineWidth', 2)
-legend('Raw Data', 'ANF-S Filtered')
+legend('Raw Data', 'Filtered')
 xlabel('Time [s]')
 ylabel('Acceleration [m/s^2]')
-title('Test Sensor Data Unfiltered vs. ANF-S Filtered');
+title('Test Sensor Data Unfiltered vs. DFS Filtered');
 fprintf('Plotted Test File: %s \n', allData(TestNumber).filename);
 
 % Spectrogram

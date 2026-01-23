@@ -55,6 +55,9 @@ linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 magDistMatrix = eye(3) + 0.02 * randn(3);
+magBias = 0.05 * ones(1,3);
+gyroBias = 0.005 * ones(1,3);
+accelBias = [0.09, 0.09, 0.09];
 
 %% Attitude Controller Generation
 [K_Att, ~] = Controller2_Gen(constantsASTRA);

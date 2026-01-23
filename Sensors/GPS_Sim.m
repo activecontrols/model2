@@ -24,7 +24,7 @@ if t - lastTime > 1 / GPS_Rate
     
     % Fake GPS Measurements (derivate velocity from GPS_Pos)
     GPS = zeros(6,1);
-    a = 0.1;
+    a = 0.05;
     GPS(1:3) = PosVel(1:3) + error_pos;
     GPS(4:6) = (GPS(1:3) - lastGPS(1:3)) / dT * a + (1 - a) * (PosVel(4:6) + gps_vel_covar * randn) + cross(Rate, [0 0 0.31]');
     lastGPS = GPS;

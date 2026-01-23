@@ -1,4 +1,4 @@
-function x_est = FlightEstimator(x_est,constantsASTRA,z,dT,P0)
+function [x_est, lastP] = FlightEstimator(x_est,constantsASTRA,z,dT,P0)
 %% M-EKF Implementation
 % Remove bias from IMU
 z(1:3) = z(1:3) - x_est(14:16);
@@ -15,6 +15,10 @@ q = x_est(1:4);
 % A-priori quaternion estimate and rotation matrix
 q = q / norm(q);
 R_b2i = quatRot(q)';
+
+% GPS velocity correction
+rGPS = [0 0 0.31]';
+z(13:15) = z(13:15) - R_b2i * cross(z(4:6), rGPS);
 
 % Process Covariance Matrix
 persistent P lastZ 
@@ -50,8 +54,8 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
     H(4:6, 7:9) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 1 * RTK + 100 * (1 - RTK);
-    gps_vel_covar = gps_pos_covar * 1;
+    gps_pos_covar = 2 * RTK + 10 * (1 - RTK);
+    gps_vel_covar = 0.5; %gps_pos_covar * 5;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain
@@ -78,4 +82,5 @@ q_nom = q_nom / norm(q_nom);
 x_est(1:4) = q_nom';
 x_est(5:10) = x_est(5:10) + dx(4:9);
 lastZ = z;
+lastP = P;
 end
