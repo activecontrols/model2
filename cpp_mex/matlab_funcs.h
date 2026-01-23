@@ -10,38 +10,61 @@ using Vector3 = Eigen::Matrix<float, 3, 1>;
 using Vector4 = Eigen::Matrix<float, 4, 1>;
 using Vector6 = Eigen::Matrix<float, 6, 1>;
 using Vector9 = Eigen::Matrix<float, 9, 1>;
-using Vector12 = Eigen::Matrix<float, 12, 1>;
 using Vector13 = Eigen::Matrix<float, 13, 1>;
 using Vector15 = Eigen::Matrix<float, 15, 1>;
 using Vector16 = Eigen::Matrix<float, 16, 1>;
+using Vector18 = Eigen::Matrix<float, 18, 1>;
 using Matrix2_2 = Eigen::Matrix<float, 2, 2>;
 using Matrix3_3 = Eigen::Matrix<float, 3, 3>;
 using Matrix3_9 = Eigen::Matrix<float, 3, 9>;
 using Matrix4_4 = Eigen::Matrix<float, 4, 4>;
 using Matrix6_6 = Eigen::Matrix<float, 6, 6>;
-using Matrix6_12 = Eigen::Matrix<float, 6, 12>;
+using Matrix6_9 = Eigen::Matrix<float, 6, 9>;
 using Matrix9_4 = Eigen::Matrix<float, 9, 4>;
-using Matrix12_6 = Eigen::Matrix<float, 12, 6>;
-using Matrix12_12 = Eigen::Matrix<float, 12, 12>;
+using Matrix6_18 = Eigen::Matrix<float, 6, 18>;
+using Matrix9_6 = Eigen::Matrix<float, 9, 6>;
+using Matrix9_9 = Eigen::Matrix<float, 9, 9>;
+using Matrix18_6 = Eigen::Matrix<float, 18, 6>;
+using Matrix18_18 = Eigen::Matrix<float, 18, 18>;
 
 typedef struct {
   float g;
   float m;
   Vector3 mag;
-  Matrix12_12 Q;
+  Matrix18_18 Q;
   Matrix6_6 R;
   Matrix3_9 K_Att;
-} t_constantsASTRA;
+} constantsASTRA_t;
 
 Matrix3_3 zetaCross(Vector3 zeta);
 Matrix3_3 quatRot(Vector4 q);
-Matrix12_12 StateTransitionMat(Vector3 accel, Vector3 gyro, Matrix3_3 R_b2i);
 Matrix4_4 HamiltonianProd(Vector4 q);
-Matrix12_12 matrixExpPade6(Matrix12_12 A);
-Vector13 EstimateStateFCN(Vector13 x_est, t_constantsASTRA constantsASTRA, Vector15 z, float dT, float GND, Matrix12_12 &P, bool new_imu_packet, bool new_gps_packet);
+Vector13 GroundEstimator(Vector13 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix18_18 &P, bool new_imu_packet, bool new_gps_packet);
+Vector13 FlightEstimator(Vector13 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix9_9 &P, bool new_gps_packet);
 Vector3 EMA_Gyros(Vector15 Y, Vector3 &lastEMA);
 Vector16 StateAUG(Vector13 XKF, Vector3 G);
 Vector4 DCM_Quat_Conversion(Matrix3_3 R);
 Vector9 DigitalNF(Vector9 IN, float GND, float THRUST, float dT, Matrix9_4 &X, Matrix9_4 &Y);
 void ASTRAv2_Controller_reset();
-Vector4 ASTRAv2_Controller(Vector3 PosTarget, Vector16 X, t_constantsASTRA constantsASTRA, float dT);
+Vector4 ASTRAv2_Controller(Vector3 PosTarget, Vector16 X, constantsASTRA_t constantsASTRA, float dT);
+
+// call like so: matrixExpPade6<Matrix9_9>
+template <typename MatrixN_N>
+MatrixN_N matrixExpPade6(MatrixN_N A) {
+  using Scalar = typename MatrixN_N::Scalar;
+  const Scalar b[] = {1.0, 0.5, 0.12, 0.0183333333333, 0.00199275362319, 0.000160590438368, 0.00000939085239292};
+
+  MatrixN_N A2 = A * A;
+  MatrixN_N A4 = A2 * A2;
+  MatrixN_N A6 = A4 * A2;
+
+  MatrixN_N U = A * (b[1] * MatrixN_N::Identity(A.rows(), A.cols()) + b[3] * A2 + b[5] * A4);
+  U += A6 * b[6];
+
+  MatrixN_N V = b[0] * MatrixN_N::Identity(A.rows(), A.cols()) + b[2] * A2 + b[4] * A4 + b[6] * A6;
+
+  MatrixN_N numer = V + U;
+  MatrixN_N denom = V - U;
+
+  return denom.inverse() * numer;
+}

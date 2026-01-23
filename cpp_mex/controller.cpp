@@ -2,8 +2,8 @@
 #include "matlab_funcs.h"
 
 namespace Controller {
-t_constantsASTRA constantsASTRA;
-Matrix12_12 P;
+constantsASTRA_t constantsASTRA;
+Matrix18_18 P;
 Vector13 x_est;
 Vector3 lastEMA;
 Matrix9_4 dnf_X;
@@ -39,7 +39,7 @@ void reset_controller_state() {
       2.717801e-16, 1.136934e+00, 2.449270e-16, 4.799793e-17, 1.985662e-01, 2.505480e-17, -7.524250e-17, -6.324555e-01, -2.397136e-16,                       //
       -1.788593e-15, 1.828852e-15, 8.462398e+00, -2.226297e-16, 2.620046e-16, 4.355001e+00, 1.286862e-15, -1.097175e-15, -4.472136e+00;                      //
 
-  P = 1 * Matrix12_12::Identity();
+  P = 1 * Matrix18_18::Identity();
   x_est = Vector13::Zero();
   x_est[0] = 1;
   lastEMA = Vector3::Zero();
@@ -69,7 +69,8 @@ Controller_Output get_controller_output(Controller_Input ci) {
   // Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, ci.dT, dnf_X, dnf_Y);
   // z.segment<9>(0) = filt_imu;
 
-  x_est = EstimateStateFCN(x_est, constantsASTRA, z, ci.dT, ci.GND_val, P, ci.new_imu_packet, ci.new_gps_packet);
+  // TODO - switch between estimators
+  x_est = GroundEstimator(x_est, constantsASTRA, z, ci.dT, P, ci.new_imu_packet, ci.new_gps_packet);
   Vector3 EMA_G = EMA_Gyros(z, lastEMA);
   Vector16 X = StateAUG(x_est, EMA_G);
   Vector3 TargetPos;
@@ -81,8 +82,8 @@ Controller_Output get_controller_output(Controller_Input ci) {
   last_thrust = raw_co(2);
 
   Controller_Output co;
-  co.gimbal_yaw_deg = 0;   // raw_co(0);   // * 180 / M_PI;
-  co.gimbal_pitch_deg = 0; // raw_co(1); // * 180 / M_PI;
+  co.gimbal_yaw_deg = raw_co(0) * 180 / M_PI;
+  co.gimbal_pitch_deg = raw_co(1) * 180 / M_PI;
   co.thrust_N = raw_co(2);
   co.roll_rad_sec_squared = raw_co(3);
   return co;
