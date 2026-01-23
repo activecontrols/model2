@@ -1,4 +1,4 @@
-function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
+function [ref, trg, err] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     CPP_REF_GEN = 0;
 
     persistent timeFlag
@@ -6,6 +6,7 @@ function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     persistent timeCounter
     persistent prevTime
     persistent HoldMode
+    persistent errorAccum
 
     if (CPP_REF_GEN == 1)
         x = x(2:13);
@@ -44,6 +45,7 @@ function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
             timeCounter = 0;
             prevTime = 0;
             HoldMode = 0;
+            errorAccum = zeros(3, 1);
         end
         dt = t - prevTime;
         prevTime = t;
@@ -80,10 +82,12 @@ function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     
         if norm(ref(4:6,1)) < sqrt(3) && isABORT == 0 
             timeCounter = timeCounter + dt;
+            errorAccum = errorAccum + PosError * dt;
         end
         if timeCounter > HoldTimeReqs(i) && i < size(HoldTimeReqs,2)
             i = i + 1;
             timeCounter = 0;
         end
         trg = TargetPos(:, i);
+        err = norm(errorAccum);
     end
