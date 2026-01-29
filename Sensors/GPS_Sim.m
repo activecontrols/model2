@@ -1,9 +1,9 @@
-function GPS = GPS_Sim(PosVel, Rate, t)
+function GPS = GPS_Sim(PosVel, Rate, R_b2i, t)
 
 % Integrate rate limiting directly into GPS measurements instead of through
 % SensorRates function. Keep Sensor Rates for IMU only.
 
-GPS_Rate = 10;      %Hz
+GPS_Rate = 20;      %Hz
 persistent error_pos lastGPS lastTime
 if isempty(error_pos)
     error_pos = 0;
@@ -24,9 +24,8 @@ if t - lastTime > 1 / GPS_Rate
     
     % Fake GPS Measurements (derivate velocity from GPS_Pos)
     GPS = zeros(6,1);
-    a = 0.05;
     GPS(1:3) = PosVel(1:3) + error_pos;
-    GPS(4:6) = (GPS(1:3) - lastGPS(1:3)) / dT * a + (1 - a) * (PosVel(4:6) + gps_vel_covar * randn) + cross(Rate, [0 0 0.31]');
+    GPS(4:6) = (PosVel(4:6) + gps_vel_covar * randn) + R_b2i * cross(Rate, [0 0 0.31]');
     lastGPS = GPS;
     lastTime = t;
 else

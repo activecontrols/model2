@@ -54,8 +54,8 @@ if sum(lastZ(10:15) - z(10:15)) ~=0
     H(4:6, 7:9) = eye(3);
 
     % Measurement Covariance Matrix
-    gps_pos_covar = 2 * RTK + 10 * (1 - RTK);
-    gps_vel_covar = 0.5; %gps_pos_covar * 5;
+    gps_pos_covar = 0.2 * RTK + 10 * (1 - RTK);
+    gps_vel_covar = 0.05; %gps_pos_covar * 5;
     R = diag([gps_pos_covar^2 * ones(3,1); gps_vel_covar^2 * ones(3,1)]);
 
     % A priori covariance and Kalman gain

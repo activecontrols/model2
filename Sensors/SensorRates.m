@@ -35,10 +35,5 @@ else
 end
 
 % Fake GPS measurements
-if t - lastGPS > 1 / GPS_Rate
-    z(10:15) = GPS;
-    lastGPS = t;
-else
-    z(10:15) = lastZ(10:15);
-end
+z(10:15) = GPS;
 lastZ = z;
