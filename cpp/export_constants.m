@@ -1,6 +1,6 @@
 fprintf("constantsASTRA.Q << ")
-for a = 1:12
-    for b = 1:12
+for a = 1:18
+    for b = 1:18
         if constantsASTRA.Q(a, b) == 0
             fprintf("0, ");
         else 
