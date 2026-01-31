@@ -58,7 +58,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   ci.target_pos_west = target_vec[1];
   ci.target_pos_up = target_vec[2];
 
-  ci.GND_val = *mxGetPr(prhs[2]);
+  ci.GND_val = *mxGetPr(prhs[2]) != 0;
   ci.dT = *mxGetPr(prhs[3]);
 
   ci.new_imu_packet = true; // TODO - set these properly
