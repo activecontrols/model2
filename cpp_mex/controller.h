@@ -5,6 +5,8 @@ struct Controller_Output {
   float roll_rad_sec_squared;
   float gimbal_pitch_deg;
   float gimbal_yaw_deg;
+  float x_est_vec[13];
+  float z_filt_vec[15];
 };
 
 struct Controller_Input {

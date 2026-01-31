@@ -107,6 +107,15 @@ Controller_Output get_controller_output(Controller_Input ci) {
   co.gimbal_pitch_deg = raw_co(1) * 180 / M_PI;
   co.thrust_N = raw_co(2);
   co.roll_rad_sec_squared = raw_co(3);
+
+  for (int i = 0; i < 13; i++) {
+    co.x_est_vec[i] = x_est(i);
+  }
+
+  for (int i = 0; i < 15; i++) {
+    co.z_filt_vec[i] = z(i);
+  }
+
   return co;
 }
 } // namespace Controller

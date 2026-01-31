@@ -2,7 +2,7 @@
 #include "controller.h"
 
 // MEX gateway function
-// U = cpp_controller_mex_wrap(Vector15 z, Vector3 target, double GND, double dT)
+// [U, z_filt, x_est] = cpp_controller_mex_wrap(Vector15 z, Vector3 target, double GND, double dT)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // Check number of inputs
   if (nrhs != 4) {
@@ -10,8 +10,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
 
   // Check number of outputs
-  if (nlhs != 1) {
-    mexErrMsgIdAndTxt("MATLAB:myFunction:nlhs", "1 outputs required.");
+  if (nlhs != 3) {
+    mexErrMsgIdAndTxt("MATLAB:myFunction:nlhs", "3 outputs required.");
   }
 
   if (!mxIsDouble(prhs[0]) || mxGetNumberOfElements(prhs[0]) != 15) {
@@ -65,10 +65,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   // Create output variables
   plhs[0] = mxCreateDoubleMatrix(4, 1, mxREAL);
+  plhs[1] = mxCreateDoubleMatrix(15, 1, mxREAL);
+  plhs[2] = mxCreateDoubleMatrix(13, 1, mxREAL);
 
   double *co_vec = mxGetPr(plhs[0]);
   co_vec[0] = co.gimbal_yaw_deg;
   co_vec[1] = co.gimbal_pitch_deg;
   co_vec[2] = co.thrust_N;
   co_vec[3] = co.roll_rad_sec_squared;
+
+  double *z_filt_vec = mxGetPr(plhs[1]);
+  for (int i = 0; i < 15; i++) {
+    z_filt_vec[i] = co.z_filt_vec[i];
+  }
+
+  double *x_est_vec = mxGetPr(plhs[2]);
+  for (int i = 0; i < 13; i++) {
+    x_est_vec[i] = co.x_est_vec[i];
+  }
 }
