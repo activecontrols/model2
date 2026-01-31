@@ -2,7 +2,7 @@
 #include "controller.h"
 
 // MEX gateway function
-// cpp_controller_mex_wrap(Vector15 z, Vector3 target, double GND, double dT)
+// U = cpp_controller_mex_wrap(Vector15 z, Vector3 target, double GND, double dT)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // Check number of inputs
   if (nrhs != 4) {
@@ -60,9 +60,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   ci.GND_val = *mxGetPr(prhs[2]) != 0;
   ci.dT = *mxGetPr(prhs[3]);
-
-  ci.new_imu_packet = true; // TODO - set these properly
-  ci.new_gps_packet = true;
 
   Controller_Output co = Controller::get_controller_output(ci);
 

@@ -11,8 +11,6 @@ struct Controller_Input {
   // System Status
   float dT;
   bool GND_val;
-  bool new_imu_packet;
-  bool new_gps_packet;
 
   // Sensor Inputs
   float accel_x;

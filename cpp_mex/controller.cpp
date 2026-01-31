@@ -7,14 +7,12 @@ Matrix18_18 P;
 Matrix9_9 Flight_P;
 Vector13 x_est;
 Vector3 lastEMA;
+Vector3 lastZ;
 Matrix9_4 dnf_X;
 Matrix9_4 dnf_Y;
 float last_thrust;
 bool last_GND;
-
-void begin() {
-  reset_controller_state();
-}
+bool has_been_called = false;
 
 void reset_controller_state() {
   constantsASTRA.g = 9.8015;
@@ -56,11 +54,17 @@ void reset_controller_state() {
   dnf_Y = Matrix9_4::Ones();
   last_thrust = 0;
   last_GND = true;
+  lastZ = Vector3::Zero();
 
   ASTRAv2_Controller_reset();
 }
 
 Controller_Output get_controller_output(Controller_Input ci) {
+  if (!has_been_called) {
+    reset_controller_state();
+    has_been_called = true;
+  }
+
   Vector15 z;
   // clang-format off
   z << ci.accel_x, ci.accel_y, ci.accel_z, 
@@ -69,6 +73,9 @@ Controller_Output get_controller_output(Controller_Input ci) {
        ci.gps_pos_north, ci.gps_pos_west, ci.gps_pos_up, 
        ci.gps_vel_north, ci.gps_vel_west, ci.gps_vel_up;
   // clang-format on
+
+  bool new_imu_packet = (lastZ.segment<9>(0) - z.segment<9>(0)) != Vector9::Zero();
+  bool new_gps_packet = (lastZ.segment<6>(9) - z.segment<6>(9)) != Vector6::Zero();
 
   Vector9 imu = z.segment<9>(0);
   Vector9 filt_imu = DigitalNF(imu, ci.GND_val, last_thrust, ci.dT, dnf_X, dnf_Y);
@@ -79,9 +86,9 @@ Controller_Output get_controller_output(Controller_Input ci) {
   }
 
   if (ci.GND_val) {
-    x_est = GroundEstimator(x_est, constantsASTRA, z, ci.dT, P, ci.new_imu_packet, ci.new_gps_packet);
+    x_est = GroundEstimator(x_est, constantsASTRA, z, ci.dT, P, new_imu_packet, new_gps_packet);
   } else {
-    x_est = FlightEstimator(x_est, constantsASTRA, z, ci.dT, Flight_P, ci.new_gps_packet);
+    x_est = FlightEstimator(x_est, constantsASTRA, z, ci.dT, Flight_P, new_gps_packet);
   }
 
   Vector3 EMA_G = EMA_Gyros(z, lastEMA);
