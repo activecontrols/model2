@@ -84,8 +84,8 @@ Vector19 GroundEstimator(Vector19 x_est, constantsASTRA_t constantsASTRA, Vector
     H.block<3, 3>(3, 6) = Matrix3_3::Identity();
 
     // Measurement Covariance Matrix
-    float gps_pos_covar = 1 * RTK + 10 * (1 - RTK);
-    float gps_vel_covar = gps_pos_covar * 1;
+    float gps_pos_covar = 0.5 * RTK + 10 * (1 - RTK);
+    float gps_vel_covar = 0.5;
     R = (Vector6() << pow(gps_pos_covar, 2) * Vector3::Ones(), pow(gps_vel_covar, 2) * Vector3::Ones()).finished().asDiagonal();
 
     // A priori covariance and Kalman gain

@@ -9,7 +9,7 @@ function [ref, trg] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     persistent errorAccum
 
     if (CPP_REF_GEN == 1)
-        i = min(floor(t / 5) + 1, size(TargetPos, 2)); % step through 1-8, advancing every 5 secs
+        i = min(floor(t / 5) + 1, size(TargetPos, 2)); % step through 1-8, advancing every 6 secs
         ref = 0;
         trg = TargetPos(:, i);
     else
