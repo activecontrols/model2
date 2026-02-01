@@ -60,7 +60,7 @@ Vector19 FlightEstimator(Vector19 x_est, constantsASTRA_t constantsASTRA, Vector
 
     // Measurement Covariance Matrix
     float gps_pos_covar = 0.2 * RTK + 10 * (1 - RTK);
-    float gps_vel_covar = 0.2;
+    float gps_vel_covar = 0.75;
     Matrix6_6 R = (Vector6() << pow(gps_pos_covar, 2) * Vector3::Ones(), pow(gps_vel_covar, 2) * Vector3::Ones()).finished().asDiagonal();
 
     // A priori covariance and Kalman gain

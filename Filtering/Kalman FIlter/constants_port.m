@@ -7,9 +7,9 @@ accel_bias_cov = 0.1;
 mag_proc_cov = 0.03;
 mag_bias_cov = 0.01;
 
-gyro_cov = 0.05;
-accel_obs_cov = 0.1;
-mag_obs_cov = 0.1;
+gyro_cov = 0.01;
+accel_obs_cov = 0.05;
+mag_obs_cov = 0.075;
 
 %Init constants
 dt = 0.005;
@@ -61,7 +61,8 @@ p2.Q(13:15, 13:15) = p2.accel_bias_cov_mat*dt;
 p2.Q(16:18, 16:18) = p2.mag_bias_cov_mat*dt;
 
 %Hand tuning
-p2.Q(1:3, 1:3) = p2.Q(1:3, 1:3) * 0.1;
+p2.Q(1:2, 1:2) = p2.Q(1:3, 1:3) * 0.02;
+p2.Q(3, 3)  = p2.Q(3, 3) * 0.2;
 p2.Q(10:12, 10:12) = p2.Q(10:12, 10:12) * 0.05;
 p2.Q(13:15, 13:15) = p2.Q(13:15, 13:15) * 0.05;
 p2.Q(16:18, 16:18) = p2.Q(16:18, 16:18) * 0.05;
