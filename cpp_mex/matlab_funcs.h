@@ -14,6 +14,7 @@ using Vector13 = Eigen::Matrix<float, 13, 1>;
 using Vector15 = Eigen::Matrix<float, 15, 1>;
 using Vector16 = Eigen::Matrix<float, 16, 1>;
 using Vector18 = Eigen::Matrix<float, 18, 1>;
+using Vector19 = Eigen::Matrix<float, 19, 1>;
 using Matrix2_2 = Eigen::Matrix<float, 2, 2>;
 using Matrix3_3 = Eigen::Matrix<float, 3, 3>;
 using Matrix3_9 = Eigen::Matrix<float, 3, 9>;
@@ -39,8 +40,8 @@ typedef struct {
 Matrix3_3 zetaCross(Vector3 zeta);
 Matrix3_3 quatRot(Vector4 q);
 Matrix4_4 HamiltonianProd(Vector4 q);
-Vector13 GroundEstimator(Vector13 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix18_18 &P, bool new_imu_packet, bool new_gps_packet);
-Vector13 FlightEstimator(Vector13 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix9_9 &P, bool new_gps_packet);
+Vector19 GroundEstimator(Vector19 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix18_18 &P, bool new_imu_packet, bool new_gps_packet);
+Vector19 FlightEstimator(Vector19 x_est, constantsASTRA_t constantsASTRA, Vector15 z, float dT, Matrix9_9 &P, bool new_gps_packet);
 Vector3 EMA_Gyros(Vector15 Y, Vector3 &lastEMA);
 Vector16 StateAUG(Vector13 XKF, Vector3 G);
 Vector4 DCM_Quat_Conversion(Matrix3_3 R);
