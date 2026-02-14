@@ -56,7 +56,8 @@ classdef population < handle & matlab.mixin.Copyable
                 % Initial mutation and crossover (not reproduction! this just
                 % introduces some initial randomness to the population)
                 for i = 2:length(obj.genes)
-                    child = obj.genes{i}.mutate(mut_rate_i, gene_seed, mut_factor_i);
+                    % child = obj.genes{i}.mutate(mut_rate_i, gene_seed, mut_factor_i);
+                    child = obj.mut_func(obj, i);
                     obj.genes{i}.alleles = child;
                 end
     
@@ -224,12 +225,13 @@ classdef population < handle & matlab.mixin.Copyable
             
             % Get mutation rate and factor from mut_func
             for i = oldPop.numElite + 1 : newPop.popSize
-                % Perform mutation
-                mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
-                a = ones(size(newPop.genes{i}.alleles)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
-                b = newPop.genes{i}.alleles .* mut_factor;
-                sigma = (b - a) ./ 3;
-                child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
+                % Perform gaussian mutation
+                % mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
+                % a = ones(size(newPop.genes{i}.alleles)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
+                % b = newPop.genes{i}.alleles .* mut_factor;
+                % sigma = (b - a) ./ 3;
+                % child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
+                child = newPop.mut_func(newPop, i);
                 newPop.genes{i}.alleles = child;
 
                 % Track parentage
