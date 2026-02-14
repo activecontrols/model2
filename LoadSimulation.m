@@ -35,6 +35,7 @@ constants_port;
 constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
 constantsASTRA.R = p2.obsv_cov_mat;
+constantsASTRA.MaxT = constantsASTRA.g * 1.697;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 IMU_Rate = 1000;     %Hz
 
@@ -53,6 +54,10 @@ matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/disturbedDynamics.m',
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
+magDistMatrix = eye(3) + 0.02 * randn(3);
+magBias = 0.05 * ones(1,3);
+gyroBias = 0.005 * ones(1,3);
+accelBias = [0.09, 0.09, 0.09];
 
 %% Attitude Controller Generation
 [K_Att, ~] = Controller2_Gen(constantsASTRA);
@@ -78,16 +83,17 @@ R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
 [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
 %% Checkpoints and HoldTimes for Trajectory
-% Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
-%                 0, 0, 3,  3,  0, 0, 0, 0;
-%                 0, 3, 3,  3,  3, 3, 0, 0];
-% HoldTimeReqs = [4, 5, 3, 3, 3, 3, 0, 0.2];
-Checkpoints =  [0, 0, 0;
-                0, 0, 0;
-                0, 2, 0];
-HoldTimeReqs = [4, 20, 4];
+Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
+                0, 0, 3,  3,  0, 0, 0, 0;
+                0, 3, 3,  3,  3, 3, 0, 0];
+HoldTimeReqs = [7, 5, 3, 3, 3, 3, 0, 0.2];
+% Checkpoints =  [0, 5, 0;
+%                 0, 10, 0;
+%                 0, 50, 0];
+% HoldTimeReqs = [5, 10, 5];
 
 % Disturbances (1 for on, 0 for off)
 distMode = 1; 
+dt_SIM = 1/1000;
 
 

@@ -31,8 +31,8 @@ testData = struct('filename', {}, 'Time', {}, 'z_vec', {}, 'x_vec', {}, 'u_vec',
               'events', struct('Arm', [], 'Kill', [], 'Finished', []));
 
 % Manually set the two first files
-list(1).name = 'log_2025-11-22_13-08-09.txt';
-list(2).name = 'log_2025-11-22_13-12-36.txt';
+list(1).name = 'log_2025-12-06_14-18-57.txt';
+list(2).name = 'log_2025-12-06_14-21-21.txt';
 totalTests = 0;
 for k = 1:1:numFiles
     
@@ -174,14 +174,25 @@ end
 %% DATA ANALYSIS
 %% GPS Velocity Scrolling Plot
 figure;
-for i = 6:totalTests-2
-    plot(testData(i).Time, testData(i).z_vec(:, 13), 'r-', 'LineWidth', 1);  hold on; grid on;
-    plot(testData(i).Time, testData(i).x_vec(:, 8),  'b-', 'LineWidth', 1); hold off;
-    legend('GPS Velocity', 'M-EKF Velocity');
-    str = sprintf('GPS.VEL vs. Time  ||  Test: %i', i);
+for i = 2:totalTests-1
+    % GPS Vel Corrector
+    GPS_Vel = zeros(size(testData(i).Time, 1), 3);
+    for j = 1:size(testData(i).Time, 1)
+        q = testData(i).x_vec(j, 1:4);
+        Gyros = testData(i).z_vec(j, 4:6);
+        GPS_Vel(j, :) = testData(i).z_vec(j, 13:15);
+        rGPS = [0 0 0.31];
+        R_b2i = quatRot(q)';
+        GPS_Vel(j, :) = GPS_Vel(j, :) - (R_b2i * cross(Gyros, rGPS)')';
+    end
+
+    plot(testData(i).Time, testData(i).z_vec(:, 11), 'r-', 'LineWidth', 1);  hold on; grid on;
+    plot(testData(i).Time, testData(i).x_vec(:, 6),  'b-', 'LineWidth', 1); hold off;
+    legend('GPS Pos', 'EKF Pos');
+    str = sprintf('GPS.POS vs. Time  ||  Test: %i', i);
     title(str);
     xlabel('Test Cycle Timer [s]');
-    ylabel('GPS Velocity [m/sec]');
+    ylabel('GPS Pos [m]');
     xlim([-5 15]);
     pause(3);
 end
@@ -201,7 +212,7 @@ uMax = InputBounds(:, 2);
 uMin = InputBounds(:, 1);
 
 figure;
-for i = 14:totalTests-2
+for i = 2:totalTests-2
 
     % Local input reconstruction
     arrayLen = size(testData(i).x_vec(:, 2:13), 1);
@@ -212,24 +223,26 @@ for i = 14:totalTests-2
         x_trg = [zeros(6,1); testData(i).trg(j, :)'; zeros(3,1)];
         uLocalv1(:, j) = -K1 * (x_vec(2:13) - x_trg);
         uLocalv1(:, j) = min(max(uLocalv1(:,j), uMin), uMax);
-        % [K2, ~] = SolveInput(x0, x_vec(2:13), u0);
-        % uLocalv2(:, j) = -K2 * (x_vec(2:13) - x_trg);
     end
     eulerAngles = quat2eul(testData(i).x_vec(:,1:4), 'XYZ');
-    plot(testData(i).Time, eulerAngles(:,2) * 180 / pi, 'y', 'LineWidth', 1); hold on; grid on;
-    plot(testData(i).Time, testData(i).x_vec(:,12) * 180 / pi, 'g', 'LineWidth', 1);
-    plot(testData(i).Time, testData(i).u_vec(:,2) * 180 / pi, 'b', 'LineWidth', 1);
-    plot(testData(i).Time, uLocalv1(2, :) * 180 / pi, 'r', 'LineWidth', 1);
-    % plot(testData(i).Time, testData(i).u_vec(:,2) * 180 / pi, 'r', 'LineWidth', 1);
-    % plot(testData(i).Time, testData(i).x_vec(:,12) * 180 / pi, 'g', 'LineWidth', 1);
+    % plot(testData(i).Time, eulerAngles(:,3) * 180 / pi, 'y', 'LineWidth', 1); hold on; grid on;
+    yyaxis left
+    accelTot = sqrt(testData(i).z_vec(:,1).^2 + testData(i).z_vec(:,2).^2 + testData(i).z_vec(:,3).^2) / constantsASTRA.g;
+    plot(testData(i).Time, accelTot, 'g', 'LineWidth', 1); hold on; grid on;
+    ylabel('Accel Reading Norm [G]');
     hold off;
-    legend('Yaw Pos','Yaw Rate','Yaw Gimbal','Control v1.5');
+    yyaxis right
+    % plot(testData(i).Time, testData(i).u_vec(:,1), 'b', 'LineWidth', 1);
+    % plot(testData(i).Time, uLocalv1(4, :) * 180 / pi, 'r', 'LineWidth', 1);
+    hold off;
     str = sprintf('Ang. Rate and Gimbal vs. Time  ||  Test: %i', i);
     title(str);
     xlabel('Test Cycle Timer [s]');
-    ylabel('Angle [deg]');
-    xlim([-2 5]);
-    pause(10);
+    ylabel('Thrust CMD [N]');
+    yline(constantsASTRA.m * constantsASTRA.g, 'r--');
+    legend('Accel Reading','Thrust', '1 TWR');
+    xlim([-2 15]);
+    pause(5);
 end
 
 %% Gimbal Time Constant Estimation
@@ -240,7 +253,7 @@ master_dt_list = [];
 
 fprintf('Loading all raw data...\n');
 
-for i = 6:length(testData)-2
+for i = 2:length(testData)-1
     t = testData(i).Time;
     dt = mean(diff(t));
     
@@ -366,3 +379,4 @@ grid on;
 Colors = colororder('glow');
 xline(best_tau,'--', ['Best Fit PCA: ' num2str(best_tau)], 'Color', Colors(1, :));
 legend('Minor / Major Axis Ratio for Data Cloud', 'Squared Residuals from linear Fit', 'Best Fit');
+

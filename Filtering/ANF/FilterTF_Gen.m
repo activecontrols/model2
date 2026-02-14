@@ -50,7 +50,7 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
 
     % Create Notch Filters
     f0 = 94;
-    width1 = 18;
+    width1 = 25;
     fs = 1000;
     numNotch = 2;
     res = 200;
@@ -62,7 +62,7 @@ function [TFC, TFD] = FilterTF_Gen(thrust)
               2.6867    84.8000];
 
     % Build Adaptive notch
-    width2 = width1 + thrust / 100 * 20;
+    width2 = width1; %+ thrust / 100 * 20;
     NotchFreq = tracks(1, 1) * thrust + tracks(1, 2);
     NotchC_Array(1,1) = Notch_TFC(NotchFreq, width2);
     NotchD_Array(1,1) = Notch_TFD(NotchFreq, width2, fs);

@@ -14,7 +14,7 @@
 % channels.
 %
 % By: Pablo Plata   -   11/27/25 (Happy Thanksgiving!)
-function [U, VEI] = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
+function [U, Att] = ASTRAv2_Controller(PosTarget, X, constantsASTRA, t)
 
 % Time Counter
 persistent lastT VelErrorI AttErrorI lastAttError
@@ -42,7 +42,7 @@ U = zeros(4,1);
     PosError = PosTarget - X(5:7);
     
     % Velocity Command
-    K_P = [0.55; 0.55; 0.65];
+    K_P = [0.75; 0.75; 0.65];
     VelTarget = K_P .* PosError;
 
     % Velocity Saturation Step
@@ -54,13 +54,13 @@ U = zeros(4,1);
     VelError = VelTarget - X(8:10);
 
     % Integral Accumulator
-    K_I = [2.3; 2.3; 5];
-    Leak = 0.30;
-    Clamp = [1; 1; 2];
+    K_I = [2; 2; 5];
+    Leak = 0.35;
+    Clamp = [5; 5; 5];
 
     % Normalize errors (0 to 1 scale)
-    MaxAttError = [0.03; 0.03; 0.3];
-    MaxVelError = [0.4; 0.4; 0.3];
+    MaxAttError = [0.06; 0.06; 0.3];
+    MaxVelError = [0.3; 0.3; 0.3];
     NormAttErr = abs(lastAttError) ./ MaxAttError;
     NormVelErr = abs(VelError) ./ MaxVelError;
     
@@ -74,7 +74,7 @@ U = zeros(4,1);
     K_I = K_I .* Gate;
     VelErrorI = VelErrorI + K_I .* VelError .* dT;
     VelErrorI = max(min(VelErrorI, Clamp), -Clamp);
-    K_P = [2.85; 2.85; 3.5];
+    K_P = [2.4; 2.4; 5];
 
     % Acceleration Target
     AccelTarget = K_P .* VelError + VelErrorI  + [0; 0; constantsASTRA.g];
@@ -129,8 +129,6 @@ U = zeros(4,1);
 uMax = InputBounds(:, 2);
 uMin = InputBounds(:, 1);
 U = min(max(U, uMin), uMax);
-VEI = VelErrorI;
-
-
+Att = AttError;
     
 
