@@ -36,6 +36,8 @@ constants_port;
 constantsASTRA = constructConstants;
 constantsASTRA.Q = p2.Q;
 constantsASTRA.R = p2.obsv_cov_mat;
+constantsASTRA.BSigma = 6e-2;
+constantsASTRA.BBias = 1e-8;
 constantsASTRA.MaxT = constantsASTRA.g * 1.697;
 covar_vec = [accel_proc_cov; gyro_cov; mag_proc_cov];
 IMU_Rate = 1000;     %Hz
@@ -55,10 +57,11 @@ matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/disturbedDynamics.m',
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
-magDistMatrix = eye(3) + 0.02 * randn(3);
-magBias = 0.05 * ones(1,3);
-gyroBias = 0.005 * ones(1,3);
-accelBias = [0.09, 0.09, 0.09];
+magDistMatrix = eye(3) + 0.05 * randn(3);
+magDistMatrix = (magDistMatrix + magDistMatrix') / 2;
+magBias = 0.1 * ones(1,3);
+gyroBias = -0.1 * ones(1,3);
+accelBias = [0.1, 0.1, 0.1];
 
 %% Attitude Controller Generation
 [K_Att, ~] = Controller2_Gen(constantsASTRA);
