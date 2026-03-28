@@ -77,6 +77,7 @@ classdef population < handle & matlab.mixin.Copyable
         function prefTask(pop)
             gs = pop.genes;
             
+<<<<<<< Updated upstream
             for i = 1:pop.popSize
                 % Perform task for current gene
                 try
@@ -97,6 +98,19 @@ classdef population < handle & matlab.mixin.Copyable
                 elseif i == round(pop.popSize)
                     fprintf('   Task Evaluation:    100%%\n')
                 end
+=======
+            for i = 1:length(gs)
+                states = pop.task_func(gs{i});
+                gs{i}.states = states;
+
+                % try
+                %     states = pop.task_func(gs{i});
+                %     gs{i}.states = states;
+                % catch
+                %     warning('Problem performing task for Gene %d. Setting gene.error as true.', i);
+                %     gs{i}.error = true;
+                % end
+>>>>>>> Stashed changes
             end
             pop.genes = gs;
         end
@@ -224,6 +238,7 @@ classdef population < handle & matlab.mixin.Copyable
             end
             
             % Get mutation rate and factor from mut_func
+<<<<<<< Updated upstream
             for i = oldPop.numElite + 1 : newPop.popSize
                 % Perform gaussian mutation
                 % mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
@@ -232,6 +247,17 @@ classdef population < handle & matlab.mixin.Copyable
                 % sigma = (b - a) ./ 3;
                 % child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
                 child = newPop.mut_func(newPop, i);
+=======
+            [mut_rate, mut_factor] = newPop.mut_func(newPop);
+
+            for i = oldPop.numElite + 1 : newPop.popSize % length(newPop.popSize)
+                % Perform mutation
+                a = ones(size(newPop.genes{i}.alleles)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
+                b = newPop.genes{i}.alleles .* mut_factor;
+                sigma = (b - a) ./ 3;
+                child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
+                % child = newPop.genes{i}.mutate(mut_rate, newPop.genes{i}.alleles, mut_factor);
+>>>>>>> Stashed changes
                 newPop.genes{i}.alleles = child;
 
                 % Track parentage

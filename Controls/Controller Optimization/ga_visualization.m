@@ -14,12 +14,16 @@ clear; close all;
 % Run of 10000 mut_rate at .15 and mut_factor at 10 to demonstrate low mutation rate behavior
 %load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\v1 Controller\GA_2025-11-30_13.54.55__popSize1000_fit1.5428.mat'
 
+<<<<<<< Updated upstream
 % load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.41.19__popSize100_fit1.0392.mat'
 
 %% Controller v2 Runs
 %load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-12-06_13.48.02__popSize1000_fit2.7077.mat'
 %load 'C:\Users\Owner\Documents\GitHub\model2\Controls\Controller Optimization\GA Runs\GA_2025-12-06_15.07.34__popSize1000_fit6.2253.mat'
 load 'Controls\'Controller Optimization'\'GA Runs'\GA_2025-12-06_12.38.15__popSize3000_fit1.3066.mat'
+=======
+load 'C:\Users\Owner\Documents\GitHub\model2\GA_2025-11-30_13.15.31__popSize100_fit-1.mat'
+>>>>>>> Stashed changes
 
 %% Plot fitness versus generation
 pops = gaData.populations;

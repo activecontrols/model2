@@ -173,7 +173,11 @@ classdef population < handle & matlab.mixin.Copyable
                 newPopSize = oldPop.numAlive;
             end
 
+<<<<<<< Updated upstream
             newPop = population(oldPop.generation + 1,oldPop.gene_seed, newPopSize, oldPop.mut_rate_i, oldPop.mut_rate_f, oldPop.mut_factor_i, oldPop.mut_factor_f, oldPop.mut_func, oldPop.gen_cut, oldPop.elite_cut, oldPop.task_func, oldPop.fit_func, oldPop.parameters);
+=======
+            newPop = population(oldPop.generation + 1,oldPop.allele_seed, newPopSize, oldPop.mut_rate_i, oldPop.mut_rate_f, oldPop.mut_factor_i, oldPop.mut_factor_f, oldPop.mut_func, oldPop.gen_cut, oldPop.elite_cut, oldPop.task_func, oldPop.fit_func, oldPop.parameters);
+>>>>>>> Stashed changes
             r = oldPop.geneRanking;
 
             % Add elite genes that will not mutate or crossover
@@ -197,12 +201,22 @@ classdef population < handle & matlab.mixin.Copyable
             end
             
             % Get mutation rate and factor from mut_func
+<<<<<<< Updated upstream
             for i = oldPop.numElite + 1 : newPop.popSize
                 % Perform mutation
                 mut_factor = newPop.mut_func(newPop, newPop.genes{i}.fitness);
                 a = ones(size(newPop.genes{i}.alleles)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
                 b = newPop.genes{i}.alleles .* mut_factor;
                 sigma = (b - a) ./ 3;
+=======
+            [~, mut_factor] = newPop.mut_func(newPop);
+
+            for i = oldPop.numElite + 1 : newPop.popSize % length(newPop.popSize)
+                % Perform mutation
+                % child = newPop.genes{i}.mutate(mut_rate, newPop.genes{i}.alleles, mut_factor);
+                a = ones(size(seed)) * 1.0e-12; % I didn't use zero to avoid making Q not positive-definite
+                b = newPop.mut_factor
+>>>>>>> Stashed changes
                 child = newPop.genes{i}.gaussian_mutate(a, b, sigma);
                 newPop.genes{i}.alleles = child;
 
