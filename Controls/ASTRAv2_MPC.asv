@@ -172,20 +172,5 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     end
     
     E_s = E_X * G;
-    W_s = W_X - E_X * H * e_x;
-
-    % Combined linear matrix inequality constraints
-    E = [E_i; E_s];
-    W = [W_i; W_s];
-
-    %% Use solver to find required error input
-    options = mpcActiveSetOptions; % default options
-    iA = false(size(W)); % define all inequality constraints as active because of solver (I dont actually know what this does)
-
-    U = mpcActiveSetSolver(L, F * e, E, W, [], zeros(0,1), iA, options);
-    
-    % Extract e_u(k) from U, then extract u from e_u = u - u_ref
-    K = [eye(dim_eu) zeros(dim_eu, dim_eu * n - dim_eu)];
-    e_u = K * U;
-    u = e_u + u_ref(:, k);
+    W_s = W_X - E_X * H * e_x
 end

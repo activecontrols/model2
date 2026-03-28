@@ -46,13 +46,19 @@ u0 = [0; 0; constantsASTRA.g * constantsASTRA.m; 0];
 %% Generate nominal dynamics function
 % Documentation for the math available on Confluence.
 % MODE == 2 on EoMGen produces clean Dynamics, Mode 1 produces perturbed.
-[x, u2, x_dot] = EoMGenerator(constantsASTRA, 2);
+[x, u2, x_dot, x_ref, u_ref, e_x, e_u, e_x_dot] = EoMGenerator(constantsASTRA, 2);
 matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/nominalDynamics.m', 'Vars', [{x}, {u2}]);
+%matlabFunction(e_x_dot, 'File', './Simulation/Vehicle Motion/nominalErrDynamics.m', 'Vars', [{e_x}, {e_u}, {x_ref}, {u_ref}])
 [linSys, disLinSys] = dynamics(x, u2, x_dot, constantsASTRA);
-[x, u2, x_dot] = EoMGenerator(constantsASTRA, 1);
+linSysErr = errorDynamics(e_x, e_u, x_ref, u_ref, e_x_dot, constantsASTRA);
+
+[x, u2, x_dot, x_ref, u_ref, e_x, e_u, e_x_dot] = EoMGenerator(constantsASTRA, 1);
 matlabFunction(x_dot, 'File', './Simulation/Vehicle Motion/disturbedDynamics.m', 'Vars', [{x}, {u2}]);
+%matlabFunction(e_x_dot, 'File', './Simulation/Vehicle Motion/disturbedErrDynamics.m', 'Vars', [{e_x}, {e_u}, {x_ref}, {u_ref}])
+
 linSys.A = linSys.A(1:12,1:12);
 linSys.B = linSys.B(1:12,:);
+
 constantsASTRA.mag = [cos(pi/6); 0; -sin(pi/6)];
 magDistMatrix = eye(3) + 0.02 * randn(3);
 magBias = 0.05 * ones(1,3);
