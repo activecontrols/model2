@@ -3,7 +3,7 @@ dataSect = getSection(dictObj, 'Design Data');
 constantsASTRA = getValue(getEntry(dataSect, 'constantsASTRA'));
 
 %%
-gainNum = 2;
+gainNum = 4;
 a = 1.6;
 b = 2;
 gains  = wblrnd(a, b, 1, gainNum);
@@ -12,7 +12,7 @@ exhaustiveVars(1) = simulink.multisim.BlockParameter("SimulationLoop/Plant Simul
     "Disturbance Models and Integrator/Wind/Wind Gain", "Gain", gainStrs);
 
 %%
-coVarNum = 5;
+coVarNum = 1;
 covariences = linspace(0, 5, coVarNum);
 coVarStr = arrayfun(@num2str, covariences,  'UniformOutput', false);
 exhaustiveVars(2) = simulink.multisim.BlockParameter("SimulationLoop/Plant Simulation/" + ...
@@ -62,7 +62,7 @@ simOut = parsim(designStudy, 'UseFastRestart', 'on', 'ShowProgress', 'on');
 outputs = simOut.fetchOutputs();
 
 %%
-% outputs = out;
+outputs = out;
 outlen = length(outputs);
 
 errSeries = {outputs.totalError.Data};

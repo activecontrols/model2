@@ -105,7 +105,9 @@ dt_SIM = 1/1000;
 
 %%
 dictObj = Simulink.data.dictionary.open('Variables.sldd');
-importFromBaseWorkspace(dictObj, 'varList', {'accelBias', 'constantsASTRA', 'Checkpoints', 'distMode', 'dt', 'dt_SIM', ...
-    'gyroBias', 'HoldTimeReqs', 'IMU_Rate', 'K', 'magDistMatrix', 'slBus1', 'u0', 'x0', 'windMerid', 'windZonal'}, 'existingVarsAction', 'overwrite');
+% importFromBaseWorkspace(dictObj, 'varList', {'accelBias', 'constantsASTRA', ' Checkpoints', ' distMode', ...
+%     ' dt', 'dt_SIM', ' gyroBias', ' HoldTimeReqs', ' IMU_Rate', ' K', ' magDistMatrix', ' slBus1', ' u0', ...
+%     ' x0', ' windMerid', ' windZonal'});
+importFromBaseWorkspace(dictObj, 'varList', {'accelBias', 'constantsASTRA', 'Checkpoints', 'distMode', 'dt', 'dt_SIM', 'gyroBias', 'HoldTimeReqs', 'IMU_Rate', 'K', 'magDistMatrix'});%, 'existingVarsAction', 'overwrite');
 saveChanges(dictObj);
-clearvars -except constantsASTRA
+% clearvars;
