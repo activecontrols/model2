@@ -71,22 +71,35 @@ constantsASTRA.K_Att = K_Att;
 ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate LQR Controller for Simulation
-% Brysons Rule for Q and R.
-a_weights = ones(12,1);
-b_weights = ones(4,1);
-a_weights = a_weights / norm(a_weights);
-b_weights = b_weights / norm(b_weights);
+% % Brysons Rule for Q and R.
+% a_weights = ones(12,1);
+% b_weights = ones(4,1);
+% a_weights = a_weights / norm(a_weights);
+% b_weights = b_weights / norm(b_weights);
+% 
+% max_x = [3, 3, 0.3, 1000, 1000, 1000, 0.5, 0.5, 0.4, 1000, 1000, 0.5];
+% % max_x = [0.5, 0.5, 0.5, 1000, 1000, 1000, 1, 1, 0.4, 1000, 1000, 2];
+% max_u = [pi/24, pi/24, 6, 2];
+% 
+% Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
+% R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
+% % R = diag([260, 260, 0.05, 0.2]);
+% % R = diag([60, 60, 3, 10]);
+% 
+% [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
-max_x = [3, 3, 0.3, 1000, 1000, 1000, 0.5, 0.5, 0.4, 1000, 1000, 0.5];
-% max_x = [0.5, 0.5, 0.5, 1000, 1000, 1000, 1, 1, 0.4, 1000, 1000, 2];
-max_u = [pi/24, pi/24, 6, 2];
-
-Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
-% R = diag([260, 260, 0.05, 0.2]);
-% R = diag([60, 60, 3, 10]);
-
-[K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
+%% Generate MPC controller for simulation
+% MPC specific constants
+constantsASTRA.('n_mpc') = 2;
+constantsASTRA.('Q_mpc') = diag([10 10 10 10 10 10 10 10 10 10 10 10]);
+constantsASTRA.('P_mpc') = diag([100 100 100 100 100 100 100 100 100 100 100 100]);
+constantsASTRA.('R_mpc') = diag([10 10 10 10]);
+constantsASTRA.('u_min') = [-10; -10; -10; -10];
+constantsASTRA.('u_max') = [10; 10; 10; 10];
+constantsASTRA.('zeta_max') = pi/6;
+constantsASTRA.('x_min') = [0; 0; 0; 0; -10; -10; -10; -10; -10; -10; -10; -10];
+constantsASTRA.('x_max') = [0; 0; 0; 0; 10; 10; 10; 10; 10; 10; 10; 10];
+constantsASTRA.('dt') = 0.01;
 
 %% Checkpoints and HoldTimes for Trajectory
 Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;

@@ -15,7 +15,8 @@
 %
 % OUTPUTS:
 %
-% By: Alexander Kaufmann - 02/14/2026
+% By: Alexander Kaufmann
+% Last updated: 04/02/2026
 
 function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     % Compute error state
@@ -109,9 +110,9 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     Z3 = zeros(3);
     u_min = constants.u_min;
     u_max = constants.u_max;
+    zeta_max = constants.zeta_max; % maximum angular deviation from inertial z-axis
     x_min = constants.x_min; % does not govern orientation
     x_max = constants.x_max; % does not govern orientation
-    zeta_max = constants.zeta_max; % maximum angular deviation from inertial z-axis
 
     % Input constraints
     W_i = zeros(2 * n * dim_eu, 1);
@@ -150,11 +151,11 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
         z_hat_ref = x_ref(7, k+i-1); % unit vector for reference body-frame z-axis
         W_X(row_s:row_f) = [z_hat_ref.' * z_hat_i - cos(zeta_max);
                             -x_min(5:7) + x_ref(5:7, k+i-1);
-                            x_min(5:7) - x_ref(5:7, k+i-1);
+                            x_max(5:7) - x_ref(5:7, k+i-1);
                             -x_min(5:7) + x_ref(8:10, k+i-1);
-                            x_min(5:7) - x_ref(8:10, k+i-1);
+                            x_max(5:7) - x_ref(8:10, k+i-1);
                             -x_min(5:7) + x_ref(11:13, k+i-1);
-                            x_min(5:7) - x_ref(11:13, k+i-1)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
+                            x_max(5:7) - x_ref(11:13, k+i-1)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
 
         for j = 1:n
             col = (j - 1) * 10;

@@ -1,0 +1,41 @@
+% Reference Trajectory Generator for use with MPC controller
+%
+% Returns a reference state given the current time in the simulation, 
+% current position, target position, and hold time requirements
+
+function [ref, trg, err] = ref_generator_mpc(t, x, checkpoints, holdTimeReqs)
+    persistent i
+    persistent t_start_hold
+    persistent hold_flag
+
+
+    % Initialize persistent variables
+    if isempty(hold_flag)
+        hold_flag = false;
+    end
+
+    if isempty(i)
+        i = 1;
+    end
+
+    % Get current checkpoint information
+    p_target = checkpoints(:, i);
+    dt_hold = holdTimeReqs(i);
+
+    % If done holding position, update target and reset hold flag
+    if hold_flag == true && (t - t_start_hold >= dt_hold)
+        i = i + 1;
+        v_target = 4
+    
+    % If just reached target position, update hold flag and start hold
+    elseif hold_flag == false && (p_target - x(4:6) <= 1e-3) % CHANGE HARDCODED TOLERANCE LATER
+        hold_flag = true;
+        t_start_hold = t;
+        v_target = 
+
+    end
+
+    % HARDCODED REFERENCE, CHANGE LATER
+    ref = [0; 0; 0; 1; p_target; 0; 0; v_target; 0; 0; 0]
+
+end
