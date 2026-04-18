@@ -68,7 +68,6 @@ accelBias = [0.09, 0.09, 0.09];
 %% Attitude Controller Generation
 [K_Att, ~] = Controller2_Gen(constantsASTRA);
 constantsASTRA.K_Att = K_Att;
-ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate LQR Controller for Simulation
 % % Brysons Rule for Q and R.
@@ -90,16 +89,18 @@ ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Generate MPC controller for simulation
 % MPC specific constants
-constantsASTRA.('n_mpc') = 2;
-constantsASTRA.('Q_mpc') = diag([10 10 10 10 10 10 10 10 10 10 10 10]);
-constantsASTRA.('P_mpc') = diag([100 100 100 100 100 100 100 100 100 100 100 100]);
-constantsASTRA.('R_mpc') = diag([10 10 10 10]);
-constantsASTRA.('u_min') = [-10; -10; -10; -10];
-constantsASTRA.('u_max') = [10; 10; 10; 10];
-constantsASTRA.('zeta_max') = pi/6;
-constantsASTRA.('x_min') = [0; 0; 0; 0; -10; -10; -10; -10; -10; -10; -10; -10];
-constantsASTRA.('x_max') = [0; 0; 0; 0; 10; 10; 10; 10; 10; 10; 10; 10];
-constantsASTRA.('dt') = 0.01;
+constantsASTRA.n_mpc = 2;
+constantsASTRA.Q_mpc = diag([10 10 10 10 10 10 10 10 10 10 10 10]);
+constantsASTRA.P_mpc = diag([100 100 100 100 100 100 100 100 100 100 100 100]);
+constantsASTRA.R_mpc = diag([0 0 0 0]);
+constantsASTRA.u_min = [-10; -10; -10; -10];
+constantsASTRA.u_max = [10; 10; 10; 10];
+constantsASTRA.zeta_max = pi/6;
+constantsASTRA.x_min = [0; 0; 0; 0; -10; -10; -10; -10; -10; -10; -10; -10];
+constantsASTRA.x_max = [0; 0; 0; 0; 10; 10; 10; 10; 10; 10; 10; 10];
+
+%% Simulink Bus generation
+ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
 
 %% Checkpoints and HoldTimes for Trajectory
 Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;

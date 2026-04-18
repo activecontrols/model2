@@ -15,14 +15,15 @@
 %
 % OUTPUTS:
 %
-% By: Alexander Kaufmann - 02/14/2026
+% By: Alexander Kaufmann
+% Last updated: 04/02/2026
 
 function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     % Compute error state
-    e_q = quatmultiply(quatinv(x_ref(1:4, k)), x(1:4)).';
+    e_q = quatmultiply(quatinv(x_ref(1:4, k).'), x(1:4).').';
     alpha = 2 * e_q(2:end);
     e_x = [alpha;
-         x(5:end) - x_ref(5:end, k)];
+         x(5:13) - x_ref(5:13, k)];
     
     dim_ex = length(e_x);
     dim_eu = size(u_ref, 1);
@@ -32,33 +33,36 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     e_x_trim = zeros(dim_ex, 1);
     e_u_trim = zeros(dim_eu, 1);
     
-    %% Dynamics prediction (TODO: MOVE BLOCK MATRIX BUILDING TO SEPARATE, NON-RUNTIME, FUNCTION)
+    %% Dynamics prediction (TODO: MOVE BLOCK MATRIX BUILDING TO SEPARATE, 
+    % NON-RUNTIME, FUNCTION) would require defining cell arrays as N x n 
+    % where N is total time steps
     % Compute state jacobians and transition matrices
-    A = cell(1, n); % zeros(dim_ex, dim_ex, n);
-    B = cell(1, n); % zeros(dim_eu, dim_ex, n);
-    phi = cell(1, n);
+    A = cell(1, n);
+    B = cell(1, n);
+    phi = cell(1, n+1);
 
-    A{1} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    B{1} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    phi{1} = eye(dim_ex); % state transition from step k to step k is identity
+    % A{1} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
+    % B{1} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
+    phi{k+1} = eye(dim_ex); % state transition from step k to step k is identity
 
-    for i = 2:n
-        A{i} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        B{i} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        phi{i} = A{i} * phi{k+i-1}; % we get phi ranging from k->k to k->k+n, 
-        % H uses k-k+1:k->k+n, G uses k->k:k->k+n-1
+    for i = 1:n % n+1 because MATLAB indexing SUCKS
+        A{k+i} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
+        B{k+i} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
+        phi{k+i} = A{k+i-1} * phi{k+i-1}; % we get phi ranging from k->k to k->k+n, 
+        % H uses k->k+1:k->k+n, G uses k->k:k->k+n-1
     end
 
-    % Create prediction matrices
-    H = zeros(dim_ex, dim_ex, n);
-    G = zeros(dim_ex, dim_eu, n);
+    % Create prediction matrices (THIS PART WOULD NEED TO INCORPORATE k TO
+    % COMPUTE BEFORE SIMULATING)
+    H = zeros(dim_ex * n, dim_ex);
+    G = zeros(dim_ex * n, dim_eu * n);
     
     for i = 1:n
         row = (i - 1) * dim_ex; % block matrix row (base 0)
         row_s = row + 1; % block matrix row starting index (base 1)
         row_f = row + dim_ex; % block matrix row ending index (base 1)
         
-        H(row_s:row_f) = phi{i+1}; % H blocks (transition matrices starting at k->k+1)
+        H(row_s:row_f, :) = phi{i+1}; % H blocks (transition matrices starting at k->k+1)
 
         for j = 1:n
             if i >= j
@@ -109,9 +113,9 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     Z3 = zeros(3);
     u_min = constants.u_min;
     u_max = constants.u_max;
+    zeta_max = constants.zeta_max; % maximum angular deviation from inertial z-axis
     x_min = constants.x_min; % does not govern orientation
     x_max = constants.x_max; % does not govern orientation
-    zeta_max = constants.zeta_max; % maximum angular deviation from inertial z-axis
 
     % Input constraints
     W_i = zeros(2 * n * dim_eu, 1);
@@ -150,11 +154,11 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
         z_hat_ref = x_ref(7, k+i-1); % unit vector for reference body-frame z-axis
         W_X(row_s:row_f) = [z_hat_ref.' * z_hat_i - cos(zeta_max);
                             -x_min(5:7) + x_ref(5:7, k+i-1);
-                            x_min(5:7) - x_ref(5:7, k+i-1);
+                            x_max(5:7) - x_ref(5:7, k+i-1);
                             -x_min(5:7) + x_ref(8:10, k+i-1);
-                            x_min(5:7) - x_ref(8:10, k+i-1);
+                            x_max(5:7) - x_ref(8:10, k+i-1);
                             -x_min(5:7) + x_ref(11:13, k+i-1);
-                            x_min(5:7) - x_ref(11:13, k+i-1)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
+                            x_max(5:7) - x_ref(11:13, k+i-1)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
 
         for j = 1:n
             col = (j - 1) * 10;
@@ -172,5 +176,20 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     end
     
     E_s = E_X * G;
-    W_s = W_X - E_X * H * e_x
+    W_s = W_X - E_X * H * e_x;
+
+    % Combined linear matrix inequality constraints
+    E = [E_i; E_s];
+    W = [W_i; W_s];
+
+    %% Use solver to find required error input
+    options = mpcActiveSetOptions; % default options
+    iA = false(size(W)); % define all inequality constraints as active because of solver (I dont actually know what this does)
+
+    U = mpcActiveSetSolver(L, F * e, E, W, [], zeros(0,1), iA, options);
+    
+    % Extract e_u(k) from U, then extract u from e_u = u - u_ref
+    K = [eye(dim_eu) zeros(dim_eu, dim_eu * n - dim_eu)];
+    e_u = K * U;
+    u = e_u + u_ref(:, k);
 end

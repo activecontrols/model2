@@ -2,10 +2,14 @@
 %
 % Returns a reference state given the current time in the simulation, 
 % current position, target position, and hold time requirements. Also 
-% returns reference input
+% returns reference input.
+%
+% Currently returns "n" references where "n" is the MPC horizon. Final 
+% trajectory implementation should just compute a full reference trajectory
+% offline.
 
-function [x_ref, u_ref] = ref_generator_mpc(t, x, checkpoints, holdTimeReqs, constantsASTRA)
-    persistent i
+function [x_ref, u_ref] = ref_generator_mpc(t, x, checkpoints, holdTimeReqs, dt, constantsASTRA)
+    persistent check_idx
     persistent t_start_hold
     persistent hold_flag
 
@@ -15,42 +19,64 @@ function [x_ref, u_ref] = ref_generator_mpc(t, x, checkpoints, holdTimeReqs, con
         hold_flag = false;
     end
 
-    if isempty(i)
-        i = 1;
+    if isempty(t_start_hold)
+        t_start_hold = t;
     end
+
+    if isempty(check_idx)
+        check_idx = 1;
+    end
+
+    % Tolerance for reaching critical point (maybe add to cosntantsASTRA?)
+    tol = 1e-6;
 
     % Grab values from constants
     m = constantsASTRA.m;
     g = constantsASTRA.g;
-    dt = constantsASTRA.dt;
+    n = constantsASTRA.n_mpc;
 
-    % Get current checkpoint information
-    p_target = checkpoints(:, i);
-    dt_hold = holdTimeReqs(i);
-
-    % If done holding position, update target and reset hold flag
-    if hold_flag == true && (t - t_start_hold >= dt_hold)
-        i = i + 1;
+    % Pre-allocate x_ref and u_ref for size
+    x_ref = zeros(13, n);
+    u_ref = zeros(4, n);
+    for k = 1:n
+        % Get current checkpoint information
+        p_target = checkpoints(:, check_idx);
+        dt_hold = holdTimeReqs(check_idx);
+    
+        % If done holding position, update target and reset hold flag
+        if hold_flag == true && (t - t_start_hold >= dt_hold)
+            check_idx = check_idx + 1;
+            p_target = checkpoints(:, check_idx);
+            hold_flag = false;
+        end
+            
+        % If just reached target position, update hold flag and start hold
+        if hold_flag == false && (vecnorm(p_target - x(4:6)) <= tol) % CHANGE HARDCODED TOLERANCE LATER
+            hold_flag = true;
+            t_start_hold = t;
+            v_target = [0; 0; 0;];
+            T_ref = m * g;
         
-        p_hat = 4 * (p_target - x(4:6)) / vecnorm(p_target - x(4:6));
-        
-        C_IB = quatRot(x(1:4));
-        TB = 5 * p_hat;
-        FI = C_IB * TB + [0; 0; -m*g];
-        v_target = FI / m * dt;
-
-        T_ref = TB;
-        
-    % If just reached target position, update hold flag and start hold
-    elseif hold_flag == false && (p_target - x(4:6) <= 1e-3) % CHANGE HARDCODED TOLERANCE LATER
-        hold_flag = true;
-        t_start_hold = t;
-        v_target = [0; 0; 0;];
-        T_ref = m * g;
+        % Otherwise fly towards current checpoint in straight line
+        else
+            if p_target - x(4:6) <= tol
+                p_hat = [0; 0; 0];
+            else
+                p_hat = 4 * (p_target - x(4:6)) / vecnorm(p_target - x(4:6));
+            end
+            
+            C_IB = quatRot(x(1:4));
+            TB = 5 * p_hat;
+            FI = C_IB * TB + [0; 0; -m*g];
+            v_target = FI / m * dt;
+    
+            T_ref = vecnorm(TB);
+    
+        end
+    
+        % HARDCODED REFERENCE, CHANGE LATER
+        x_ref(:, k) = [1; 0; 0; 0; p_target; v_target; 0; 0; 0];
+        u_ref(:, k) = [T_ref; 0; 0; 0]; % GOING TO START BY SETTING R=0 SO INPUT SHOULDN'T MATTER YET
+        t = t + dt;
     end
-
-    % HARDCODED REFERENCE, CHANGE LATER
-    x_ref = [1; 0; 0; 0; p_target; v_target; 0; 0; 0];
-    u_ref = [T_ref; 0; 0; 0]; % GOING TO START BY SETTING R=0 SO INPUT SHOULDN'T MATTER YET
-
 end

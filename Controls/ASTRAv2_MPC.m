@@ -20,10 +20,10 @@
 
 function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     % Compute error state
-    e_q = quatmultiply(quatinv(x_ref(1:4, k)), x(1:4)).';
+    e_q = quatmultiply(quatinv(x_ref(1:4, k+1).'), x(1:4).').';
     alpha = 2 * e_q(2:end);
     e_x = [alpha;
-         x(5:end) - x_ref(5:end, k)];
+         x(5:13) - x_ref(5:13, k+1)];
     
     dim_ex = length(e_x);
     dim_eu = size(u_ref, 1);
@@ -33,33 +33,35 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     e_x_trim = zeros(dim_ex, 1);
     e_u_trim = zeros(dim_eu, 1);
     
-    %% Dynamics prediction (TODO: MOVE BLOCK MATRIX BUILDING TO SEPARATE, NON-RUNTIME, FUNCTION)
+    %% Dynamics prediction (TODO: MOVE BLOCK MATRIX BUILDING TO SEPARATE, 
+    % NON-RUNTIME, FUNCTION) would require defining cell arrays as N x n 
+    % where N is total time steps
     % Compute state jacobians and transition matrices
-    A = cell(1, n); % zeros(dim_ex, dim_ex, n);
-    B = cell(1, n); % zeros(dim_eu, dim_ex, n);
-    phi = cell(1, n);
+    A = cell(1, n);
+    B = cell(1, n);
+    phi = cell(1, n+1);
 
-    A{1} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    B{1} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    phi{1} = eye(dim_ex); % state transition from step k to step k is identity
 
-    for i = 2:n
-        A{i} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        B{i} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        phi{i} = A{i} * phi{k+i-1}; % we get phi ranging from k->k to k->k+n, 
-        % H uses k-k+1:k->k+n, G uses k->k:k->k+n-1
+    phi{k+1} = eye(dim_ex); % state transition from step k to step k is identity
+
+    for i = 1:n % all the indexing is different from my derivations because MATLAB indexing is lame
+        A{k+i} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i), u_ref(:, k+i));
+        B{k+i} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i), u_ref(:, k+i));
+        phi{k+i+1} = A{k+i} * phi{k+i}; % we get phi ranging from k->k to k->k+n, 
+        % H uses k->k+1:k->k+n, G uses k->k:k->k+n-1
     end
 
-    % Create prediction matrices
-    H = zeros(dim_ex, dim_ex, n);
-    G = zeros(dim_ex, dim_eu, n);
+    % Create prediction matrices (THIS PART WOULD NEED TO INCORPORATE k TO
+    % COMPUTE BEFORE SIMULATING)
+    H = zeros(dim_ex * n, dim_ex);
+    G = zeros(dim_ex * n, dim_eu * n);
     
     for i = 1:n
         row = (i - 1) * dim_ex; % block matrix row (base 0)
         row_s = row + 1; % block matrix row starting index (base 1)
         row_f = row + dim_ex; % block matrix row ending index (base 1)
         
-        H(row_s:row_f) = phi{i+1}; % H blocks (transition matrices starting at k->k+1)
+        H(row_s:row_f, :) = phi{i+1}; % H blocks (transition matrices starting at k->k+1)
 
         for j = 1:n
             if i >= j
