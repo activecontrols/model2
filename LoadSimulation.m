@@ -65,55 +65,43 @@ magBias = 0.05 * ones(1,3);
 gyroBias = 0.005 * ones(1,3);
 accelBias = [0.09, 0.09, 0.09];
 
-%% Attitude Controller Generation
-[K_Att, ~] = Controller2_Gen(constantsASTRA);
-constantsASTRA.K_Att = K_Att;
-
-%% Generate LQR Controller for Simulation
-% % Brysons Rule for Q and R.
-% a_weights = ones(12,1);
-% b_weights = ones(4,1);
-% a_weights = a_weights / norm(a_weights);
-% b_weights = b_weights / norm(b_weights);
-% 
-% max_x = [3, 3, 0.3, 1000, 1000, 1000, 0.5, 0.5, 0.4, 1000, 1000, 0.5];
-% % max_x = [0.5, 0.5, 0.5, 1000, 1000, 1000, 1, 1, 0.4, 1000, 1000, 2];
-% max_u = [pi/24, pi/24, 6, 2];
-% 
-% Q = eye(size(linSys.A,1)) .* a_weights ./ max_x.^2;
-% R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
-% % R = diag([260, 260, 0.05, 0.2]);
-% % R = diag([60, 60, 3, 10]);
-% 
-% [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
 %% Generate MPC controller for simulation
 % MPC specific constants
-constantsASTRA.n_mpc = 2;
-constantsASTRA.Q_mpc = diag([10 10 10 10 10 10 10 10 10 10 10 10]);
-constantsASTRA.P_mpc = diag([100 100 100 100 100 100 100 100 100 100 100 100]);
-constantsASTRA.R_mpc = diag([0 0 0 0]);
-constantsASTRA.u_min = [-10; -10; -10; -10];
-constantsASTRA.u_max = [10; 10; 10; 10];
+constantsASTRA.n_mpc = 20;
+constantsASTRA.Q_mpc = diag([0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 10000 10000 10000]);
+constantsASTRA.P_mpc = constantsASTRA.Q_mpc; % diag([100 100 100 100 100 100 100 100 100 100 100 100]);
+constantsASTRA.R_mpc = diag([0.0001 0.0001 0.00005 0.00005]);
+constantsASTRA.u_min = [-deg2rad(7); -deg2rad(7); 0; -10];
+constantsASTRA.u_max = [deg2rad(7); deg2rad(7); 20; 10];
 constantsASTRA.zeta_max = pi/6;
-constantsASTRA.x_min = [0; 0; 0; 0; -10; -10; -10; -10; -10; -10; -10; -10];
-constantsASTRA.x_max = [0; 0; 0; 0; 10; 10; 10; 10; 10; 10; 10; 10];
+constantsASTRA.r_min = [-10; -10; -10];
+constantsASTRA.v_min = [-50; -50; -50];
+constantsASTRA.omega_min = [-10; -10; -10];
+constantsASTRA.r_max = [10; 10; 10]; 
+constantsASTRA.v_max = [50; 50; 50]; 
+constantsASTRA.omega_max = [10; 10; 10];
 
-%% Simulink Bus generation
-ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);
+%% Trajectory generation, SIM time step, and final time
+% Checkpoints =  [0, 0, 0,  3,  3, 0, 0;
+%                 0, 0, 3,  3,  0, 0, 0;
+%                 0, 3, 3,  3,  3, 3, 0];
+% 
+% HoldTimeReqs = [7, 5, 3, 3, 3, 3, 0.2];
+Checkpoints = [0, 0, 0;
+               0, 0, 0;
+               0, 3, 0];
+HoldTimeReqs = [7, 10, 0.2];
 
-%% Checkpoints and HoldTimes for Trajectory
-Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
-                0, 0, 3,  3,  0, 0, 0, 0;
-                0, 3, 3,  3,  3, 3, 0, 0];
-HoldTimeReqs = [7, 5, 3, 3, 3, 3, 0, 0.2];
-% Checkpoints =  [0, 5, 0;
-%                 0, 10, 0;
-%                 0, 50, 0];
-% HoldTimeReqs = [5, 10, 5];
+dt_SIM = 1/1000;
+
+[t_ref, x_ref, u_ref] = ref_generator_mpc(Checkpoints, HoldTimeReqs, constantsASTRA, dt_SIM);
+T_final = t_ref(end);
+constantsASTRA.T_final = T_final;
+set_param('SimulationLoop', 'StopTime', string(T_final)) % this only works if you are viewing the top level of the sim for some reason
 
 % Disturbances (1 for on, 0 for off)
 distMode = 1; 
-dt_SIM = 1/1000;
 
-
+%% Simulink Bus generation
+ASTRAv2 = Simulink.Bus.createObject(constantsASTRA);

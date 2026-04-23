@@ -6,11 +6,11 @@
 % INPUTS:
 %   x         - current state (this will be the estimated state when running in
 %               the loop)
-%   t         - current time
 %   x_ref     - reference state (must pass enough time steps to match
 %               prediction horizon)
 %   u_ref     - reference input (must pass enough time steps to match
 %               prediction horizon)
+%   
 %   constants - ASTRAv2 constants
 %
 % OUTPUTS:
@@ -18,16 +18,15 @@
 % By: Alexander Kaufmann
 % Last updated: 04/02/2026
 
-function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
+function u = ASTRAv2_MPC(x, x_ref, u_ref, k, n_mpc, constants)
     % Compute error state
-    e_q = quatmultiply(quatinv(x_ref(1:4, k).'), x(1:4).').';
+    e_q = quatmultiply(quatinv(x_ref(1:4, k+1).'), x(1:4).').';
     alpha = 2 * e_q(2:end);
     e_x = [alpha;
-         x(5:13) - x_ref(5:13, k)];
+         x(5:13) - x_ref(5:13, k+1)];
     
     dim_ex = length(e_x);
     dim_eu = size(u_ref, 1);
-    n = constants.n_mpc;
 
     % Define error trim conditions
     e_x_trim = zeros(dim_ex, 1);
@@ -37,41 +36,44 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     % NON-RUNTIME, FUNCTION) would require defining cell arrays as N x n 
     % where N is total time steps
     % Compute state jacobians and transition matrices
-    A = cell(1, n);
-    B = cell(1, n);
-    phi = cell(1, n+1);
+    A = zeros(dim_ex, dim_ex, n_mpc);
+    B = zeros(dim_ex, dim_eu, n_mpc);
+    Phi = zeros(dim_ex, dim_ex, n_mpc+1);
 
-    % A{1} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    % B{1} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k), u_ref(:, k));
-    phi{k+1} = eye(dim_ex); % state transition from step k to step k is identity
 
-    for i = 1:n % n+1 because MATLAB indexing SUCKS
-        A{k+i} = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        B{k+i} = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i-1), u_ref(:, k+i-1));
-        phi{k+i} = A{k+i-1} * phi{k+i-1}; % we get phi ranging from k->k to k->k+n, 
+    Phi(:,:,1) = eye(dim_ex); % state transition from step k to step k is identity
+
+    for i = 1:n_mpc % all the indexing is different from my derivations because MATLAB indexing is lame
+        A(:,:,i) = JacobianErrorX(e_x_trim, e_u_trim, x_ref(:, k+i), u_ref(:, k+i));
+        B(:,:,i) = JacobianErrorU(e_x_trim, e_u_trim, x_ref(:, k+i), u_ref(:, k+i));
+        Phi(:,:,i+1) = A(:,:,i) * Phi(:,:,i); % we get Phi ranging from k->k to k->k+n, 
         % H uses k->k+1:k->k+n, G uses k->k:k->k+n-1
     end
 
     % Create prediction matrices (THIS PART WOULD NEED TO INCORPORATE k TO
     % COMPUTE BEFORE SIMULATING)
-    H = zeros(dim_ex * n, dim_ex);
-    G = zeros(dim_ex * n, dim_eu * n);
+    H = zeros(dim_ex * n_mpc, dim_ex);
+    G = zeros(dim_ex * n_mpc, dim_eu * n_mpc);
     
-    for i = 1:n
-        row = (i - 1) * dim_ex; % block matrix row (base 0)
-        row_s = row + 1; % block matrix row starting index (base 1)
-        row_f = row + dim_ex; % block matrix row ending index (base 1)
+    for i = 1:n_mpc
+        row_s = (i-1)*dim_ex + 1;
+        row_f = i*dim_ex;
         
-        H(row_s:row_f, :) = phi{i+1}; % H blocks (transition matrices starting at k->k+1)
-
-        for j = 1:n
-            if i >= j
-                col = (j - 1) * dim_eu; % block matrix column (base 0)
-                col_s = col + 1; % block matrix column starting index (base 1)
-                col_f = col + dim_eu; % block matrix column ending index (base 1)
-
-                G(row_s:row_f, col_s:col_f) = phi{i} * inv(phi{j}) * B{j}; % G blocks
-            end
+        H(row_s:row_f, :) = Phi(:,:,i+1);
+        
+        % Diagonal block: G(i,i) = B(i), no transition needed
+        col_s = (i-1)*dim_eu + 1;
+        col_f = i*dim_eu;
+        G(row_s:row_f, col_s:col_f) = B(:,:,i);
+        
+        % Propagate all previously-set column-j blocks down one row
+        % by left-multiplying with A(:,:,i)
+        for j = 1:i-1
+            prev_row_s = (i-2)*dim_ex + 1;
+            prev_row_f = (i-1)*dim_ex;
+            col_s_j = (j-1)*dim_eu + 1;
+            col_f_j = j*dim_eu;
+            G(row_s:row_f, col_s_j:col_f_j) = A(:,:,i) * G(prev_row_s:prev_row_f, col_s_j:col_f_j);
         end
     end
 
@@ -80,16 +82,16 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     P = constants.P_mpc;
     R = constants.R_mpc;
 
-    Q_bar = zeros(dim_ex * n, dim_ex * n);
-    R_bar = zeros(dim_eu * n, dim_eu * n);
+    Q_bar = zeros(dim_ex * n_mpc, dim_ex * n_mpc);
+    R_bar = zeros(dim_eu * n_mpc, dim_eu * n_mpc);
 
-    for i = 1:n
-        for j = 1:n
+    for i = 1:n_mpc
+        for j = 1:n_mpc
             idx_Q = (i - 1) * dim_ex;
             idx_Q_s = idx_Q + 1;
             idx_Q_f = idx_Q + dim_ex;
             
-            if i < n
+            if i < n_mpc
                 Q_bar(idx_Q_s:idx_Q_f, idx_Q_s:idx_Q_f) = Q;
             else
                 Q_bar(idx_Q_s:idx_Q_f, idx_Q_s:idx_Q_f) = P;
@@ -114,65 +116,64 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     u_min = constants.u_min;
     u_max = constants.u_max;
     zeta_max = constants.zeta_max; % maximum angular deviation from inertial z-axis
-    x_min = constants.x_min; % does not govern orientation
-    x_max = constants.x_max; % does not govern orientation
+    r_min = constants.r_min;
+    v_min = constants.v_min;
+    omega_min = constants.omega_min;
+    r_max = constants.r_min;
+    v_max = constants.v_min;
+    omega_max = constants.omega_max;
 
     % Input constraints
-    W_i = zeros(2 * n * dim_eu, 1);
-    E_i = zeros(2 * n * dim_eu, n * dim_eu);
+    W_i = zeros(2 * n_mpc * dim_eu, 1);
+    E_i = zeros(2 * n_mpc * dim_eu, n_mpc * dim_eu);
 
-    for i = 1:n 
+    for i = 1:n_mpc 
         row = (i - 1) * 2 * dim_eu;
         row_s = row + 1;
         row_f = row + 2 * dim_eu;
-        
-        W_i(row_s:row_f) = [-u_min + u_ref(:, k+i-1); 
-                            u_max - u_ref(:, k+i-1)];
+        col = (i - 1) * dim_eu;
+        col_s = col + 1;
+        col_f = col + dim_eu;
 
-        for j = 1:n
-            col = (j - 1) * dim_eu;
-            col_s = col + 1;
-            col_f = col + dim_eu;
+        W_i(row_s:row_f) = [-u_min + u_ref(:, k+i); 
+                             u_max - u_ref(:, k+i)];
 
-            E_i(row_s:row_f, col_s:col_f) = [-Iu; 
-                                             Iu];
-        end
+            
+        E_i(row_s:row_f, col_s:col_f) = [-Iu; 
+                                          Iu];
     end
 
     % State Constraints
-    E_xi = zeros(2 * 9 + 1, 10); % see the documentation on the MPC controller for more details behind this structure
+    E_xi = zeros(2 * 9 + 1, 12); % see the documentation on the MPC controller for more details behind this structure
     W_xi = zeros(2 * 9 + 1, 1);
-    E_X = zeros(n * size(E_xi));
-    W_X = zeros(n * size(W_xi, 1), 1);
+    E_X = zeros(n_mpc * size(E_xi));
+    W_X = zeros(n_mpc * size(W_xi, 1), 1);
     z_hat_i = [0; 0; 1]; % unit vector for inertial-frame z-axis
 
-    for i = 1:n
-        row = (i - 1) * (2 * 9 + 1);
+    for i = 1:n_mpc
+        row = (i - 1) * 19;
         row_s = row + 1;
-        row_f = row + (2 * 9 + 1);
+        row_f = row + 19;
+        col = (i - 1) * dim_ex;
+        col_s = col + 1;
+        col_f = col + dim_ex;
 
-        z_hat_ref = x_ref(7, k+i-1); % unit vector for reference body-frame z-axis
+        z_hat_ref = quatRot(x_ref(1:4, k+i)) * [0; 0; 1]; % unit vector for reference body-frame z-axis
         W_X(row_s:row_f) = [z_hat_ref.' * z_hat_i - cos(zeta_max);
-                            -x_min(5:7) + x_ref(5:7, k+i-1);
-                            x_max(5:7) - x_ref(5:7, k+i-1);
-                            -x_min(5:7) + x_ref(8:10, k+i-1);
-                            x_max(5:7) - x_ref(8:10, k+i-1);
-                            -x_min(5:7) + x_ref(11:13, k+i-1);
-                            x_max(5:7) - x_ref(11:13, k+i-1)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
+                            -x_min(5:7) + x_ref(5:7, k+i);
+                             x_max(5:7) - x_ref(5:7, k+i);
+                            -x_min(8:10) + x_ref(8:10, k+i);
+                             x_max(8:10) - x_ref(8:10, k+i);
+                            -x_min(11:13) + x_ref(11:13, k+i);
+                             x_max(11:13) - x_ref(11:13, k+i)]; % indices of x_min and x_max might have to be changed depending on how we decide to format the vectors at higher levels
 
-        for j = 1:n
-            col = (j - 1) * 10;
-            col_s = col + 1;
-            col_f = col + 10;
-
-            E_X(row_s:row_f, col_s:col_f) = [-z_hat_i.' * zetaCross(z_hat_ref) * quatRot(x_ref(1:4, k+i-1)), Z3,  Z3,  Z3;
-                                             zeros(3, 1),                                                   -I3,  Z3,  Z3;
-                                             zeros(3, 1),                                                    I3,  Z3,  Z3;
-                                             zeros(3, 1),                                                    Z3, -I3,  Z3;
-                                             zeros(3, 1),                                                    Z3,  I3,  Z3;
-                                             zeros(3, 1),                                                    Z3,  Z3, -I3;
-                                             zeros(3, 1),                                                    Z3,  Z3,  I3];
-        end
+        E_X(row_s:row_f, col_s:col_f) = [-z_hat_i.' * zetaCross(z_hat_ref) * quatRot(x_ref(1:4, k+i)), zeros(1,3), zeros(1,3), zeros(1,3);
+                                         Z3, -I3,  Z3,  Z3;
+                                         Z3,  I3,  Z3,  Z3;
+                                         Z3,  Z3, -I3,  Z3;
+                                         Z3,  Z3,  I3,  Z3;
+                                         Z3,  Z3,  Z3, -I3;
+                                         Z3,  Z3,  Z3,  I3];
     end
     
     E_s = E_X * G;
@@ -186,10 +187,10 @@ function u = ASTRAv2_MPC(x, x_ref, u_ref, k, constants)
     options = mpcActiveSetOptions; % default options
     iA = false(size(W)); % define all inequality constraints as active because of solver (I dont actually know what this does)
 
-    U = mpcActiveSetSolver(L, F * e, E, W, [], zeros(0,1), iA, options);
+    U = mpcActiveSetSolver(L, F * e_x, E, W, zeros(0,dim_eu*n_mpc), zeros(0,1), iA, options);
     
     % Extract e_u(k) from U, then extract u from e_u = u - u_ref
-    K = [eye(dim_eu) zeros(dim_eu, dim_eu * n - dim_eu)];
+    K = [eye(dim_eu) zeros(dim_eu, dim_eu * n_mpc - dim_eu)];
     e_u = K * U;
-    u = e_u + u_ref(:, k);
+    u = e_u + u_ref(:, k+1); % the plus one is because MATLAB indexing starts at 1
 end

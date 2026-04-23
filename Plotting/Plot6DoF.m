@@ -1,6 +1,6 @@
 function Plot6DoF(Checkpoints)
     % Load the Simulink model
-    LoadSimulation;
+    % LoadSimulation;
     load_system("SimulationLoop.slx");
     
     % Run the simulation
