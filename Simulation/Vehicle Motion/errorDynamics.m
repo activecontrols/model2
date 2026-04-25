@@ -6,7 +6,7 @@
 %
 % INPUTS:
 %   e_x       - error-state
-%   e_u       - input error
+%   u         - error
 %   x_ref     - reference state
 %   u_ref     - reference input
 %   e_x_dot   - error-state dynamics
@@ -16,24 +16,27 @@
 %   lin_err     - SS matrices for continuous time linearized error-state 
 %                 dynamics
 
-function lin_err = errorDynamics(e_x, e_u, x_ref, u_ref, e_x_dot, constants)
+function lin_err = errorDynamics(e_x, u, x_ref, u_ref, e_x_dot, constants)
+    m = constants.m;
+    g = constants.g;
+
     % Linearize about zero error condition
     e_x_trim = zeros(size(e_x));
-    e_u_trim = zeros(size(e_u));
+    u_trim = [0; 0; m * g; 0];
 
     % Take jacobians to generate A and B matrices
     lin_err.A = jacobian(e_x_dot, e_x);
-    lin_err.B = jacobian(e_x_dot, e_u);
+    lin_err.B = jacobian(e_x_dot, u);
 
     % Numerical functions for Jacobians for Controls.
-    matlabFunction(lin_err.A, 'File', './Controls/JacobianErrorX.m', 'Vars', [{e_x}, {e_u}, {x_ref}, {u_ref}]);
-    matlabFunction(lin_err.B, 'File', './Controls/JacobianErrorU.m', 'Vars', [{e_x}, {e_u}, {x_ref}, {u_ref}]);
+    matlabFunction(lin_err.A, 'File', './Controls/JacobianErrorX.m', 'Vars', [{e_x}, {u}, {x_ref}, {u_ref}]);
+    matlabFunction(lin_err.B, 'File', './Controls/JacobianErrorU.m', 'Vars', [{e_x}, {u}, {x_ref}, {u_ref}]);
     
     % Substitute trim conditions and create C and D matrices
     % This returns a struct with SS matrices as functions of reference
     % trajectory (THIS MIGHT NOT BE NEEDED AT ALL)
-    lin_err.A = subs(lin_err.A, [e_x; e_u], [e_x_trim; e_u_trim]);
-    lin_err.B = subs(lin_err.B, [e_x; e_u], [e_x_trim; e_u_trim]);
+    lin_err.A = subs(lin_err.A, [e_x; u], [e_x_trim; u_trim]);
+    lin_err.B = subs(lin_err.B, [e_x; u], [e_x_trim; u_trim]);
     lin_err.C = eye(size(lin_err.A, 1));
     lin_err.D = zeros(size(lin_err.C, 1), size(lin_err.B, 2));
     % sys_lin_err = ss(lin_err.A, lin_err.B, lin_err.C, lin_err.D);

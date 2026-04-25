@@ -71,7 +71,7 @@ accelBias = [0.09, 0.09, 0.09];
 %% Generate MPC controller for simulation
 % MPC specific constants
 constantsASTRA.n_mpc = 1;
-constantsASTRA.Q_mpc = diag([10, 10, 10, 300, 300, 300, .1, .1, .1, 550, 550, 550]);
+constantsASTRA.Q_mpc = diag([10, 10, 10, 300, 30, 30, .1, .1, .1, 550, 550, 550]);
 constantsASTRA.P_mpc = constantsASTRA.Q_mpc; % diag([100 100 100 100 100 100 100 100 100 100 100 100]);
 constantsASTRA.R_mpc = diag([1, 1, 1, 1]);
 constantsASTRA.u_min = [-deg2rad(7); -deg2rad(7); 0; -10];

@@ -41,7 +41,7 @@ function [u, e_x] = ASTRAv2_MPC(x, x_ref, u_ref, k, n_mpc, constants)
     e_q = quatmultiply(quatinv(x_ref(1:4, k+1).'), x(1:4).').';
     alpha = 2 * e_q(2:end);
     e_x = [alpha;
-         x(5:13) - x_ref(5:13, k+1)];
+           x(5:13) - x_ref(5:13, k+1)];
     
     dim_ex = length(e_x);
     dim_u = size(u_ref, 1);
@@ -62,8 +62,8 @@ function [u, e_x] = ASTRAv2_MPC(x, x_ref, u_ref, k, n_mpc, constants)
     Phi(:,:,1) = eye(dim_ex); % state transition from step k to step k is identity
 
     for i = 1:n_mpc % all the indexing is different from my derivations because MATLAB indexing is lame
-        A(:,:,i) = JacobianErrorX(e_x, u_trim, x_ref(:, k+i), u_ref(:, k+i));
-        B(:,:,i) = JacobianErrorU(e_x, u_trim, x_ref(:, k+i), u_ref(:, k+i));
+        A(:,:,i) = JacobianErrorX(e_x, u_ref(:,k+i), x_ref(:,k+i), u_ref(:,k+i));
+        B(:,:,i) = JacobianErrorU(e_x, u_ref(:,k+i), x_ref(:,k+i), u_ref(:,k+i));
         Phi(:,:,i+1) = A(:,:,i) * Phi(:,:,i); % we get Phi ranging from k->k to k->k+n, 
         % H uses k->k+1:k->k+n, G uses k->k:k->k+n-1
     end
@@ -140,49 +140,49 @@ function [u, e_x] = ASTRAv2_MPC(x, x_ref, u_ref, k, n_mpc, constants)
         col_s = col + 1;
         col_f = col + dim_u;
 
-        W_i(row_s:row_f) = [-u_min + u_ref(:, k+i); 
-                             u_max - u_ref(:, k+i)];
+        W_i(row_s:row_f) = [-u_min + u_trim; 
+                             u_max - u_trim];
 
             
         E_i(row_s:row_f, col_s:col_f) = [-Iu; 
                                           Iu];
     end
 
-    % State Constraints
-    E_xi = zeros(2 * 9 + 1, 12); % see the documentation on the MPC controller for more details behind this structure
-    W_xi = zeros(2 * 9 + 1, 1);
-    E_X = zeros(n_mpc * size(E_xi));
-    W_X = zeros(n_mpc * size(W_xi, 1), 1);
-    z_hat_i = [0; 0; 1]; % unit vector for inertial-frame z-axis
-
-    for i = 1:n_mpc
-        row = (i - 1) * 19;
-        row_s = row + 1;
-        row_f = row + 19;
-        col = (i - 1) * dim_ex;
-        col_s = col + 1;
-        col_f = col + dim_ex;
-
-        z_hat_ref = quatRot(x_ref(1:4, k+i)) * [0; 0; 1]; % unit vector for reference body-frame z-axis
-        W_X(row_s:row_f) = [z_hat_ref.' * z_hat_i - cos(zeta_max);
-                            -r_min + x_ref(5:7, k+i);
-                             r_max - x_ref(5:7, k+i);
-                            -v_min + x_ref(8:10, k+i);
-                             v_max - x_ref(8:10, k+i);
-                            -omega_min + x_ref(11:13, k+i);
-                             omega_max - x_ref(11:13, k+i)];
-        
-        E_X(row_s:row_f, col_s:col_f) = [-z_hat_i.' * zetaCross(z_hat_ref) * quatRot(x_ref(1:4, k+i)), zeros(1,3), zeros(1,3), zeros(1,3);
-                                         Z3, -I3,  Z3,  Z3;
-                                         Z3,  I3,  Z3,  Z3;
-                                         Z3,  Z3, -I3,  Z3;
-                                         Z3,  Z3,  I3,  Z3;
-                                         Z3,  Z3,  Z3, -I3;
-                                         Z3,  Z3,  Z3,  I3];
-    end
-    
-    E_s = E_X * G;
-    W_s = W_X - E_X * H * e_x;
+    % % State Constraints
+    % E_xi = zeros(2 * 9 + 1, dim_ex); % see the documentation on the MPC controller for more details behind this structure
+    % W_xi = zeros(2 * 9 + 1, 1);
+    % E_X = zeros(n_mpc * size(E_xi));
+    % W_X = zeros(n_mpc * size(W_xi, 1), 1);
+    % z_hat_i = [0; 0; 1]; % unit vector for inertial-frame z-axis
+    % 
+    % for i = 1:n_mpc
+    %     row = (i - 1) * 19;
+    %     row_s = row + 1;
+    %     row_f = row + 19;
+    %     col = (i - 1) * dim_ex;
+    %     col_s = col + 1;
+    %     col_f = col + dim_ex;
+    % 
+    %     z_hat_ref = quatRot(x_ref(1:4, k+i)) * [0; 0; 1]; % unit vector for reference body-frame z-axis
+    %     W_X(row_s:row_f) = [z_hat_ref.' * z_hat_i - cos(zeta_max);
+    %                         -r_min + x_ref(5:7, k+i);
+    %                          r_max - x_ref(5:7, k+i);
+    %                         -v_min + x_ref(8:10, k+i);
+    %                          v_max - x_ref(8:10, k+i);
+    %                         -omega_min + x_ref(11:13, k+i);
+    %                          omega_max - x_ref(11:13, k+i)];
+    % 
+    %     E_X(row_s:row_f, col_s:col_f) = [-z_hat_i.' * zetaCross(z_hat_ref) * quatRot(x_ref(1:4, k+i)), zeros(1,3), zeros(1,3), zeros(1,3);
+    %                                      Z3, -I3,  Z3,  Z3;
+    %                                      Z3,  I3,  Z3,  Z3;
+    %                                      Z3,  Z3, -I3,  Z3;
+    %                                      Z3,  Z3,  I3,  Z3;
+    %                                      Z3,  Z3,  Z3, -I3;
+    %                                      Z3,  Z3,  Z3,  I3];
+    % end
+    % 
+    % E_s = E_X * G;
+    % W_s = W_X - E_X * H * e_x;
 
     % Combined linear matrix inequality constraints
     % E = [E_i; E_s];
@@ -196,7 +196,7 @@ function [u, e_x] = ASTRAv2_MPC(x, x_ref, u_ref, k, n_mpc, constants)
 
     U = mpcActiveSetSolver(L, F * e_x, E, W, zeros(0,dim_u*n_mpc), zeros(0,1), iA, options);
     
-    % Extract e_u(k) from U, then extract u from e_u = u - u_ref
+    % Extract u(k) from U, then account for linearization
     K = [eye(dim_u) zeros(dim_u, dim_u * n_mpc - dim_u)];
-    u = K * U + u_trim;
+    u = K * U + u_ref(:,k+1); 
 end
