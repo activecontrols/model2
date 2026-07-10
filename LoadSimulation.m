@@ -83,14 +83,18 @@ R = eye(size(linSys.B,2)) .* b_weights ./ max_u.^2;
 [K, ~, ~] = lqr(linSys.A, linSys.B, Q, R);
 
 %% Checkpoints and HoldTimes for Trajectory
-Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
-                0, 0, 3,  3,  0, 0, 0, 0;
-                0, 3, 3,  3,  3, 3, 0, 0];
-HoldTimeReqs = [7, 5, 3, 3, 3, 3, 0, 0.2];
-% Checkpoints =  [0, 5, 0;
-%                 0, 10, 0;
-%                 0, 50, 0];
-% HoldTimeReqs = [5, 10, 5];
+% Checkpoints =  [0, 0, 0,  3,  3, 0, 0, 0;
+%                 0, 0, 3,  3,  0, 0, 0, 0;
+%                 0, 3, 3,  3,  3, 3, 0, 0];
+% HoldTimeReqs = [7, 5, 3, 3, 3, 3, 0, 0.2];
+
+%% New trajectory system
+startWait = 5;
+
+% The times to switch between different functions
+% Eg. [0.2, 0.6, 1] switches from path1 to path2 at s = 0.2 and switches from path2 to 
+% path3 at s = 0.6. S maxes at 1, but the final one is needed for the logic to work 
+switches = [0.5, 1];
 
 % Disturbances (1 for on, 0 for off)
 distMode = 1; 

@@ -1,4 +1,4 @@
-function [ref, trg, err] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
+function [ref, trg, err, PosError] = ref_generator3(x, t, TargetPos, HoldTimeReqs)
     CPP_REF_GEN = 0;
 
     persistent timeFlag
